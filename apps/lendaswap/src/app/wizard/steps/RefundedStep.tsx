@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "#/components/ui/button";
 import type { GetSwapResponse } from "../../api";
+import { assertNever } from "../../utils/assertNever";
 import {
   getBlockexplorerAddressLink,
   getBlockexplorerTxLink,
@@ -54,7 +55,9 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
 
   // Get the refund-relevant address (where the user funded from / where refund goes)
   const getRefundAddress = (): string | null => {
-    switch (swapData.direction) {
+    const direction = swapData.direction;
+
+    switch (direction) {
       case "arkade_to_evm":
         return swapData.btc_vhtlc_address ?? null;
       case "evm_to_arkade":
@@ -65,15 +68,23 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
       case "bitcoin_to_evm":
         return swapData.btc_htlc_address ?? null;
       case "lightning_to_evm":
+      case "lightning_to_arkade":
         return null; // Lightning refunds go back via the LN channel
-      default:
-        return null;
+      case "arkade_to_lightning":
+        return swapData.arkade_vhtlc_address ?? null;
     }
+
+    return assertNever(
+      direction,
+      "Unhandled swap direction in getRefundAddress",
+    );
   };
 
   // Get the spend (claim/refund) transaction ID on the source side
   const getRefundTxId = (): string | null => {
-    switch (swapData.direction) {
+    const direction = swapData.direction;
+
+    switch (direction) {
       case "arkade_to_evm":
         return swapData.btc_claim_txid ?? null;
       case "evm_to_arkade":
@@ -81,7 +92,6 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
       case "evm_to_lightning":
         return swapData.evm_claim_txid ?? null;
       case "btc_to_arkade":
-        return swapData.btc_claim_txid ?? null;
       case "bitcoin_to_evm":
         return swapData.btc_claim_txid ?? null;
       case "lightning_to_arkade":
@@ -90,10 +100,9 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
         return null;
       case "arkade_to_lightning":
         return swapData.arkade_claim_txid ?? null;
-      default: {
-        return swapData;
-      }
     }
+
+    return assertNever(direction, "Unhandled swap direction in getRefundTxId");
   };
 
   // Chain for block explorer links (source chain, since refund goes back to source)
