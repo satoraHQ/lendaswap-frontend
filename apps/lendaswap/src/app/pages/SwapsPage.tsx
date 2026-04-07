@@ -40,6 +40,112 @@ import {
   getTokenNetworkIcon,
 } from "../utils/tokenUtils";
 
+type StatusInfo = {
+  label: string;
+  textColor: string;
+  icon: "check" | "loading" | null;
+  showIcon: boolean;
+};
+
+const STATUS_INFO = {
+  pending: {
+    label: "In Progress",
+    textColor: "text-orange-600 dark:text-orange-400",
+    icon: "loading",
+    showIcon: true,
+  },
+  clientfundingseen: {
+    label: "In Progress",
+    textColor: "text-orange-600 dark:text-orange-400",
+    icon: "loading",
+    showIcon: true,
+  },
+  clientfunded: {
+    label: "In Progress",
+    textColor: "text-orange-600 dark:text-orange-400",
+    icon: "loading",
+    showIcon: true,
+  },
+  clientrefunded: {
+    label: "Refunded",
+    textColor: "text-muted-foreground",
+    icon: null,
+    showIcon: false,
+  },
+  serverfunded: {
+    label: "In Progress",
+    textColor: "text-orange-600 dark:text-orange-400",
+    icon: "loading",
+    showIcon: true,
+  },
+  clientredeeming: {
+    label: "In Progress",
+    textColor: "text-orange-600 dark:text-orange-400",
+    icon: "loading",
+    showIcon: true,
+  },
+  clientredeemed: {
+    label: "In Progress",
+    textColor: "text-orange-600 dark:text-orange-400",
+    icon: "loading",
+    showIcon: true,
+  },
+  serverredeemed: {
+    label: "Completed",
+    textColor: "text-green-600 dark:text-green-400",
+    icon: "check",
+    showIcon: true,
+  },
+  clientfundedserverrefunded: {
+    label: "Action Required",
+    textColor: "text-red-600 dark:text-red-400",
+    icon: null,
+    showIcon: false,
+  },
+  clientrefundedserverfunded: {
+    label: "Action Required",
+    textColor: "text-red-600 dark:text-red-400",
+    icon: null,
+    showIcon: false,
+  },
+  clientrefundedserverrefunded: {
+    label: "Refunded",
+    textColor: "text-muted-foreground",
+    icon: null,
+    showIcon: false,
+  },
+  expired: {
+    label: "Expired",
+    textColor: "text-muted-foreground",
+    icon: null,
+    showIcon: false,
+  },
+  clientinvalidfunded: {
+    label: "Action Required",
+    textColor: "text-red-600 dark:text-red-400",
+    icon: null,
+    showIcon: false,
+  },
+  clientfundedtoolate: {
+    label: "Action Required",
+    textColor: "text-red-600 dark:text-red-400",
+    icon: null,
+    showIcon: false,
+  },
+  serverwontfund: {
+    label: "Action Required",
+    textColor: "text-red-600 dark:text-red-400",
+    icon: null,
+    showIcon: false,
+  },
+  clientredeemedandclientrefunded: {
+    label: "Error",
+    textColor: "text-red-600 dark:text-red-400",
+    icon: null,
+    showIcon: false,
+  },
+} satisfies Record<SwapStatus, StatusInfo>;
+
 // Get status display info
 function getStatusInfo(status: SwapStatus): {
   label: string;
@@ -47,57 +153,19 @@ function getStatusInfo(status: SwapStatus): {
   icon: React.ReactNode;
   showIcon: boolean;
 } {
-  switch (status) {
-    // Success state - swap fully completed
-    case "serverredeemed":
-      return {
-        label: "Completed",
-        textColor: "text-green-600 dark:text-green-400",
-        icon: <Check className="h-3 w-3" />,
-        showIcon: true,
-      };
-    // In progress states
-    case "pending":
-    case "clientfundingseen":
-    case "clientfunded":
-    case "serverfunded":
-    case "clientredeeming":
-    case "clientredeemed":
-      return {
-        label: "In Progress",
-        textColor: "text-orange-600 dark:text-orange-400",
-        icon: <Loader2 className="h-3 w-3 animate-spin" />,
-        showIcon: true,
-      };
-    // Refunded/expired states
-    case "expired":
-    case "clientrefunded":
-    case "clientrefundedserverrefunded":
-      return {
-        label: status === "expired" ? "Expired" : "Refunded",
-        textColor: "text-muted-foreground",
-        icon: null,
-        showIcon: false,
-      };
-    // Error states requiring user action
-    case "clientfundedserverrefunded":
-    case "clientinvalidfunded":
-    case "clientfundedtoolate":
-    case "clientrefundedserverfunded":
-      return {
-        label: "Action Required",
-        textColor: "text-red-600 dark:text-red-400",
-        icon: null,
-        showIcon: false,
-      };
-    default:
-      return {
-        label: "Unknown",
-        textColor: "text-muted-foreground",
-        icon: null,
-        showIcon: false,
-      };
-  }
+  const info = STATUS_INFO[status];
+
+  return {
+    label: info.label,
+    textColor: info.textColor,
+    showIcon: info.showIcon,
+    icon:
+      info.icon === "check" ? (
+        <Check className="h-3 w-3" />
+      ) : info.icon === "loading" ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : null,
+  };
 }
 
 export function SwapsPage() {

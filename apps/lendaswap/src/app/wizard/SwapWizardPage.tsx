@@ -19,6 +19,7 @@ import { useAsyncRetry } from "react-use";
 import { api } from "../api";
 import { SupportErrorBanner } from "../components/SupportErrorBanner";
 import { db } from "../db";
+import { assertNever } from "../utils/assertNever";
 import {
   DepositArkadeStep,
   DepositBitcoinStep,
@@ -85,63 +86,39 @@ function determineStepFromStatus(
         return swapData.vhtlc_refund_locktime;
     }
   };
-  const refundLocktime = getRefundLocktime();
 
+  const refundLocktime = getRefundLocktime();
   const refundLocktimeDate = refundLocktime
     ? new Date(Number(refundLocktime) * 1000)
     : undefined;
+  const isRefundTimelockExpired =
+    refundLocktimeDate !== undefined && refundLocktimeDate < new Date();
 
-  const status = swapData.status;
-
-  // Arkade-to-EVM swaps support collaborative refund (instant, no locktime wait)
-  // but only in statuses where the swap has clearly failed — NOT in
-  // `clientfunded` which is the normal progression (server hasn't funded yet).
+  // Arkade-to-EVM and Arkade-to-Lightning swaps support collaborative refund (instant, no locktime
+  // wait) but only in statuses where the swap has clearly failed — NOT in `clientfunded` which is
+  // the normal progression (server hasn't funded yet).
   //
-  // TODO: `clientfunded` could also benefit from a collab refund escape hatch
-  // (e.g. if the server is down and never funds the EVM HTLC). The challenge
-  // is deciding when to show it — any timeout is arbitrary and risks users
-  // refunding a swap that was about to succeed. A possible approach: show a
-  // "having trouble? refund now" link after N seconds on the processing screen.
-  // For now, if the server truly fails the swap will transition to
-  // `clientfundedtoolate` / `expired` and collab refund kicks in then.
-  const isArkadeToEvm =
+  // TODO: `clientfunded` could also benefit from a collab refund escape hatch (e.g. if the server
+  // is down and never funds the EVM HTLC). The challenge is deciding when to show it — any timeout
+  // is arbitrary and risks users refunding a swap that was about to succeed. A possible approach:
+  // show a "having trouble? refund now" link after N seconds on the processing screen. For now, if
+  // the server truly fails the swap will transition to `clientfundedtoolate` / `expired` and collab
+  // refund kicks in then.
+
+  const supportsInstantRefund =
     swapData.direction === "arkade_to_evm" ||
     swapData.direction === "arkade_to_lightning";
-  const failedForCollabRefund =
-    status === "clientfundedserverrefunded" ||
-    status === "clientinvalidfunded" ||
-    status === "clientfundedtoolate";
 
-  if (isArkadeToEvm && failedForCollabRefund) {
-    return "refundable";
-  }
-
-  switch (status) {
-    case "clientfundingseen":
-    case "clientfunded":
-    case "serverfunded":
-    case "clientfundedserverrefunded":
-    case "clientinvalidfunded":
-    case "clientfundedtoolate":
-      if (refundLocktimeDate && refundLocktimeDate < new Date()) {
-        console.warn(`Refund timelock expired. Ready to refund.`);
-        return "refundable";
-      }
-      break;
-    default:
-      // otherwise we just continue
-      break;
-  }
-
-  switch (status) {
+  switch (swapData.status) {
     case "pending":
       return "user-deposit";
+
     case "clientfundingseen":
-      return "user-deposit-seen";
+      return isRefundTimelockExpired ? "refundable" : "user-deposit-seen";
+
     case "clientfunded":
-      return "server-depositing";
     case "serverfunded":
-      return "server-depositing";
+      return isRefundTimelockExpired ? "refundable" : "server-depositing";
     case "serverredeemed":
     case "clientredeeming":
     case "clientredeemed":
@@ -152,11 +129,25 @@ function determineStepFromStatus(
     case "clientinvalidfunded":
     case "clientfundedtoolate":
       return "refundable";
+
+    case "serverwontfund":
+      return supportsInstantRefund || isRefundTimelockExpired
+        ? "refundable"
+        : "server-depositing";
+
     case "clientrefundedserverfunded":
     case "clientrefundedserverrefunded":
     case "clientrefunded":
       return "refunded";
+
+    case "clientredeemedandclientrefunded":
+      return "refunded";
   }
+
+  return assertNever(
+    swapData.status,
+    "Unhandled SwapStatus in determineStepFromStatus",
+  );
 }
 
 export function SwapWizardPage() {
@@ -228,14 +219,26 @@ export function SwapWizardPage() {
   useEffect(() => {
     if (!swapId || !swapData) return;
 
-    const terminalStates: SwapStatus[] = [
-      "serverredeemed",
-      "expired",
-      "clientrefundedserverfunded",
-      "clientrefundedserverrefunded",
-      "clientrefunded",
-    ];
-    if (displaySwapData && terminalStates.includes(displaySwapData.status)) {
+    const statusIsTerminal = {
+      pending: false,
+      clientfundingseen: false,
+      clientfunded: false,
+      clientrefunded: true,
+      serverfunded: false,
+      clientredeeming: false,
+      clientredeemed: false,
+      serverredeemed: true,
+      clientfundedserverrefunded: false,
+      clientrefundedserverfunded: true,
+      clientrefundedserverrefunded: true,
+      expired: true,
+      clientinvalidfunded: false,
+      clientfundedtoolate: false,
+      serverwontfund: false,
+      clientredeemedandclientrefunded: true,
+    } satisfies Record<SwapStatus, boolean>;
+
+    if (displaySwapData && statusIsTerminal[displaySwapData.status]) {
       return;
     }
 
