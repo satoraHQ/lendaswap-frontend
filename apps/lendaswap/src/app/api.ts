@@ -227,21 +227,47 @@ export const api = {
     return result.response as GetSwapResponse;
   },
 
+  /**
+   * Load a swap owned by this wallet.
+   *
+   * Refreshes the server copy into local IndexedDB (best effort — server
+   * errors are logged and swallowed so the stale local copy is still
+   * returned), then reads back the `StoredSwap`, which includes
+   * wallet-only fields (preimage, derived keys, direction) not present in
+   * the raw server response.
+   *
+   * Throws if the swap is not in local storage. Use this for swaps the
+   * current wallet created or recovered — it is NOT suitable for looking
+   * up arbitrary swap IDs, since those won't have local keys.
+   */
   async getSwap(id: string): Promise<StoredSwap> {
     const client = await getClients();
 
     try {
-      // Try to fetch latest from API and update local storage
       await client.getSwap(id, { updateStorage: true });
     } catch (error) {
       console.error(`Failed refreshing swap from server ${error}`);
     }
-    // Return the stored swap (includes preimage and keys)
     const stored = await client.getStoredSwap(id);
     if (!stored) {
       throw new Error("Swap not found");
     }
     return stored;
+  },
+
+  /**
+   * Fetch the server's view of any swap by ID.
+   *
+   * Hits `GET /swap/{id}` directly and returns the raw `GetSwapResponse`
+   * without touching local storage. No preimage/keys are included, so
+   * you cannot claim or refund with this result — it is read-only.
+   *
+   * Use this for public lookups (e.g. the /track page) where the swap
+   * may belong to another wallet. Throws on network or 404 errors.
+   */
+  async fetchSwap(id: string): Promise<GetSwapResponse> {
+    const client = await getClients();
+    return await client.getSwap(id);
   },
 
   subscribeToSwaps(

@@ -18,7 +18,7 @@ import { DebugNavigation } from "./components/DebugNavigation";
 import { ImportMnemonicDialog } from "./components/ImportMnemonicDialog";
 import { LandingSection } from "./components/LandingSection";
 import { HomePage } from "./HomePage";
-import { RefundPage, SwapsPage, TermsOfServicePage } from "./pages";
+import { RefundPage, SwapsPage, TermsOfServicePage, TrackPage } from "./pages";
 import { SwapWizardPage } from "./wizard";
 
 /** Redirect `/` to the default pair, preserving query params like `?ref=`. */
@@ -65,6 +65,11 @@ function useStepInfo() {
     return {
       title: "Your Swaps",
       description: "View and manage all your swaps",
+    };
+  } else if (location.pathname.startsWith("/track")) {
+    return {
+      title: "Track Swap",
+      description: "Check the status and transactions of any swap",
     };
   } else if (location.pathname.includes("/manage/")) {
     return {
@@ -227,6 +232,11 @@ export default function App() {
                               element={<HomePage />}
                             />
                             <Route path="/swaps" element={<SwapsPage />} />
+                            <Route path="/track" element={<TrackPage />} />
+                            <Route
+                              path="/track/:swapId/*"
+                              element={<TrackPage />}
+                            />
                           </Routes>
                         </Card>
                       </div>
