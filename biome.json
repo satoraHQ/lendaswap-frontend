@@ -31,6 +31,9 @@
       "complexity": {
         "noStaticOnlyClass": "off"
       },
+      "nursery": {
+        "useExhaustiveSwitchCases": "error"
+      },
       "suspicious": {
         "noUnknownAtRules": "off"
       }
