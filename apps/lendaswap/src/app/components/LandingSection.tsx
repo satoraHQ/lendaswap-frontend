@@ -38,13 +38,13 @@ export function LandingSection() {
                 <img
                   src={src}
                   alt="User avatar"
-                  className="w-10 h-10 md:w-11 md:h-11 rounded-full border-2 border-background shadow-lg bg-orange-500/20"
+                  className="w-10 h-10 md:w-11 md:h-11 rounded-full border-2 border-background shadow-lg bg-lime-400/20"
                 />
               </div>
             ))}
           </div>
           <div className="flex flex-col items-start">
-            <span className="text-orange-500 text-xl md:text-2xl">★★★★★</span>
+            <span className="text-lime-400 text-xl md:text-2xl">★★★★★</span>
             <p className="text-sm text-muted-foreground font-medium">
               Trusted by{" "}
               <span className="text-foreground font-bold">4,102+</span>{" "}
@@ -56,13 +56,13 @@ export function LandingSection() {
         {/* Top Row - Bento Grid: Square left, Wide right */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
           {/* Self-Custody - 100% Secured */}
-          <div className="md:col-span-2 group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-orange-500/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-orange-500/30 hover:shadow-xl hover:shadow-orange-500/5 aspect-square md:aspect-square">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 via-transparent to-orange-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          <div className="md:col-span-2 group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5 aspect-square md:aspect-square">
+            <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
             {/* Background circles - Apple-style behind shield, animate on hover */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[240px] h-[240px] md:w-[320px] md:h-[320px] rounded-full bg-gradient-to-br from-orange-400/[0.08] to-orange-600/[0.03] blur-sm opacity-0 scale-50 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-100" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[180px] h-[180px] md:w-[240px] md:h-[240px] rounded-full border border-orange-500/[0.1] opacity-0 scale-50 transition-all duration-500 delay-100 ease-out group-hover:opacity-100 group-hover:scale-100" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[120px] h-[120px] md:w-[160px] md:h-[160px] rounded-full border border-orange-500/[0.15] opacity-0 scale-50 transition-all duration-500 delay-200 ease-out group-hover:opacity-100 group-hover:scale-100" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[240px] h-[240px] md:w-[320px] md:h-[320px] rounded-full bg-gradient-to-br from-lime-300/[0.08] to-lime-500/[0.03] blur-sm opacity-0 scale-50 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-100" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[180px] h-[180px] md:w-[240px] md:h-[240px] rounded-full border border-lime-400/[0.1] opacity-0 scale-50 transition-all duration-500 delay-100 ease-out group-hover:opacity-100 group-hover:scale-100" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[120px] h-[120px] md:w-[160px] md:h-[160px] rounded-full border border-lime-400/[0.15] opacity-0 scale-50 transition-all duration-500 delay-200 ease-out group-hover:opacity-100 group-hover:scale-100" />
 
             <style>{`
                     .shield-container {
@@ -139,15 +139,15 @@ export function LandingSection() {
           </div>
 
           {/* Mobile App Promo - Wide */}
-          <div className="md:col-span-3 group relative rounded-3xl border border-border bg-gradient-to-br from-card via-card to-orange-500/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-orange-500/30 hover:shadow-xl hover:shadow-orange-500/5 aspect-square md:aspect-auto overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 via-transparent to-orange-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-3xl" />
+          <div className="md:col-span-3 group relative rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5 aspect-square md:aspect-auto overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-3xl" />
 
             {/* Coming Soon - Big background text */}
             <div className="absolute top-[35%] right-4 sm:right-8 md:right-12 -translate-y-1/2 flex flex-col items-end pointer-events-none">
-              <span className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-orange-500/[0.08] leading-none transition-all duration-500 group-hover:text-orange-500/[0.15]">
+              <span className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-lime-400/[0.08] leading-none transition-all duration-500 group-hover:text-lime-400/[0.15]">
                 COMING
               </span>
-              <span className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-orange-500/[0.12] leading-none transition-all duration-500 group-hover:text-orange-500/[0.2]">
+              <span className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-lime-400/[0.12] leading-none transition-all duration-500 group-hover:text-lime-400/[0.2]">
                 SOON
               </span>
             </div>
@@ -171,7 +171,7 @@ export function LandingSection() {
                     {/* Dynamic Island */}
                     <div className="absolute top-2.5 sm:top-3 md:top-3 left-1/2 -translate-x-1/2 w-[30px] sm:w-[32px] md:w-[34px] h-[8px] sm:h-[9px] md:h-[10px] bg-black rounded-full z-10" />
                     {/* Screen */}
-                    <div className="w-full h-full bg-gradient-to-br from-orange-100 via-orange-50 to-white dark:from-orange-500/20 dark:via-orange-600/10 dark:to-orange-500/5" />
+                    <div className="w-full h-full bg-gradient-to-br from-lime-100 via-lime-50 to-white dark:from-lime-400/20 dark:via-lime-500/10 dark:to-lime-400/5" />
                     {/* Screen reflection */}
                     <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
                   </div>
@@ -192,7 +192,7 @@ export function LandingSection() {
                 href="https://lendasat.com/app_waitlist"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 mt-1.5 text-xs md:text-sm font-medium text-orange-500 hover:text-orange-400 transition-colors"
+                className="inline-flex items-center gap-1.5 mt-1.5 text-xs md:text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors"
               >
                 Join waitlist
                 <ArrowDown className="h-3 w-3 rotate-[-90deg]" />
@@ -204,8 +204,8 @@ export function LandingSection() {
         {/* Middle Row - Bento Grid: Wide left, Square right */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
           {/* Developer Docs - Wide */}
-          <div className="md:col-span-3 group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-orange-500/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-orange-500/30 hover:shadow-xl hover:shadow-orange-500/5 aspect-[4/3] md:aspect-auto">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 via-transparent to-orange-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          <div className="md:col-span-3 group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5 aspect-[4/3] md:aspect-auto">
+            <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             <style>{`
                     @keyframes typewriter {
                       from { max-width: 0; }
@@ -272,26 +272,26 @@ export function LandingSection() {
                   {/* Terminal Content */}
                   <div className="px-3 py-2.5 md:px-4 md:py-3 font-mono text-[8px] md:text-[10px] leading-[1.7]">
                     <div className="docs-terminal-line docs-terminal-line-1 text-zinc-600 dark:text-zinc-400">
-                      <span className="text-orange-500 dark:text-orange-400">
+                      <span className="text-lime-400 dark:text-lime-300">
                         $
                       </span>{" "}
                       <span className="text-zinc-500">npm i</span>{" "}
                       @lendasat/lendaswap-sdk-pure
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-2 mt-1.5 text-zinc-600 dark:text-zinc-400">
-                      <span className="text-orange-600 dark:text-orange-400/70">
+                      <span className="text-lime-500 dark:text-lime-300/70">
                         import
                       </span>{" "}
                       {"{"}{" "}
-                      <span className="text-orange-600 dark:text-orange-300">
+                      <span className="text-lime-500 dark:text-lime-300">
                         Client
                       </span>
                       ,{" "}
-                      <span className="text-orange-600 dark:text-orange-300">
+                      <span className="text-lime-500 dark:text-lime-300">
                         IdbSwapStorage
                       </span>{" "}
                       {"}"}{" "}
-                      <span className="text-orange-600 dark:text-orange-400/70">
+                      <span className="text-lime-500 dark:text-lime-300/70">
                         from
                       </span>{" "}
                       <span className="text-amber-700 dark:text-amber-200/90">
@@ -299,17 +299,17 @@ export function LandingSection() {
                       </span>
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-3 mt-1 text-zinc-600 dark:text-zinc-400">
-                      <span className="text-orange-600 dark:text-orange-400/70">
+                      <span className="text-lime-500 dark:text-lime-300/70">
                         const
                       </span>{" "}
                       <span className="text-blue-600 dark:text-blue-300">
                         client
                       </span>{" "}
                       ={" "}
-                      <span className="text-orange-600 dark:text-orange-400/70">
+                      <span className="text-lime-500 dark:text-lime-300/70">
                         await
                       </span>{" "}
-                      <span className="text-orange-600 dark:text-orange-300">
+                      <span className="text-lime-500 dark:text-lime-300">
                         Client
                       </span>
                       .
@@ -324,10 +324,10 @@ export function LandingSection() {
                         withSwapStorage
                       </span>
                       (
-                      <span className="text-orange-600 dark:text-orange-400/70">
+                      <span className="text-lime-500 dark:text-lime-300/70">
                         new
                       </span>{" "}
-                      <span className="text-orange-600 dark:text-orange-300">
+                      <span className="text-lime-500 dark:text-lime-300">
                         IdbSwapStorage
                       </span>
                       ()).
@@ -337,14 +337,14 @@ export function LandingSection() {
                       ()
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-5 mt-1 text-zinc-600 dark:text-zinc-400">
-                      <span className="text-orange-600 dark:text-orange-400/70">
+                      <span className="text-lime-500 dark:text-lime-300/70">
                         const
                       </span>{" "}
                       <span className="text-blue-600 dark:text-blue-300">
                         swap
                       </span>{" "}
                       ={" "}
-                      <span className="text-orange-600 dark:text-orange-400/70">
+                      <span className="text-lime-500 dark:text-lime-300/70">
                         await
                       </span>{" "}
                       client.
@@ -371,7 +371,7 @@ export function LandingSection() {
                         100000
                       </span>
                       {" }"})
-                      <span className="docs-terminal-cursor text-orange-500 dark:text-orange-400 ml-0.5">
+                      <span className="docs-terminal-cursor text-lime-400 dark:text-lime-300 ml-0.5">
                         |
                       </span>
                     </div>
@@ -387,7 +387,7 @@ export function LandingSection() {
                   href="https://lendasat.com/docs/lendaswap"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-1.5 text-xs md:text-sm font-medium text-orange-500 hover:text-orange-400 transition-colors"
+                  className="inline-flex items-center gap-1.5 mt-1.5 text-xs md:text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors"
                 >
                   View docs
                   <ArrowDown className="h-3 w-3 rotate-[-90deg]" />
@@ -506,8 +506,8 @@ export function LandingSection() {
         {/* Bottom Row - 3 Feature Boxes */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Instant */}
-          <div className="group relative aspect-[4/3] md:aspect-square overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-orange-500/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-orange-500/30 hover:shadow-xl hover:shadow-orange-500/5">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 via-transparent to-orange-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          <div className="group relative aspect-[4/3] md:aspect-square overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5">
+            <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             <style>{`
                     @keyframes coinSpinLeft {
                       0% { transform: translateX(0) rotateY(0deg); }
@@ -566,7 +566,7 @@ export function LandingSection() {
                   </div>
                   {/* Swap arrows */}
                   <div className="flex flex-col items-center gap-0.5">
-                    <ArrowLeftRight className="w-5 h-5 md:w-7 md:h-7 text-orange-500/70" />
+                    <ArrowLeftRight className="w-5 h-5 md:w-7 md:h-7 text-lime-400/70" />
                   </div>
                   {/* Bitcoin Coin - Right - Glossy Orange Glass */}
                   <div
@@ -606,8 +606,8 @@ export function LandingSection() {
           </div>
 
           {/* Atomic Swaps - Peer to Peer Connection */}
-          <div className="group relative md:col-span-2 aspect-[4/3] md:aspect-auto overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-orange-500/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-orange-500/30 hover:shadow-xl hover:shadow-orange-500/5">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 via-transparent to-orange-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          <div className="group relative md:col-span-2 aspect-[4/3] md:aspect-auto overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5">
+            <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             <style>{`
                     .p2p-line {
                       stroke-dasharray: 4 4;

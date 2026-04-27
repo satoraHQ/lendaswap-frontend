@@ -144,23 +144,23 @@ export default function App() {
 
       {/* Modern Gradient Glows */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        {/* Top Left - Orange Gradient */}
+        {/* Top Left - Lime Gradient */}
         <div
           className="absolute -left-48 -top-48 h-[600px] w-[600px] opacity-100 dark:opacity-40"
           style={{
             background:
-              "radial-gradient(circle at center, rgba(251, 146, 60, 0.08) 0%, rgba(249, 115, 22, 0.05) 25%, rgba(234, 88, 12, 0.03) 50%, transparent 70%)",
+              "radial-gradient(circle at center, rgba(163, 196, 16, 0.08) 0%, rgba(194, 232, 33, 0.05) 25%, rgba(163, 196, 16, 0.03) 50%, transparent 70%)",
             filter: "blur(100px)",
             mixBlendMode: "screen",
           }}
         />
 
-        {/* Bottom Right - Orange to Amber Gradient */}
+        {/* Bottom Right - Lime Gradient */}
         <div
           className="absolute -bottom-40 -right-40 h-[550px] w-[550px] opacity-100 dark:opacity-40"
           style={{
             background:
-              "radial-gradient(circle at center, rgba(251, 146, 60, 0.07) 0%, rgba(249, 115, 22, 0.04) 30%, rgba(245, 158, 11, 0.03) 50%, transparent 68%)",
+              "radial-gradient(circle at center, rgba(163, 196, 16, 0.07) 0%, rgba(194, 232, 33, 0.04) 30%, rgba(163, 196, 16, 0.03) 50%, transparent 68%)",
             filter: "blur(110px)",
             mixBlendMode: "screen",
           }}
