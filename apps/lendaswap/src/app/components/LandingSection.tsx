@@ -26,10 +26,10 @@ export function LandingSection() {
         <div className="flex items-center justify-center gap-4 mb-8">
           <div className="flex items-center -space-x-4">
             {[
-              "https://api.dicebear.com/7.x/lorelei/svg?seed=Felix&backgroundColor=f97316",
-              "https://api.dicebear.com/7.x/lorelei/svg?seed=Mia&backgroundColor=f97316",
-              "https://api.dicebear.com/7.x/lorelei/svg?seed=Oscar&backgroundColor=f97316",
-              "https://api.dicebear.com/7.x/lorelei/svg?seed=Luna&backgroundColor=f97316",
+              "https://api.dicebear.com/7.x/lorelei/svg?seed=Felix&backgroundColor=a3c410",
+              "https://api.dicebear.com/7.x/lorelei/svg?seed=Mia&backgroundColor=a3c410",
+              "https://api.dicebear.com/7.x/lorelei/svg?seed=Oscar&backgroundColor=a3c410",
+              "https://api.dicebear.com/7.x/lorelei/svg?seed=Luna&backgroundColor=a3c410",
             ].map((src) => (
               <div
                 key={src}
