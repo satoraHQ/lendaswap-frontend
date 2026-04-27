@@ -50,19 +50,19 @@ type StatusInfo = {
 const STATUS_INFO = {
   pending: {
     label: "In Progress",
-    textColor: "text-orange-600 dark:text-orange-400",
+    textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
   clientfundingseen: {
     label: "In Progress",
-    textColor: "text-orange-600 dark:text-orange-400",
+    textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
   clientfunded: {
     label: "In Progress",
-    textColor: "text-orange-600 dark:text-orange-400",
+    textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
@@ -74,19 +74,19 @@ const STATUS_INFO = {
   },
   serverfunded: {
     label: "In Progress",
-    textColor: "text-orange-600 dark:text-orange-400",
+    textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
   clientredeeming: {
     label: "In Progress",
-    textColor: "text-orange-600 dark:text-orange-400",
+    textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
   clientredeemed: {
     label: "In Progress",
-    textColor: "text-orange-600 dark:text-orange-400",
+    textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },

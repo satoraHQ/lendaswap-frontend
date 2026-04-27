@@ -40,10 +40,10 @@ export function DebugNavigation() {
   };
 
   return (
-    <div className="mb-6 flex flex-col items-center gap-2.5 border-t border-orange-500/30 bg-orange-500/5 px-4 py-3 rounded-lg">
+    <div className="mb-6 flex flex-col items-center gap-2.5 border-t border-lime-400/30 bg-lime-400/5 px-4 py-3 rounded-lg">
       <div className="flex items-center gap-2">
-        <div className="h-2 w-2 animate-pulse rounded-full bg-orange-500" />
-        <span className="text-xs font-semibold text-orange-700 dark:text-orange-400 uppercase tracking-wider">
+        <div className="h-2 w-2 animate-pulse rounded-full bg-lime-400" />
+        <span className="text-xs font-semibold text-lime-600 dark:text-lime-300 uppercase tracking-wider">
           Debug Mode
         </span>
       </div>

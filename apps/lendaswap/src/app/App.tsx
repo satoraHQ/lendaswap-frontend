@@ -222,9 +222,9 @@ export default function App() {
                     path="*"
                     element={
                       <div className="group relative">
-                        {/* Orange glow effect on hover */}
-                        <div className="group-hover:via-orange-400/8 absolute -inset-1 rounded-[28px] bg-gradient-to-br from-orange-500/0 via-orange-500/0 to-orange-500/0 opacity-0 blur-xl transition-all duration-500 group-hover:from-orange-500/10 group-hover:to-orange-500/10 group-hover:opacity-100" />
-                        <Card className="border-border from-card via-card relative !gap-0 rounded-3xl border bg-gradient-to-br to-orange-500/5 !py-0 shadow-sm">
+                        {/* Lime glow effect on hover */}
+                        <div className="group-hover:via-lime-400/8 absolute -inset-1 rounded-[28px] bg-gradient-to-br from-lime-400/0 via-lime-400/0 to-lime-400/0 opacity-0 blur-xl transition-all duration-500 group-hover:from-lime-400/10 group-hover:to-lime-400/10 group-hover:opacity-100" />
+                        <Card className="border-border from-card via-card relative !gap-0 rounded-3xl border bg-gradient-to-br to-lime-400/5 !py-0 shadow-sm">
                           <Routes>
                             <Route path="/" element={<DefaultRedirect />} />
                             <Route
