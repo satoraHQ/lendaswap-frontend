@@ -21,12 +21,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import lendasatLogoBlack from "../../assets/lendasat_black.svg?url";
-import lendasatLogoWhite from "../../assets/lendasat_grey.svg?url";
 import { ReactComponent as XLogo } from "../../assets/x-com-logo.svg";
 import isValidSpeedWalletContext from "../../utils/speedWallet";
 import { useNwc } from "../NwcContext";
-import { useTheme } from "../utils/theme-provider";
 import { ThemeToggle } from "../utils/theme-toggle";
 import { useWalletBridge } from "../WalletBridgeContext";
 import { NwcConnectDialog } from "./NwcConnectDialog";
@@ -43,7 +40,6 @@ export function AppHeader({
   onDownloadSeedphrase,
 }: AppHeaderProps) {
   const navigate = useNavigate();
-  const { theme } = useTheme();
   const { open } = useAppKit();
   const { isConnected, address } = useAccount();
   const { isEmbedded } = useWalletBridge();
@@ -64,12 +60,13 @@ export function AppHeader({
               onClick={() => navigate("/")}
               className="flex items-center gap-2 transition-opacity hover:opacity-80"
             >
-              <img
-                src={theme === "dark" ? lendasatLogoWhite : lendasatLogoBlack}
-                alt="LendaSat"
-                className="size-8 shrink-0 rounded-lg object-contain"
-              />
-              <span className="text-xl font-semibold">LendaSwap</span>
+              <span className="text-xl font-bold select-none">
+                satora
+                <span
+                  className="inline-block rounded-full bg-lime-400 align-baseline"
+                  style={{ width: "0.3em", height: "0.3em", marginLeft: "0.05em" }}
+                />
+              </span>
             </button>
 
             {/* GitHub Link */}
