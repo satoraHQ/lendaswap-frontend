@@ -70,7 +70,7 @@ export function LandingSection() {
                     }
                     .group:hover .shield-container {
                       transform: scale(1.05);
-                      filter: drop-shadow(0 0 25px rgba(249, 115, 22, 0.4));
+                      filter: drop-shadow(0 0 25px rgba(163, 196, 16, 0.4));
                     }
                     .shield-check {
                       stroke-dasharray: 100;
@@ -533,16 +533,16 @@ export function LandingSection() {
               {/* Coin swap animation area */}
               <div className="flex-1 flex items-center justify-center">
                 <div className="flex items-center gap-3 md:gap-5">
-                  {/* USDT Coin - Left - Glossy Orange Glass */}
+                  {/* USDT Coin - Left - Glossy Lime Glass */}
                   <div
                     className="instant-coin-left w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center shadow-xl relative"
                     style={{
                       perspective: "1000px",
                       transformStyle: "preserve-3d",
                       background:
-                        "linear-gradient(135deg, rgba(251,146,60,0.9) 0%, rgba(249,115,22,0.8) 50%, rgba(234,88,12,0.9) 100%)",
+                        "linear-gradient(135deg, rgba(194,232,33,0.9) 0%, rgba(163,196,16,0.8) 50%, rgba(132,160,10,0.9) 100%)",
                       boxShadow:
-                        "0 8px 32px rgba(249,115,22,0.3), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1)",
+                        "0 8px 32px rgba(163,196,16,0.3), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1)",
                       border: "1px solid rgba(255,255,255,0.2)",
                       backdropFilter: "blur(8px)",
                     }}
@@ -568,16 +568,16 @@ export function LandingSection() {
                   <div className="flex flex-col items-center gap-0.5">
                     <ArrowLeftRight className="w-5 h-5 md:w-7 md:h-7 text-lime-400/70" />
                   </div>
-                  {/* Bitcoin Coin - Right - Glossy Orange Glass */}
+                  {/* Bitcoin Coin - Right - Glossy Lime Glass */}
                   <div
                     className="instant-coin-right w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center shadow-xl relative"
                     style={{
                       perspective: "1000px",
                       transformStyle: "preserve-3d",
                       background:
-                        "linear-gradient(135deg, rgba(251,146,60,0.95) 0%, rgba(249,115,22,0.85) 50%, rgba(194,65,12,0.95) 100%)",
+                        "linear-gradient(135deg, rgba(194,232,33,0.95) 0%, rgba(163,196,16,0.85) 50%, rgba(132,160,10,0.95) 100%)",
                       boxShadow:
-                        "0 8px 32px rgba(249,115,22,0.3), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1)",
+                        "0 8px 32px rgba(163,196,16,0.3), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1)",
                       border: "1px solid rgba(255,255,255,0.2)",
                       backdropFilter: "blur(8px)",
                     }}
@@ -616,13 +616,13 @@ export function LandingSection() {
                     .group:hover .p2p-line {
                       stroke-dasharray: none;
                       stroke-width: 2;
-                      filter: drop-shadow(0 0 4px rgba(249,115,22,0.6));
+                      filter: drop-shadow(0 0 4px rgba(163,196,16,0.6));
                     }
                     .p2p-node {
                       transition: all 0.3s ease;
                     }
                     .group:hover .p2p-node {
-                      filter: drop-shadow(0 0 12px rgba(249,115,22,0.5));
+                      filter: drop-shadow(0 0 12px rgba(163,196,16,0.5));
                       transform: scale(1.05);
                     }
                     .p2p-check {
@@ -645,9 +645,9 @@ export function LandingSection() {
                       className="p2p-node w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center relative"
                       style={{
                         background:
-                          "linear-gradient(135deg, rgba(251,146,60,0.9) 0%, rgba(249,115,22,0.85) 50%, rgba(234,88,12,0.9) 100%)",
+                          "linear-gradient(135deg, rgba(194,232,33,0.9) 0%, rgba(163,196,16,0.85) 50%, rgba(132,160,10,0.9) 100%)",
                         boxShadow:
-                          "0 4px 20px rgba(249,115,22,0.25), inset 0 1px 2px rgba(255,255,255,0.2)",
+                          "0 4px 20px rgba(163,196,16,0.25), inset 0 1px 2px rgba(255,255,255,0.2)",
                         border: "1px solid rgba(255,255,255,0.15)",
                       }}
                     >
@@ -674,7 +674,7 @@ export function LandingSection() {
                         x2="80"
                         y2="20"
                         className="p2p-line"
-                        stroke="#f97316"
+                        stroke="#a3c410"
                         strokeWidth="1.5"
                       />
                       {/* Center checkmark circle */}
@@ -682,7 +682,7 @@ export function LandingSection() {
                         className="p2p-check"
                         style={{ transformOrigin: "40px 20px" }}
                       >
-                        <circle cx="40" cy="20" r="12" fill="#f97316" />
+                        <circle cx="40" cy="20" r="12" fill="#a3c410" />
                         <path
                           d="M34 20 L38 24 L46 16"
                           stroke="white"
@@ -701,9 +701,9 @@ export function LandingSection() {
                       className="p2p-node w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center"
                       style={{
                         background:
-                          "linear-gradient(135deg, rgba(251,146,60,0.9) 0%, rgba(249,115,22,0.85) 50%, rgba(234,88,12,0.9) 100%)",
+                          "linear-gradient(135deg, rgba(194,232,33,0.9) 0%, rgba(163,196,16,0.85) 50%, rgba(132,160,10,0.9) 100%)",
                         boxShadow:
-                          "0 4px 20px rgba(249,115,22,0.25), inset 0 1px 2px rgba(255,255,255,0.2)",
+                          "0 4px 20px rgba(163,196,16,0.25), inset 0 1px 2px rgba(255,255,255,0.2)",
                         border: "1px solid rgba(255,255,255,0.15)",
                       }}
                     >
