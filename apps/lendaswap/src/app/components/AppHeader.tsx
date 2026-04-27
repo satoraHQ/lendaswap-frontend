@@ -64,7 +64,11 @@ export function AppHeader({
                 satora
                 <span
                   className="inline-block rounded-full bg-lime-400 align-baseline"
-                  style={{ width: "0.3em", height: "0.3em", marginLeft: "0.05em" }}
+                  style={{
+                    width: "0.3em",
+                    height: "0.3em",
+                    marginLeft: "0.05em",
+                  }}
                 />
               </span>
             </button>

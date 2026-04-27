@@ -130,7 +130,6 @@ export default function App() {
 
   return (
     <div className="bg-background relative min-h-screen overflow-hidden">
-
       {/* Modern Gradient Glows */}
       <div className="pointer-events-none fixed inset-0 z-0">
         {/* Top Left - Lime Gradient */}
