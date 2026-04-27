@@ -60,7 +60,7 @@ export function AppHeader({
               onClick={() => navigate("/")}
               className="flex items-center gap-2 transition-opacity hover:opacity-80"
             >
-              <span className="text-xl font-bold select-none">
+              <span className="text-2xl font-bold select-none">
                 satora
                 <span
                   className="inline-block rounded-full bg-lime-400 align-baseline"
@@ -77,7 +77,7 @@ export function AppHeader({
               className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
               aria-label="Visit us on GitHub"
             >
-              <Github className="h-5 w-5" />
+              <Github className="h-4 w-4" />
             </a>
 
             {/* X/Twitter Link */}
@@ -88,7 +88,7 @@ export function AppHeader({
               className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
               aria-label="Follow us on X"
             >
-              <XLogo className="h-4 w-4 fill-current" />
+              <XLogo className="h-3.5 w-3.5 fill-current" />
             </a>
 
             {/* Lendasat Website Link */}
@@ -99,7 +99,7 @@ export function AppHeader({
               className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
               aria-label="Visit lendasat.com"
             >
-              <Globe className="h-[18px] w-[18px]" />
+              <Globe className="h-4 w-4" />
             </a>
           </div>
 
