@@ -272,83 +272,83 @@ export function LandingSection() {
                   {/* Terminal Content */}
                   <div className="px-3 py-2.5 md:px-4 md:py-3 font-mono text-[8px] md:text-[10px] leading-[1.7]">
                     <div className="docs-terminal-line docs-terminal-line-1 text-zinc-600 dark:text-zinc-400">
-                      <span className="text-lime-400 dark:text-lime-300">
+                      <span className="text-[#7a8a0e] dark:text-lime-400">
                         $
                       </span>{" "}
                       <span className="text-zinc-500">npm i</span>{" "}
                       @lendasat/lendaswap-sdk-pure
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-2 mt-1.5 text-zinc-600 dark:text-zinc-400">
-                      <span className="text-lime-500 dark:text-lime-300/70">
+                      <span className="text-[#7a8a0e] dark:text-lime-400">
                         import
                       </span>{" "}
                       {"{"}{" "}
-                      <span className="text-lime-500 dark:text-lime-300">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         Client
                       </span>
                       ,{" "}
-                      <span className="text-lime-500 dark:text-lime-300">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         IdbSwapStorage
                       </span>{" "}
                       {"}"}{" "}
-                      <span className="text-lime-500 dark:text-lime-300/70">
+                      <span className="text-[#7a8a0e] dark:text-lime-400">
                         from
                       </span>{" "}
-                      <span className="text-amber-700 dark:text-amber-200/90">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         '@lendasat/lendaswap-sdk-pure'
                       </span>
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-3 mt-1 text-zinc-600 dark:text-zinc-400">
-                      <span className="text-lime-500 dark:text-lime-300/70">
+                      <span className="text-[#7a8a0e] dark:text-lime-400">
                         const
                       </span>{" "}
                       <span className="text-blue-600 dark:text-blue-300">
                         client
                       </span>{" "}
                       ={" "}
-                      <span className="text-lime-500 dark:text-lime-300/70">
+                      <span className="text-[#7a8a0e] dark:text-lime-400">
                         await
                       </span>{" "}
-                      <span className="text-lime-500 dark:text-lime-300">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         Client
                       </span>
                       .
-                      <span className="text-amber-700 dark:text-amber-200/90">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         builder
                       </span>
                       ()
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-4 mt-1 text-zinc-600 dark:text-zinc-400">
                       {"  "}.
-                      <span className="text-amber-700 dark:text-amber-200/90">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         withSwapStorage
                       </span>
                       (
-                      <span className="text-lime-500 dark:text-lime-300/70">
+                      <span className="text-[#7a8a0e] dark:text-lime-400">
                         new
                       </span>{" "}
-                      <span className="text-lime-500 dark:text-lime-300">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         IdbSwapStorage
                       </span>
                       ()).
-                      <span className="text-amber-700 dark:text-amber-200/90">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         build
                       </span>
                       ()
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-5 mt-1 text-zinc-600 dark:text-zinc-400">
-                      <span className="text-lime-500 dark:text-lime-300/70">
+                      <span className="text-[#7a8a0e] dark:text-lime-400">
                         const
                       </span>{" "}
                       <span className="text-blue-600 dark:text-blue-300">
                         swap
                       </span>{" "}
                       ={" "}
-                      <span className="text-lime-500 dark:text-lime-300/70">
+                      <span className="text-[#7a8a0e] dark:text-lime-400">
                         await
                       </span>{" "}
                       client.
-                      <span className="text-amber-700 dark:text-amber-200/90">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         createArkadeToEvmSwap
                       </span>
                       ({"{"}
@@ -359,7 +359,7 @@ export function LandingSection() {
                         targetToken
                       </span>
                       :{" "}
-                      <span className="text-amber-700 dark:text-amber-200/90">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         'usdc_arb'
                       </span>
                       ,{" "}
@@ -367,11 +367,11 @@ export function LandingSection() {
                         sourceAmount
                       </span>
                       :{" "}
-                      <span className="text-amber-700 dark:text-amber-200/90">
+                      <span className="text-[#7a8a0e] dark:text-lime-300">
                         100000
                       </span>
                       {" }"})
-                      <span className="docs-terminal-cursor text-lime-400 dark:text-lime-300 ml-0.5">
+                      <span className="docs-terminal-cursor text-[#7a8a0e] dark:text-lime-400 ml-0.5">
                         |
                       </span>
                     </div>
@@ -384,7 +384,7 @@ export function LandingSection() {
                   Developer Docs
                 </div>
                 <a
-                  href="https://lendasat.com/docs/lendaswap"
+                  href="https://docs.satora.io"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 mt-1.5 text-xs md:text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors"
