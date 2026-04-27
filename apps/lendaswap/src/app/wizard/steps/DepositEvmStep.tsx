@@ -303,7 +303,7 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
             </div>
           )}
           {userRejected && (
-            <div className="ml-7 rounded-lg border border-orange-500 bg-orange-50 p-2 text-xs text-orange-600 dark:bg-orange-950/20">
+            <div className="ml-7 rounded-lg border border-lime-400 bg-lime-50 p-2 text-xs text-lime-500 dark:bg-lime-950/20">
               You rejected the request in your wallet. Click the button below to
               try again.
             </div>
@@ -313,7 +313,7 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
 
       {/* Wallet Connection Warning */}
       {!address && (
-        <div className="rounded-lg border border-orange-500 bg-orange-50 p-3 text-sm text-orange-600 dark:bg-orange-950/20">
+        <div className="rounded-lg border border-lime-400 bg-lime-50 p-3 text-sm text-lime-500 dark:bg-lime-950/20">
           Please connect your wallet to continue
         </div>
       )}

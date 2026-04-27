@@ -104,9 +104,9 @@ export function SupportErrorBanner({
   // Known/actionable error — show instruction, no support button
   if (knownAction) {
     return (
-      <div className="rounded-xl border border-orange-500/30 bg-orange-50 p-3 flex items-center gap-3 dark:bg-orange-950/20">
-        <AlertCircle className="h-4 w-4 shrink-0 text-orange-600" />
-        <span className="text-sm text-orange-600">{knownAction}</span>
+      <div className="rounded-xl border border-lime-400/30 bg-lime-50 p-3 flex items-center gap-3 dark:bg-lime-950/20">
+        <AlertCircle className="h-4 w-4 shrink-0 text-lime-500" />
+        <span className="text-sm text-lime-500">{knownAction}</span>
       </div>
     );
   }

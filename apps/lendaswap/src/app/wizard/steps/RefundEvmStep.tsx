@@ -254,7 +254,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
               </>
             ) : (
               <>
-                <Clock className="h-4 w-4 text-orange-500" />
+                <Clock className="h-4 w-4 text-lime-400" />
                 <span>Refund available in {timeRemaining}</span>
               </>
             )}
@@ -335,12 +335,12 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
 
         {/* No refund path available — collab unavailable and timelock not passed */}
         {!refundSuccess && !canRefund && (
-          <div className="space-y-2 rounded-lg border border-orange-500/30 bg-orange-50 p-4 dark:bg-orange-950/20">
-            <p className="text-sm text-orange-800 dark:text-orange-200">
+          <div className="space-y-2 rounded-lg border border-lime-400/30 bg-lime-50 p-4 dark:bg-lime-950/20">
+            <p className="text-sm text-lime-700 dark:text-lime-200">
               Instant refund is not available for this swap. Manual refund will
               unlock in:
             </p>
-            <div className="font-mono text-2xl font-bold text-orange-900 dark:text-orange-100">
+            <div className="font-mono text-2xl font-bold text-lime-800 dark:text-lime-100">
               {timeRemaining}
             </div>
           </div>
@@ -370,7 +370,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
               <p className="font-mono">
                 {refundLocktimeDate.toLocaleString()}
                 <span
-                  className={`ml-1 ${isLocktimePassed ? "text-green-600" : "text-orange-600"}`}
+                  className={`ml-1 ${isLocktimePassed ? "text-green-600" : "text-lime-500"}`}
                 >
                   ({isLocktimePassed ? "Passed" : "Locked"})
                 </span>

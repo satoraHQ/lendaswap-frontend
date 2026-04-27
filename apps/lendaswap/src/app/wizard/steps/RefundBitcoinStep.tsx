@@ -141,17 +141,17 @@ export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {
             </p>
           </div>
         ) : (
-          <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-500 rounded-lg p-4 space-y-3">
+          <div className="bg-lime-50 dark:bg-lime-950/20 border border-lime-400 rounded-lg p-4 space-y-3">
             <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              <h3 className="text-sm font-semibold text-orange-900 dark:text-orange-100">
+              <Clock className="h-5 w-5 text-lime-500 dark:text-lime-300" />
+              <h3 className="text-sm font-semibold text-lime-800 dark:text-lime-100">
                 Refund Locked
               </h3>
             </div>
-            <p className="text-sm text-orange-800 dark:text-orange-200">
+            <p className="text-sm text-lime-700 dark:text-lime-200">
               Your funds are temporarily locked. Refund will be available in:
             </p>
-            <div className="text-2xl font-bold text-orange-900 dark:text-orange-100 font-mono">
+            <div className="text-2xl font-bold text-lime-800 dark:text-lime-100 font-mono">
               {timeRemaining}
             </div>
           </div>
@@ -229,7 +229,7 @@ export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {
             <p className="text-xs text-muted-foreground">
               {refundLocktimeDate.toLocaleString()}
               <span
-                className={`ml-2 ${isLocktimePassed ? "text-green-600" : "text-orange-600"}`}
+                className={`ml-2 ${isLocktimePassed ? "text-green-600" : "text-lime-500"}`}
               >
                 ({isLocktimePassed ? "Passed" : "Not yet reached"})
               </span>

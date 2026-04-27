@@ -151,14 +151,14 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
           amounts !== null &&
           amounts.vtxoStatus !== "spent" &&
           amounts.vtxoStatus !== "not_funded" && (
-            <div className="space-y-3 rounded-lg border border-orange-500 bg-orange-50 p-4 dark:bg-orange-950/20">
+            <div className="space-y-3 rounded-lg border border-lime-400 bg-lime-50 p-4 dark:bg-lime-950/20">
               <div className="flex items-center gap-3">
-                <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                <h3 className="text-sm font-semibold text-orange-900 dark:text-orange-100">
+                <Clock className="h-5 w-5 text-lime-500 dark:text-lime-300" />
+                <h3 className="text-sm font-semibold text-lime-800 dark:text-lime-100">
                   Refund Unavailable
                 </h3>
               </div>
-              <p className="text-sm text-orange-800 dark:text-orange-200">
+              <p className="text-sm text-lime-700 dark:text-lime-200">
                 This swap cannot be refunded at this time. Please try again
                 later.
               </p>
@@ -212,7 +212,7 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
                   </p>
                 )}
                 {amounts.vtxoStatus === "recoverable" && (
-                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                  <p className="text-xs text-lime-500 dark:text-lime-300">
                     {amounts.recoverable.toLocaleString()} sats — recoverable
                     (batch expired)
                   </p>
@@ -222,7 +222,7 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
                     <p className="text-xs text-green-600 dark:text-green-400">
                       {amounts.spendable.toLocaleString()} sats — spendable
                     </p>
-                    <p className="text-xs text-orange-600 dark:text-orange-400">
+                    <p className="text-xs text-lime-500 dark:text-lime-300">
                       {amounts.recoverable.toLocaleString()} sats — recoverable
                       (batch expired)
                     </p>
