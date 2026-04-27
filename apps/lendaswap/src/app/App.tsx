@@ -130,17 +130,6 @@ export default function App() {
 
   return (
     <div className="bg-background relative min-h-screen overflow-hidden">
-      {/* Grid Pattern Background */}
-      <div
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, hsl(var(--foreground) / 0.015) 1px, transparent 1px),
-            linear-gradient(to bottom, hsl(var(--foreground) / 0.015) 1px, transparent 1px)
-          `,
-          backgroundSize: "40px 40px",
-        }}
-      />
 
       {/* Modern Gradient Glows */}
       <div className="pointer-events-none fixed inset-0 z-0">
