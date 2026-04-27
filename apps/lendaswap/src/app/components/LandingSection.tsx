@@ -120,8 +120,8 @@ export function LandingSection() {
                       x2="0%"
                       y2="100%"
                     >
-                      <stop offset="0%" stopColor="#fb923c" />
-                      <stop offset="100%" stopColor="#c2410c" />
+                      <stop offset="0%" stopColor="#c2e821" />
+                      <stop offset="100%" stopColor="#a3c410" />
                     </linearGradient>
                   </defs>
                 </svg>
