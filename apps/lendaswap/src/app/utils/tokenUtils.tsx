@@ -219,7 +219,13 @@ export function getTargetChainDisplayName(swapData: {
   return toChainName(swapData.target_token.chain);
 }
 
-/** Block explorer base URLs by chain ID. */
+/**
+ * Block explorer base URLs by chain key.
+ *
+ * Unknown EVM chains fall back to {@link EVM_EXPLORER_FALLBACK} (blockscan.com,
+ * Etherscan's multi-chain aggregator) so we still produce a valid link
+ * without needing to maintain a per-chain entry for every supported chain.
+ */
 const BLOCK_EXPLORERS: Record<string, string> = {
   // Source chains
   "1": "https://etherscan.io",
@@ -255,13 +261,16 @@ const BLOCK_EXPLORERS: Record<string, string> = {
   Lightning: "https://arkade.space",
 };
 
+/** Fallback for unrecognized EVM chains — Etherscan's multi-chain aggregator. */
+const EVM_EXPLORER_FALLBACK = "https://blockscan.com";
+
 export function getBlockexplorerTxLink(
   chain: string,
   txid?: string | null,
 ): string {
   if (!txid) return "";
-  const base = BLOCK_EXPLORERS[chain];
-  return base ? `${base}/tx/${txid}` : txid;
+  const base = BLOCK_EXPLORERS[chain] ?? EVM_EXPLORER_FALLBACK;
+  return `${base}/tx/${txid}`;
 }
 
 export function getBlockexplorerAddressLink(
@@ -269,8 +278,8 @@ export function getBlockexplorerAddressLink(
   address?: string | null,
 ): string {
   if (!address) return "";
-  const base = BLOCK_EXPLORERS[chain];
-  return base ? `${base}/address/${address}` : address;
+  const base = BLOCK_EXPLORERS[chain] ?? EVM_EXPLORER_FALLBACK;
+  return `${base}/address/${address}`;
 }
 
 // ---------------------------------------------------------------------------
