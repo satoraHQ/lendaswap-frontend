@@ -100,7 +100,7 @@ export function deriveSourceAmount(params: DeriveAmountParams): number {
   const { fixedFees, protocolFeeRate } = fees;
 
   if (isSourceBtc) {
-    // BTC→EVM: user wants T EVM tokens — calculate BTC needed including fees.
+    // BTC→EVM: user wants T EVM tokens - calculate BTC needed including fees.
     // If bridging, the DEX must output T + bridgeFee so the user receives T after fee.
     const targetPlusBridgeFee = amount + bridgeFee;
     const btcForExchange = evmSmallestToSats(
@@ -111,7 +111,7 @@ export function deriveSourceAmount(params: DeriveAmountParams): number {
     const source = (btcForExchange + fixedFees) / (1 - protocolFeeRate);
     return Math.max(0, Math.round(source));
   } else {
-    // EVM→BTC: user wants T BTC sats — calculate EVM needed including fees
+    // EVM→BTC: user wants T BTC sats - calculate EVM needed including fees
     const grossBtc = (amount + fixedFees) / (1 - protocolFeeRate);
     const source = satsToEvmSmallest(grossBtc, exchangeRate, evmDecimals);
     return Math.max(0, Math.round(source));

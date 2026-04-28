@@ -104,7 +104,7 @@ export function CctpDetails({ swapData }: { swapData: GetSwapResponse }) {
       </>
     ) : cctpError ? (
       <>
-        Tracking failed. Your funds are safe — CCTP will deliver them to{" "}
+        Tracking failed. Your funds are safe - CCTP will deliver them to{" "}
         {targetNetwork} automatically.
       </>
     ) : (

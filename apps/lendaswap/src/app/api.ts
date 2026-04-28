@@ -157,7 +157,7 @@ async function getClients(): Promise<SdkClient> {
 
     // If wallet was migrated from v2 (legacy WASM SDK), recover swaps from server
     if (walletStorage.migratedFromLegacy) {
-      console.log("Migrated wallet from v2 — recovering swaps from server");
+      console.log("Migrated wallet from v2 - recovering swaps from server");
       await sdkClient.recoverSwaps();
     }
   }

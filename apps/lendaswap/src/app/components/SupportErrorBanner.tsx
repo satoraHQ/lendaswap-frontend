@@ -16,7 +16,7 @@ import { api } from "../api";
 
 const SUPPORT_EMAIL = "support@lendasat.com";
 
-/** Error messages the user can resolve themselves — no support needed. */
+/** Error messages the user can resolve themselves - no support needed. */
 const KNOWN_ERROR_PATTERNS: Array<{ pattern: RegExp; action: string }> = [
   {
     pattern: /please enter a.*address/i,
@@ -57,15 +57,15 @@ function getKnownAction(error: string): string | null {
 interface SupportErrorBannerProps {
   /** Short user-facing message (e.g. "Failed to create swap"). */
   message?: string;
-  /** Raw error string — included in the support email, NOT shown to the user. */
+  /** Raw error string - included in the support email, NOT shown to the user. */
   error: string;
-  /** Swap ID, if available — included in the support email. */
+  /** Swap ID, if available - included in the support email. */
   swapId?: string;
 }
 
 function buildMailtoUrl(error: string, swapId?: string, xpub?: string): string {
   const subject = swapId
-    ? `LendaSwap Support — Swap ${swapId}`
+    ? `LendaSwap Support - Swap ${swapId}`
     : "LendaSwap Support Request";
 
   const body = [
@@ -101,7 +101,7 @@ export function SupportErrorBanner({
     }
   }, [knownAction, error]);
 
-  // Known/actionable error — show instruction, no support button
+  // Known/actionable error - show instruction, no support button
   if (knownAction) {
     return (
       <div className="rounded-xl border border-lime-400/30 bg-lime-50 p-3 flex items-center gap-3 dark:bg-lime-950/20">
@@ -111,7 +111,7 @@ export function SupportErrorBanner({
     );
   }
 
-  // Unknown error — show expandable details + support dialog
+  // Unknown error - show expandable details + support dialog
   return (
     <>
       <Collapsible>

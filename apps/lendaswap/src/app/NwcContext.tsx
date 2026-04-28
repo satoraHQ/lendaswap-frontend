@@ -76,7 +76,7 @@ function parseNwcUri(uri: string): {
 /**
  * Minimal NWC client using nostr-tools (already a transitive dep).
  *
- * We avoid pulling in @getalby/sdk to keep the bundle small —
+ * We avoid pulling in @getalby/sdk to keep the bundle small -
  * nostr-tools is a direct dependency used for NWC relay communication.
  */
 class NwcClient {
@@ -241,7 +241,7 @@ export function NwcProvider({ children }: NwcProviderProps) {
         }
       } catch (err) {
         console.warn("Failed to restore NWC connection:", err);
-        // Don't remove from storage — wallet might just be offline
+        // Don't remove from storage - wallet might just be offline
         if (!cancelled) {
           // Still mark as "connected" (URI is stored) but with null balance
           try {
@@ -250,7 +250,7 @@ export function NwcProvider({ children }: NwcProviderProps) {
             clientRef.current = client;
             if (!cancelled) setIsConnected(true);
           } catch {
-            // URI is actually invalid — clear it
+            // URI is actually invalid - clear it
             localStorage.removeItem(STORAGE_KEY);
           }
         }

@@ -67,7 +67,7 @@ export function DebugNavigation() {
         })}
       </div>
 
-      {/* Direction tabs — only show on wizard pages */}
+      {/* Direction tabs - only show on wizard pages */}
       {isWizardPage && (
         <div className="flex flex-wrap justify-center gap-1.5">
           {DIRECTION_TABS.map((tab) => {

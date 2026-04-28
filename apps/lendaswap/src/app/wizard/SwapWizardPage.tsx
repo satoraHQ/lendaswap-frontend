@@ -95,11 +95,11 @@ function determineStepFromStatus(
     refundLocktimeDate !== undefined && refundLocktimeDate < new Date();
 
   // Arkade-to-EVM and Arkade-to-Lightning swaps support collaborative refund (instant, no locktime
-  // wait) but only in statuses where the swap has clearly failed — NOT in `clientfunded` which is
+  // wait) but only in statuses where the swap has clearly failed - NOT in `clientfunded` which is
   // the normal progression (server hasn't funded yet).
   //
   // TODO: `clientfunded` could also benefit from a collab refund escape hatch (e.g. if the server
-  // is down and never funds the EVM HTLC). The challenge is deciding when to show it — any timeout
+  // is down and never funds the EVM HTLC). The challenge is deciding when to show it - any timeout
   // is arbitrary and risks users refunding a swap that was about to succeed. A possible approach:
   // show a "having trouble? refund now" link after N seconds on the processing screen. For now, if
   // the server truly fails the swap will transition to `clientfundedtoolate` / `expired` and collab

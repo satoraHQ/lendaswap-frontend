@@ -88,7 +88,7 @@ createAppKit({
 
 const queryClient = new QueryClient();
 
-// PostHog configuration – disable via VITE_POSTHOG_DISABLED=true or
+// PostHog configuration - disable via VITE_POSTHOG_DISABLED=true or
 // localStorage.setItem("posthog_disabled", "true") in the browser console.
 const posthogDisabled =
   import.meta.env.VITE_POSTHOG_DISABLED === "true" ||

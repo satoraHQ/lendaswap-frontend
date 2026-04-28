@@ -40,7 +40,7 @@ const SUPPORTED_CHAINS = [
 
 /**
  * Builds a bridge-kit `ViemAdapter` backed by the connected wagmi wallet
- * (Reown AppKit). The adapter is chain-agnostic — bridge-kit calls its
+ * (Reown AppKit). The adapter is chain-agnostic - bridge-kit calls its
  * `getPublicClient` / `getWalletClient` callbacks per chain as it walks the
  * approve → burn → attestation → mint flow, and wagmi transparently switches
  * the wallet's active chain when the wallet client is requested for a chain

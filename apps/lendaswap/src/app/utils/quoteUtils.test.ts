@@ -51,7 +51,7 @@ describe("evmSmallestToSats", () => {
   });
 });
 
-describe("deriveTargetAmount — BTC→EVM", () => {
+describe("deriveTargetAmount - BTC→EVM", () => {
   const base = {
     exchangeRate: USDC_RATE,
     evmDecimals: USDC_DECIMALS,
@@ -113,7 +113,7 @@ describe("deriveTargetAmount — BTC→EVM", () => {
   });
 });
 
-describe("deriveTargetAmount — EVM→BTC", () => {
+describe("deriveTargetAmount - EVM→BTC", () => {
   const base = {
     exchangeRate: USDC_RATE,
     evmDecimals: USDC_DECIMALS,
@@ -142,7 +142,7 @@ describe("deriveTargetAmount — EVM→BTC", () => {
   });
 });
 
-describe("deriveSourceAmount — BTC→EVM (reverse)", () => {
+describe("deriveSourceAmount - BTC→EVM (reverse)", () => {
   const base = {
     exchangeRate: USDC_RATE,
     evmDecimals: USDC_DECIMALS,
@@ -186,7 +186,7 @@ describe("deriveSourceAmount — BTC→EVM (reverse)", () => {
   });
 });
 
-describe("deriveSourceAmount — EVM→BTC (reverse)", () => {
+describe("deriveSourceAmount - EVM→BTC (reverse)", () => {
   const base = {
     exchangeRate: USDC_RATE,
     evmDecimals: USDC_DECIMALS,

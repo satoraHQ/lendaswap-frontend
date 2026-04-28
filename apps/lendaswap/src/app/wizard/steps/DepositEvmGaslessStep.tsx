@@ -143,7 +143,7 @@ export function DepositEvmGaslessStep({
   const balanceDisplay =
     balance !== null
       ? (Number(balance) / 10 ** sourceDecimals).toFixed(sourceDecimals)
-      : "—";
+      : "-";
 
   const qrValue = depositAddress;
 
@@ -226,7 +226,7 @@ export function DepositEvmGaslessStep({
 
       <p className="text-xs text-muted-foreground text-center">
         {hasSufficientBalance
-          ? `${tokenSymbol} received. Click Fund Swap to complete — no wallet connection or gas needed.`
+          ? `${tokenSymbol} received. Click Fund Swap to complete - no wallet connection or gas needed.`
           : `Send ${sourceAmount} ${tokenSymbol} to the address above. This page updates automatically once payment is detected.`}
       </p>
 

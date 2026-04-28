@@ -13,7 +13,7 @@ import {
   getBlockexplorerTxLink,
 } from "../../../utils/tokenUtils";
 
-/** Simple key–value row (Amount Sent, Amount Received, etc.) */
+/** Simple key-value row (Amount Sent, Amount Received, etc.) */
 export function AmountRow({
   label,
   children,

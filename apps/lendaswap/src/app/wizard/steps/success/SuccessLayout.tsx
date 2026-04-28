@@ -169,7 +169,7 @@ export function SuccessLayout({
             </p>
           </div>
 
-          {/* Transaction Details — provided by variant */}
+          {/* Transaction Details - provided by variant */}
           {children}
 
           {/* Recovery warning for Arkade swaps */}

@@ -4,7 +4,7 @@ import { isBtcToken } from "./useSatsBtcMode";
 
 // ── Custom SVG icons ─────────────────────────────────────────────────
 
-/** Gold bar icon – stroke-based SVG matching the Lucide icon style. */
+/** Gold bar icon - stroke-based SVG matching the Lucide icon style. */
 function GoldBar(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -25,7 +25,7 @@ function GoldBar(props: SVGProps<SVGSVGElement>) {
 }
 
 /**
- * Satoshi symbol – three parallel diagonal lines with two short vertical strokes.
+ * Satoshi symbol - three parallel diagonal lines with two short vertical strokes.
  * @see https://bitcoin.design/guide/designing-products/units-and-symbols/
  */
 function SatoshiIcon(props: SVGProps<SVGSVGElement>) {

@@ -44,7 +44,7 @@ export interface CctpInboundSession {
   /** Set once the user signs the burn on source. */
   burn_tx_hash?: string;
   /**
-   * Stage reached. `done` rows are deletable — the standard wizard
+   * Stage reached. `done` rows are deletable - the standard wizard
    * continues from `clientfundingseen` once the multicall mines.
    */
   phase:

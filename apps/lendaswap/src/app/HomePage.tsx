@@ -252,7 +252,7 @@ export function HomePage() {
     }
 
     if (isEvmTarget) {
-      // Switching to an EVM target — auto-fill wallet address
+      // Switching to an EVM target - auto-fill wallet address
       const maybeWeb3Address = connectedAddress?.toString();
       if (maybeWeb3Address && isWeb3WalletConnected) {
         setTargetAddress(maybeWeb3Address);
@@ -260,7 +260,7 @@ export function HomePage() {
         setTargetAddress("");
       }
     } else {
-      // Switching to a BTC target — clear any stale EVM address
+      // Switching to a BTC target - clear any stale EVM address
       setTargetAddress("");
     }
   }, [targetChainKey]);
@@ -321,7 +321,7 @@ export function HomePage() {
     targetToken: targetTokenId,
   });
 
-  // Debounced quote fetch — fires 800ms after the last amount change.
+  // Debounced quote fetch - fires 800ms after the last amount change.
   // Uses the user's actual amount so amount-dependent fees (like CCTP bridge
   // fee) are accurate. When the quote resolves, sync the non-pinned side
   // from the authoritative response in the same promise chain so there's no
@@ -447,7 +447,7 @@ export function HomePage() {
   // doesn't support it, etc.) we surface a manual fallback button.
 
   // Only require a chain switch for source EVM chains or target chains that
-  // are NOT bridge-only (bridge targets don't need the wallet on that chain —
+  // are NOT bridge-only (bridge targets don't need the wallet on that chain -
   // CCTP handles delivery automatically).
   const requiredEvmChain =
     sourceAsset &&
@@ -501,7 +501,7 @@ export function HomePage() {
     // backend doesn't accept these as source chains, so the SDK auto-remaps
     // to Arbitrum USDC and populates `bridge_source_chain` on our behalf.
     // We still persist a local session (swap_id + source chain) for the
-    // wizard's BridgingCctpStep — the stored swap now reports the gross
+    // wizard's BridgingCctpStep - the stored swap now reports the gross
     // burn on the source chain directly via `source_amount`.
     if (
       isCctpUsdc(sourceAsset) &&
@@ -771,7 +771,7 @@ export function HomePage() {
                   if (targetAsset && isValidPair(asset, targetAsset)) {
                     navigateToTokens(asset, targetAsset);
                   } else {
-                    // Invalid pair or no target — pick a sensible default
+                    // Invalid pair or no target - pick a sensible default
                     const defaultTarget = isBtc(asset)
                       ? DEFAULT_USDC_POLYGON
                       : DEFAULT_BTC_LIGHTNING;
@@ -846,7 +846,7 @@ export function HomePage() {
                   if (sourceAsset && isValidPair(sourceAsset, asset)) {
                     navigateToTokens(sourceAsset, asset);
                   } else {
-                    // Invalid pair or no source — pick a sensible default
+                    // Invalid pair or no source - pick a sensible default
                     const defaultSource = isBtc(asset)
                       ? DEFAULT_USDC_POLYGON
                       : DEFAULT_BTC_LIGHTNING;
@@ -891,13 +891,13 @@ export function HomePage() {
           <div className="text-muted-foreground/70 space-y-1 pt-2 text-xs">
             {!isLoadingQuote && isBelowMin && (
               <div className="text-destructive">
-                Amount too low — minimum is {quote.min_amount.toLocaleString()}{" "}
+                Amount too low - minimum is {quote.min_amount.toLocaleString()}{" "}
                 sats
               </div>
             )}
             {!isLoadingQuote && isAboveMax && (
               <div className="text-destructive">
-                Amount too high — maximum is {quote.max_amount.toLocaleString()}{" "}
+                Amount too high - maximum is {quote.max_amount.toLocaleString()}{" "}
                 sats
               </div>
             )}

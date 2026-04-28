@@ -43,7 +43,7 @@ export function CctpInboundDetails({
   const config = getDirectionConfig(swapData);
   const { targetSymbol, targetNetwork } = getSwapDisplayInfo(swapData);
 
-  // Source chain info comes from the stored CCTP session — the backend's
+  // Source chain info comes from the stored CCTP session - the backend's
   // source_token is Arbitrum USDC (the bridged form), not what the user
   // actually sent.
   const sourceChainName = session?.source_chain ?? "Arbitrum";

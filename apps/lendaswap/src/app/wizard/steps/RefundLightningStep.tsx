@@ -25,7 +25,7 @@ export function RefundLightningStep({ swapData }: RefundLightningStepProps) {
           <div className="flex items-center gap-3">
             <Zap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-              Lightning Refund — No Action Needed
+              Lightning Refund - No Action Needed
             </h3>
           </div>
           <p className="text-sm text-blue-800 dark:text-blue-200">

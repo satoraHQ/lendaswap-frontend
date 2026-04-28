@@ -1,21 +1,21 @@
 /**
- * CCTP source-side bridging — rendered inside the wizard when the swap has
+ * CCTP source-side bridging - rendered inside the wizard when the swap has
  * a local CCTP-inbound session (see `db.ts::CctpInboundSession`).
  *
  * Swap creation happens on HomePage before we navigate here. This component
  * picks up from the stored session and drives:
  *
- *   1. switch_chain  — wagmi switches the user's wallet to the source chain.
- *   2. approving     — USDC.approve(TokenMessenger, max) if needed.
- *   3. burn          — wallet signs depositForBurn on the source chain.
+ *   1. switch_chain  - wagmi switches the user's wallet to the source chain.
+ *   2. approving     - USDC.approve(TokenMessenger, max) if needed.
+ *   3. burn          - wallet signs depositForBurn on the source chain.
  *                       mintRecipient + destinationCaller = smart account
  *                       (so only the user's Kernel account can claim).
- *   4. burn_pending  — wait for source-chain receipt.
- *   5. attestation   — poll Circle's IRIS until the message is complete.
- *   6. submitting    — smart account sends a UserOperation via the bundler
+ *   4. burn_pending  - wait for source-chain receipt.
+ *   5. attestation   - poll Circle's IRIS until the message is complete.
+ *   6. submitting    - smart account sends a UserOperation via the bundler
  *                       containing receiveMessage + USDC.approve(Permit2) +
  *                       executeAndCreateWithPermit2. Paymaster sponsors gas.
- *   7. done          — mark session done; wizard re-renders and the
+ *   7. done          - mark session done; wizard re-renders and the
  *                       standard flow takes over (HTLCCreated event has
  *                       fired so status ≥ clientfundingseen).
  */
@@ -132,7 +132,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
   const [userOpTxHash, setUserOpTxHash] = useState<string | null>(null);
   const [attestationProgress, setAttestationProgress] = useState<string>("");
   /**
-   * The Kernel smart-account address — derived once on session load
+   * The Kernel smart-account address - derived once on session load
    * and rendered in the UI before the wallet prompt, so the user sees
    * the address *before* Rabby/MetaMask flag it as "not your address."
    */
@@ -144,7 +144,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
   const sourceChainName = session?.source_chain ?? "";
   // Cast: SDK's bundled viem and the frontend's viem are different instances
   // (separate node_modules), so their `Chain` types are nominally distinct
-  // even though structurally identical. Safe — same chain definitions.
+  // even though structurally identical. Safe - same chain definitions.
   const sourceChainViem = getCctpViemChainByName(sourceChainName) as
     | ViemChain
     | undefined;
@@ -227,7 +227,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
   //
   // Wallets (Rabby/MetaMask) warn "recipient is not your current address"
   // when we burn USDC with mintRecipient pinned to the Kernel smart
-  // account — which IS deterministic from the user's key but isn't their
+  // account - which IS deterministic from the user's key but isn't their
   // EOA. Displaying the address up-front with an explanation lets the
   // user recognise it when the wallet popup lands, rather than being
   // surprised by the risk alert.
@@ -321,7 +321,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
         // 3. Skip receiveMessage if the USDC is already at the smart
         //    account (Circle's forwarder, a third-party relayer, or an
         //    earlier retry may already have minted it).
-        //    Uses the Alchemy RPC (same URL as the bundler) — the public
+        //    Uses the Alchemy RPC (same URL as the bundler) - the public
         //    Arbitrum node strips revert data, which we need for the
         //    pre-flight per-call simulation below.
         const alchemyUrl = import.meta.env.VITE_AA_BUNDLER_URL as
@@ -356,7 +356,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
         // 5. Per-call pre-flight (no account deployment, no mempool).
         //    Call 3 typically reverts here since Permit2 sees no code
         //    at the smart account and takes the EOA path. It's
-        //    informational — the authoritative check is step 6.
+        //    informational - the authoritative check is step 6.
         await simulateBatchCalls({
           calls,
           smartAccount: accountAddress,
@@ -370,7 +370,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
         // Alchemy's paymaster rejects that with `Invalid User
         // Operation`. `sendUserOperation` uses a different property
         // set that includes `'gas'` and estimates before the real
-        // paymaster call, so it works — we rely on it as the
+        // paymaster call, so it works - we rely on it as the
         // authoritative submission check.
 
         const userOpHash = await aaClient.sendUserOperation({ calls });
@@ -427,7 +427,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
 
       // 2. Derive the user's Kernel smart-account address on Arbitrum.
       //    That address is both the CCTP mintRecipient AND the
-      //    destinationCaller — ensuring only the smart account can
+      //    destinationCaller - ensuring only the smart account can
       //    call receiveMessage later inside the UserOp batch.
       const { privateKey: ownerKey } = await api.getSwapDepositorKey(swapId);
       const ownerHex = (
@@ -609,7 +609,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
                       <p className="text-xs">
                         A contract wallet deterministically derived from your
                         signing key. Controlled by the same wallet you&apos;re
-                        using now — any signature you give, Lendaswap can&apos;t
+                        using now - any signature you give, Lendaswap can&apos;t
                         move funds without it. Your wallet may flag this as
                         &quot;not your address&quot;; that&apos;s expected.
                       </p>
@@ -678,7 +678,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
 
       {phase === "done" && (
         <p className="text-sm">
-          Bridging complete — waiting for on-chain HTLC…
+          Bridging complete - waiting for on-chain HTLC…
         </p>
       )}
 

@@ -72,7 +72,7 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
   const { switchChainAsync } = useSwitchChain();
   const { open } = useAppKit();
 
-  // Expiry countdown — field name depends on swap type
+  // Expiry countdown - field name depends on swap type
   const refundLocktime = isBtcOnchain(swapData.target_token)
     ? ((swapData as EvmToBitcoinSwapResponse).btc_refund_locktime ?? 0)
     : ((swapData as EvmToArkadeSwapResponse | EvmToLightningSwapResponse)
@@ -169,7 +169,7 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
       }
       updateStep("switchChain", { status: "completed" });
 
-      // 2. Fund swap (approve + sign + send — all handled by the SDK)
+      // 2. Fund swap (approve + sign + send - all handled by the SDK)
       updateStep("fund", { status: "active" });
       const signer = buildEvmSigner(
         walletClient as WalletClient<Transport, ViemChain, Account>,

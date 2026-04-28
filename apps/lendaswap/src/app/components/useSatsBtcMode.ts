@@ -19,7 +19,7 @@ function formatNumber(val: number, maxDecimals = 8): string {
 // ── Hook ─────────────────────────────────────────────────────────────
 
 interface UseAmountInputOptions {
-  /** External value in smallest unit (sats for BTC, 10^-6 for USDC, etc.) — set by parent or quote. */
+  /** External value in smallest unit (sats for BTC, 10^-6 for USDC, etc.) - set by parent or quote. */
   value: number | undefined;
   /** Called with the amount in smallest unit when the user edits the input. */
   onChange: (value: number | undefined) => void;

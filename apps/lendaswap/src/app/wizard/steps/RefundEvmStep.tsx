@@ -141,11 +141,11 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
       let txHash: string;
 
       if (swapData.gasless) {
-        // Gasless swap — SDK's embedded key is the depositor
+        // Gasless swap - SDK's embedded key is the depositor
         const result = await api.collabRefundEvmSwap(swapId, settlement);
         txHash = result.txHash;
       } else {
-        // Wallet-funded swap — sign via external wallet
+        // Wallet-funded swap - sign via external wallet
         if (!walletClient || !address || !chain) {
           open().catch(console.error);
           return;
@@ -327,13 +327,13 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
             {!isWbtcSource && (
               <p className="text-muted-foreground text-xs">
                 Refunding as {sourceSymbol} swaps {htlcTokenSymbol} back via a
-                DEX — amount may vary slightly due to exchange rate.
+                DEX - amount may vary slightly due to exchange rate.
               </p>
             )}
           </div>
         )}
 
-        {/* No refund path available — collab unavailable and timelock not passed */}
+        {/* No refund path available - collab unavailable and timelock not passed */}
         {!refundSuccess && !canRefund && (
           <div className="space-y-2 rounded-lg border border-lime-400/30 bg-lime-50 p-4 dark:bg-lime-950/20">
             <p className="text-sm text-lime-700 dark:text-lime-200">
@@ -386,7 +386,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
           </div>
         </div>
 
-        {/* Manual refund disclosure — only shown when collab is available and timelock has also passed */}
+        {/* Manual refund disclosure - only shown when collab is available and timelock has also passed */}
         {collabAvailable && isLocktimePassed && !refundSuccess && (
           <Collapsible>
             <CollapsibleTrigger className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors">

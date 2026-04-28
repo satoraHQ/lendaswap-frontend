@@ -32,7 +32,7 @@ interface AddressInputProps {
   setAddressIsValid: (valid: boolean) => void;
   setBitcoinAmount: (amount: number) => void;
   disabled?: boolean;
-  /** Current target amount in sats — needed for NWC makeInvoice */
+  /** Current target amount in sats - needed for NWC makeInvoice */
   targetAmountSats?: number;
 }
 
@@ -90,7 +90,7 @@ export function AddressInput({
         onChange(resolvedAddress);
         return;
       } catch {
-        // Fall through — let normal validation handle it
+        // Fall through - let normal validation handle it
       }
     }
     onChange(raw);

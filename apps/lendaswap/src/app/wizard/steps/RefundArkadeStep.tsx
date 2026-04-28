@@ -58,7 +58,7 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
   }, [swapData, amounts]);
 
   // Calculate if swap can be refunded.
-  // With collaborative refund, no locktime wait is needed — the server cosigns
+  // With collaborative refund, no locktime wait is needed - the server cosigns
   // immediately when the swap is in a safe state. The SDK handles the fallback
   // to non-collab (locktime-based) refund if the server rejects.
   const canRefund = (() => {
@@ -208,29 +208,29 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
                 )}
                 {amounts.vtxoStatus === "spendable" && (
                   <p className="text-xs text-green-600 dark:text-green-400">
-                    {amounts.spendable.toLocaleString()} sats — spendable
+                    {amounts.spendable.toLocaleString()} sats - spendable
                   </p>
                 )}
                 {amounts.vtxoStatus === "recoverable" && (
                   <p className="text-xs text-lime-500 dark:text-lime-300">
-                    {amounts.recoverable.toLocaleString()} sats — recoverable
+                    {amounts.recoverable.toLocaleString()} sats - recoverable
                     (batch expired)
                   </p>
                 )}
                 {amounts.vtxoStatus === "mixed" && (
                   <>
                     <p className="text-xs text-green-600 dark:text-green-400">
-                      {amounts.spendable.toLocaleString()} sats — spendable
+                      {amounts.spendable.toLocaleString()} sats - spendable
                     </p>
                     <p className="text-xs text-lime-500 dark:text-lime-300">
-                      {amounts.recoverable.toLocaleString()} sats — recoverable
+                      {amounts.recoverable.toLocaleString()} sats - recoverable
                       (batch expired)
                     </p>
                   </>
                 )}
                 {amounts.vtxoStatus === "spent" && (
                   <p className="text-muted-foreground text-xs">
-                    {amounts.spent.toLocaleString()} sats — already spent
+                    {amounts.spent.toLocaleString()} sats - already spent
                   </p>
                 )}
               </div>

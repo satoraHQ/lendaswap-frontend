@@ -38,12 +38,12 @@ export async function createSwapSmartAccountClient(
 
   if (!bundlerUrl) {
     throw new Error(
-      "Missing VITE_AA_BUNDLER_URL — set it in the frontend env or pass bundlerUrl.",
+      "Missing VITE_AA_BUNDLER_URL - set it in the frontend env or pass bundlerUrl.",
     );
   }
   if (!paymasterPolicyId) {
     throw new Error(
-      "Missing VITE_AA_POLICY_ID — set your Alchemy Gas Manager policy ID in the frontend env or pass policyId.",
+      "Missing VITE_AA_POLICY_ID - set your Alchemy Gas Manager policy ID in the frontend env or pass policyId.",
     );
   }
 
@@ -61,7 +61,7 @@ export async function createSwapSmartAccountClient(
   });
 }
 
-/** React hook variant — only re-initialises when the owner key changes. */
+/** React hook variant - only re-initialises when the owner key changes. */
 export function useSmartAccountFactory(
   ownerPrivateKey?: `0x${string}`,
 ): (() => ReturnType<typeof createSwapSmartAccountClient>) | null {

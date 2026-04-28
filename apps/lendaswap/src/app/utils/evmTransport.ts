@@ -7,7 +7,7 @@
 import { type Chain, fallback, http } from "viem";
 
 const FALLBACK_RPCS: Record<number, string[]> = {
-  // Polygon — viem's default (polygon.drpc.org) doesn't support eth_call,
+  // Polygon - viem's default (polygon.drpc.org) doesn't support eth_call,
   // so we list working public RPCs explicitly.
   137: [
     "https://tenderly.rpc.polygon.community",
