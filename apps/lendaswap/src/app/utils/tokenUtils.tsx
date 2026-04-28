@@ -247,6 +247,7 @@ const BLOCK_EXPLORERS: Record<string, string> = {
   "9745": "https://plasma-explorer.com",
   "30": "https://rootstock.blockscout.com",
   "988": "https://stable-explorer.com",
+  "4217": "https://explore.tempo.xyz",
   "196": "https://www.okx.com/web3/explorer/xlayer",
   // Non-EVM
   Bitcoin: "https://mempool.space",
