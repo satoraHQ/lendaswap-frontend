@@ -21,9 +21,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import lendasatLogoBlack from "../../assets/lendasat_black.svg?url";
+import lendasatLogoWhite from "../../assets/lendasat_grey.svg?url";
 import { ReactComponent as XLogo } from "../../assets/x-com-logo.svg";
 import isValidSpeedWalletContext from "../../utils/speedWallet";
 import { useNwc } from "../NwcContext";
+import { useTheme } from "../utils/theme-provider";
 import { ThemeToggle } from "../utils/theme-toggle";
 import { useWalletBridge } from "../WalletBridgeContext";
 import { NwcConnectDialog } from "./NwcConnectDialog";
@@ -40,6 +43,7 @@ export function AppHeader({
   onDownloadSeedphrase,
 }: AppHeaderProps) {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const { open } = useAppKit();
   const { isConnected, address } = useAccount();
   const { isEmbedded } = useWalletBridge();
@@ -60,17 +64,12 @@ export function AppHeader({
               onClick={() => navigate("/")}
               className="flex items-center gap-2 transition-opacity hover:opacity-80"
             >
-              <span className="text-2xl font-bold select-none">
-                satora
-                <span
-                  className="inline-block rounded-full bg-lime-400 align-baseline"
-                  style={{
-                    width: "0.3em",
-                    height: "0.3em",
-                    marginLeft: "0.05em",
-                  }}
-                />
-              </span>
+              <img
+                src={theme === "dark" ? lendasatLogoWhite : lendasatLogoBlack}
+                alt="LendaSat"
+                className="size-8 shrink-0 rounded-lg object-contain"
+              />
+              <span className="text-xl font-semibold">LendaSwap</span>
             </button>
 
             {/* GitHub Link */}
@@ -78,7 +77,7 @@ export function AppHeader({
               href="https://github.com/lendasat"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
               aria-label="Visit us on GitHub"
             >
               <Github className="h-4 w-4" />
@@ -89,7 +88,7 @@ export function AppHeader({
               href="https://x.com/lendasat"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
               aria-label="Follow us on X"
             >
               <XLogo className="h-3.5 w-3.5 fill-current" />
@@ -100,7 +99,7 @@ export function AppHeader({
               href="https://lendasat.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
               aria-label="Visit lendasat.com"
             >
               <Globe className="h-4 w-4" />
@@ -153,7 +152,7 @@ export function AppHeader({
                       trigger={
                         <button
                           type="button"
-                          className="focus:bg-accent focus:text-accent-foreground outline-hidden relative flex w-full cursor-default select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-gray-200"
+                          className="outline-hidden relative flex w-full cursor-default select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-gray-200 focus:bg-accent focus:text-accent-foreground"
                         >
                           <Zap
                             className={`h-4 w-4 shrink-0 ${isNwcConnected ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
