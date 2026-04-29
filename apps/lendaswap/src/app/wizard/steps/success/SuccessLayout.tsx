@@ -159,7 +159,7 @@ export function SuccessLayout({
             {isValidSpeedWalletContext() ? (
               <h3 className="flex items-center justify-center gap-2 text-2xl font-semibold">
                 Speed <Heart className="h-6 w-6 fill-red-500 text-red-500" />{" "}
-                LendaSwap
+                Satora
               </h3>
             ) : (
               <h3 className="text-2xl font-semibold">Swap Complete!</h3>

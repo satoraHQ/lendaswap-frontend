@@ -2,7 +2,7 @@
  * Speed Wallet Integration Utilities
  *
  * Speed Wallet is a Bitcoin wallet that supports Mini Apps.
- * When LendaSwap runs inside Speed Wallet, we use their payment API
+ * When Satora runs inside Speed Wallet, we use their payment API
  * instead of displaying QR codes.
  *
  * @see https://docs.speed.app/mini-apps/receiving-payments
@@ -119,7 +119,7 @@ export const getSpeedWalletParams = (): SpeedWalletParams => {
 };
 
 /**
- * Detects if LendaSwap is running inside Speed Wallet's Mini App environment.
+ * Detects if Satora is running inside Speed Wallet's Mini App environment.
  * Checks URL params first, then falls back to persisted sessionStorage.
  */
 export const isSpeedWalletEnvironment = (): boolean => {

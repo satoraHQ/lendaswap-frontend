@@ -7,7 +7,7 @@ export function TermsOfServicePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Terms of Service | LendaSwap";
+    document.title = "Terms of Service | Satora";
   }, []);
 
   return (
@@ -37,7 +37,7 @@ export function TermsOfServicePage() {
             </h2>
             <p>
               These Terms of Service (&quot;Terms&quot;) govern your use of
-              LendaSwap, an atomic swap service operated by Sofbear Consulting
+              Satora, an atomic swap service operated by Sofbear Consulting
               Ltd., a company registered in the British Virgin Islands
               (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or
               &quot;our&quot;). By accessing or using our service, you agree to
@@ -50,7 +50,7 @@ export function TermsOfServicePage() {
               2. Service Description
             </h2>
             <p>
-              LendaSwap provides an atomic swap service that enables users to
+              Satora provides an atomic swap service that enables users to
               exchange Bitcoin (BTC) with Wrapped Bitcoin (wBTC) and other
               tokens across multiple blockchain networks, including but not
               limited to Ethereum, Polygon, and Arbitrum.

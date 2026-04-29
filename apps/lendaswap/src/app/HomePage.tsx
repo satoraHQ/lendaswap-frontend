@@ -129,7 +129,7 @@ export function HomePage() {
   const { arkAddress, isEmbedded } = useWalletBridge();
 
   useEffect(() => {
-    document.title = "LendaSwap - Lightning-Fast Bitcoin Atomic Swaps";
+    document.title = "Satora - Lightning-Fast Bitcoin Atomic Swaps";
   }, []);
 
   // Parse URL params like "lightning:btc" or "polygon:0x1234" into {chain, address}

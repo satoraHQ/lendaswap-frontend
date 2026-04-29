@@ -157,7 +157,7 @@ export function SwapWizardPage() {
 
   //
   useEffect(() => {
-    document.title = "Swap in Progress | LendaSwap";
+    document.title = "Swap in Progress | Satora";
   }, []);
 
   // Reactively watch for an in-flight CCTP-inbound bridging session on this

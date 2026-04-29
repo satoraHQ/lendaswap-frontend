@@ -741,20 +741,20 @@ export function LandingSection() {
               How does it work?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              LendaSwap uses Hash Time-Locked Contracts (HTLCs) to enable
-              trustless atomic swaps. When you start a swap, both parties lock
-              their funds in smart contracts. The swap either completes fully or
-              both parties get refunded - there's no way for anyone to steal
-              your funds. We support Bitcoin Lightning, Arkade (Bitcoin L2), and
-              EVM chains like Polygon and Ethereum.
+              Satora uses Hash Time-Locked Contracts (HTLCs) to enable trustless
+              atomic swaps. When you start a swap, both parties lock their funds
+              in smart contracts. The swap either completes fully or both
+              parties get refunded - there's no way for anyone to steal your
+              funds. We support Bitcoin Lightning, Arkade (Bitcoin L2), and EVM
+              chains like Polygon and Ethereum.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="custody" className="border-border/50">
             <AccordionTrigger className="text-left">
-              Is LendaSwap self-custodial?
+              Is Satora self-custodial?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              Yes! LendaSwap is fully self-custodial. Your keys, your coins. You
+              Yes! Satora is fully self-custodial. Your keys, your coins. You
               can backup your recovery phrase anytime by clicking the key icon
               in the header - you can show, download, or import your seedphrase.
               Store it safely - this phrase allows you to recover your funds if
@@ -776,20 +776,20 @@ export function LandingSection() {
               What if my swap gets stuck?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              LendaSwap uses atomic swaps, which means your funds are always
-              safe. If a swap doesn't complete, you can always recover your
-              funds. Click the swap icon in the header to view your swap history
-              and initiate a refund if needed. Note: depending on the swap
-              currency, lock times may vary. In the worst case, your funds might
-              be locked for up to 2 weeks before you can claim them back.
+              Satora uses atomic swaps, which means your funds are always safe.
+              If a swap doesn't complete, you can always recover your funds.
+              Click the swap icon in the header to view your swap history and
+              initiate a refund if needed. Note: depending on the swap currency,
+              lock times may vary. In the worst case, your funds might be locked
+              for up to 2 weeks before you can claim them back.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="opensource" className="border-border/50">
             <AccordionTrigger className="text-left">
-              Is LendaSwap open source?
+              Is Satora open source?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              Yes! LendaSwap is fully open source. You can review our code,
+              Yes! Satora is fully open source. You can review our code,
               contribute, or run your own instance. Check out our GitHub at{" "}
               <a
                 href="https://github.com/lendasat/lendaswap-sdk"

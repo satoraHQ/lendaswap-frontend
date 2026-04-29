@@ -47,7 +47,7 @@ export function FirstTimeBackupModal({
       // Create a temporary link and trigger download
       const link = document.createElement("a");
       link.href = url;
-      link.download = `lendaswap-phrase-${new Date().toISOString().split("T")[0]}.txt`;
+      link.download = `satora-phrase-${new Date().toISOString().split("T")[0]}.txt`;
       document.body.appendChild(link);
       link.click();
 

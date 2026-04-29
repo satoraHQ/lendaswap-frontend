@@ -118,7 +118,7 @@ export interface OnchainToEvmSwapRequest {
 // Token utility functions
 export { getTokenDisplayName, getTokenIcon } from "./utils/tokenUtils";
 
-// API client for Lendaswap backend
+// API client for Satora backend
 const API_BASE_URL =
   import.meta.env.VITE_LENDASWAP_API_URL || "http://localhost:3333";
 

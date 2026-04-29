@@ -609,7 +609,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
                       <p className="text-xs">
                         A contract wallet deterministically derived from your
                         signing key. Controlled by the same wallet you&apos;re
-                        using now - any signature you give, Lendaswap can&apos;t
+                        using now - any signature you give, Satora can&apos;t
                         move funds without it. Your wallet may flag this as
                         &quot;not your address&quot;; that&apos;s expected.
                       </p>

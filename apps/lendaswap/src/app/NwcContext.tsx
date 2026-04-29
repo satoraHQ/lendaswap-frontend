@@ -43,7 +43,7 @@ const NwcContext = createContext<NwcContextType>({
 
 export const useNwc = () => useContext(NwcContext);
 
-const STORAGE_KEY = "lendaswap_nwc_uri";
+const STORAGE_KEY = "satora_nwc_uri";
 
 /** Parse a nostr+walletconnect:// URI into its components */
 function parseNwcUri(uri: string): {
@@ -201,7 +201,7 @@ class NwcClient {
   async makeInvoice(amountSats: number): Promise<string> {
     const result = await this.request("make_invoice", {
       amount: amountSats * 1000, // NWC uses msats
-      description: "LendaSwap",
+      description: "Satora",
     });
     return result.invoice as string;
   }

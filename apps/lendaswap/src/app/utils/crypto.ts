@@ -2,7 +2,7 @@
  * Generate a secret and its SHA256 hash for HTLC
  *
  * The secret is a random 32-byte value that will be used by the client
- * to claim the Polygon HTLC. The hash is sent to lendaswap when creating
+ * to claim the Polygon HTLC. The hash is sent to satora when creating
  * the swap, and is used as the hash lock for both Bitcoin and Polygon HTLCs.
  *
  * @returns Object containing the secret and hashLock, both as hex strings with 0x prefix

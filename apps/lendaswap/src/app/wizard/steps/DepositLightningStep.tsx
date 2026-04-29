@@ -100,7 +100,7 @@ export function DepositLightningStep({ swapData }: SendLightningStepProps) {
     const success = triggerSpeedWalletPayment(
       lightningInvoice,
       Number(swapData.source_amount),
-      `LendaSwap: ${tokenAmount} ${tokenSymbol} swap`,
+      `Satora: ${tokenAmount} ${tokenSymbol} swap`,
     );
 
     if (success) {

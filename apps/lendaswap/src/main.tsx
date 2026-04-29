@@ -87,7 +87,7 @@ createAppKit({
   networks: [networks[0], ...networks.slice(1), solana],
   projectId,
   metadata: {
-    name: "LendaSwap",
+    name: "Satora",
     description: "Lightning-Fast Bitcoin Atomic Swaps",
     url: window.location.origin,
     icons: [],

@@ -116,7 +116,7 @@ export default function App() {
       // Create a temporary link and trigger download
       const link = document.createElement("a");
       link.href = url;
-      link.download = `lendaswap-phrase-${new Date().toISOString().split("T")[0]}.txt`;
+      link.download = `satora-phrase-${new Date().toISOString().split("T")[0]}.txt`;
       document.body.appendChild(link);
       link.click();
 
@@ -246,7 +246,7 @@ export default function App() {
             <DebugNavigation />
 
             <div className="text-muted-foreground space-y-2 text-center text-sm">
-              <p>© 2026 LendaSwap. All rights reserved.</p>
+              <p>© 2026 Lendasat. All rights reserved.</p>
               <p>
                 <button
                   type="button"

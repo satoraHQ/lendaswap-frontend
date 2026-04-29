@@ -178,7 +178,7 @@ export function SwapsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "My Swaps | LendaSwap";
+    document.title = "My Swaps | Satora";
   }, []);
 
   const handleCopyId = async (e: React.MouseEvent, swapId: string) => {

@@ -939,8 +939,8 @@ export function TrackPage() {
 
   useEffect(() => {
     document.title = swapId
-      ? `Track ${swapId.slice(0, 8)}… | LendaSwap`
-      : "Track Swap | LendaSwap";
+      ? `Track ${swapId.slice(0, 8)}… | Satora`
+      : "Track Swap | Satora";
   }, [swapId]);
 
   if (!swapId) {
