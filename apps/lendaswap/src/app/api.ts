@@ -190,6 +190,7 @@ export const api = {
     targetToken: string;
     sourceAmount?: number;
     targetAmount?: number;
+    bridgeRecipientSetup?: boolean;
   }): Promise<QuoteResponse> {
     const referralCode = getReferralCode();
     const client = await getClients();
@@ -209,6 +210,7 @@ export const api = {
     targetAddress: string;
     userAddress?: string;
     gasless?: boolean;
+    bridgeRecipientSetup?: boolean;
   }): Promise<GetSwapResponse> {
     const referralCode = getReferralCode();
     const client = await getClients();
@@ -223,6 +225,7 @@ export const api = {
       userAddress: request.userAddress,
       referralCode: referralCode || undefined,
       gasless: request.gasless,
+      bridgeRecipientSetup: request.bridgeRecipientSetup,
     });
     return result.response as GetSwapResponse;
   },
@@ -284,9 +287,12 @@ export const api = {
     return await client.listAllSwaps();
   },
 
-  async claim(id: string): Promise<ClaimResult> {
+  async claim(
+    id: string,
+    options?: { bridgeRecipient?: string; bridgeRecipientWallet?: string },
+  ): Promise<ClaimResult> {
     const client = await getClients();
-    return await client.claim(id);
+    return await client.claim(id, options);
   },
 
   async amountsForSwap(id: string): Promise<VhtlcAmounts> {

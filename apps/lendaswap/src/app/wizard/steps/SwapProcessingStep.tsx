@@ -14,6 +14,12 @@ import { useAccount } from "wagmi";
 import { Button } from "#/components/ui/button";
 import { api } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
+import { getSwapById } from "../../db";
+import {
+  deriveSolanaUsdcAta,
+  isSolanaTokenAccount,
+  resolveSolanaBridgeRecipient,
+} from "../../utils/solana";
 import {
   getBlockexplorerTxLink,
   getTokenIcon,
@@ -110,7 +116,82 @@ export function SwapProcessingStep({
           retryCount,
         });
 
-        const claimResponse = await api.claim(swapId);
+        // For Solana-bridge destinations the EIP-712 `destination` field
+        // can only carry an EVM address, so the user's Solana wallet
+        // (stored in `target_evm_address` as a string) has to be turned
+        // into its USDC ATA and passed via `bridgeRecipient`. The
+        // ATA-existence answer that drives the hookData / maxFee variant
+        // is *pinned* at swap creation in IndexedDB so the burn always
+        // matches the fee that was funded — see PR review for the
+        // divergence failure mode this prevents.
+        const bridgeTargetChain = (swapData as { bridge_target_chain?: string })
+          .bridge_target_chain;
+        const solanaWallet =
+          bridgeTargetChain === "Solana"
+            ? (swapData as { target_evm_address?: string }).target_evm_address
+            : undefined;
+        let claimOptions:
+          | { bridgeRecipient?: string; bridgeRecipientWallet?: string }
+          | undefined;
+        if (solanaWallet) {
+          // Last-line-of-defense tripwire: if the user pasted an SPL
+          // token account address as their "Solana wallet" at create
+          // time, deriving an ATA from it would route CCTP funds to a
+          // PDA-of-PDA black hole. Fail terminally (no retry) and ask
+          // the user to refund. RPC failure on the probe is treated as
+          // inconclusive — we proceed rather than letting a flaky RPC
+          // permanently brick claims.
+          let isTokenAccount = false;
+          try {
+            isTokenAccount = await isSolanaTokenAccount(solanaWallet);
+          } catch (err) {
+            console.warn(
+              "Solana token-account tripwire failed, proceeding without check:",
+              err,
+            );
+          }
+          if (isTokenAccount) {
+            const message =
+              "Destination address is a Solana token account, not a wallet. CCTP cannot deliver to a token account directly — please refund this swap and start a new one with your Solana wallet address.";
+            console.error(message, { swapId, address: solanaWallet });
+            setRetryCount(maxRetries);
+            setClaimError(message);
+            posthog?.capture("swap_failed", {
+              failure_type: "claim",
+              swap_id: swapData.id,
+              swap_direction: swapData.direction,
+              error_message: message,
+              retry_count: retryCount,
+            });
+            return;
+          }
+          const stored = await getSwapById(swapId).catch(() => undefined);
+          const pinnedSetup = stored?.bridge_recipient_setup;
+          if (pinnedSetup !== undefined) {
+            // Pinned at create time: deterministic ATA + decision.
+            const ata = await deriveSolanaUsdcAta(solanaWallet);
+            claimOptions = {
+              bridgeRecipient: ata,
+              bridgeRecipientWallet: pinnedSetup ? solanaWallet : undefined,
+            };
+          } else {
+            // Fallback: legacy / cross-device claim where the pin isn't
+            // available locally. Re-probe and hope the recipient's ATA
+            // state matches what was committed at create time.
+            console.warn(
+              "No pinned bridge_recipient_setup for swap",
+              swapId,
+              "— re-probing Solana RPC. Funded fee and burn-time fee may diverge.",
+            );
+            const resolved = await resolveSolanaBridgeRecipient(solanaWallet);
+            claimOptions = {
+              bridgeRecipient: resolved.ata,
+              bridgeRecipientWallet: resolved.bridgeRecipientWallet,
+            };
+          }
+        }
+
+        const claimResponse = await api.claim(swapId, claimOptions);
         if (!claimResponse.success) {
           console.error("Auto-claim returned an unsuccessful response:", {
             swapId: swapData.id,

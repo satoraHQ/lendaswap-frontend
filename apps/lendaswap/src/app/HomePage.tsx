@@ -9,7 +9,9 @@ import {
   isBtcOnchain,
   isCctpUsdc,
   isLightning,
+  isSolanaToken,
   isSourceEvmChain,
+  isValidSolanaAddress,
   type TokenInfo,
   toChainName,
 } from "@lendasat/lendaswap-sdk-pure";
@@ -28,7 +30,7 @@ import { AddressInput } from "./components/AddressInput";
 import { AmountInput } from "./components/AmountInput";
 import { AssetDropDown } from "./components/AssetDropDown";
 import { SupportErrorBanner } from "./components/SupportErrorBanner";
-import { upsertCctpInboundSession } from "./db";
+import { updateSwap, upsertCctpInboundSession } from "./db";
 import { useGaslessFeature } from "./hooks/useGaslessFeature";
 import { type RefreshArgs, useQuote } from "./hooks/useQuote";
 import { useTokenBalance } from "./hooks/useTokenBalance";
@@ -310,6 +312,44 @@ export function HomePage() {
   const targetTokenId = targetAsset?.token_id;
   const targetChain = targetAsset?.chain;
 
+  // Solana destinations: probe RPC for whether the recipient already has
+  // a USDC ATA. Only meaningful when the target chain is Solana AND the
+  // user has typed/pasted a valid Solana pubkey. The result flips the
+  // bridge fee in the quote between the standard (~$0.30) and ATA-setup
+  // (~$0.48) variants. `undefined` while we don't yet have a definitive
+  // answer — backend then falls back to its conservative default.
+  const isSolanaTarget = !!targetChain && isSolanaToken(targetChain);
+  const [bridgeRecipientSetup, setBridgeRecipientSetup] = useState<
+    boolean | undefined
+  >(undefined);
+
+  useEffect(() => {
+    if (!isSolanaTarget || !isValidSolanaAddress(targetAddress)) {
+      setBridgeRecipientSetup(undefined);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { deriveSolanaUsdcAta, solanaAtaExists } = await import(
+          "./utils/solana"
+        );
+        const ata = await deriveSolanaUsdcAta(targetAddress);
+        const exists = await solanaAtaExists(ata);
+        if (!cancelled) setBridgeRecipientSetup(!exists);
+      } catch (err) {
+        // RPC failure: leave undefined so the backend uses its default.
+        if (!cancelled) {
+          console.warn("Solana ATA probe failed in quote path:", err);
+          setBridgeRecipientSetup(undefined);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSolanaTarget, targetAddress]);
+
   const {
     quote,
     isLoading: isLoadingQuote,
@@ -319,6 +359,7 @@ export function HomePage() {
     sourceToken: sourceTokenId,
     targetChain,
     targetToken: targetTokenId,
+    bridgeRecipientSetup,
   });
 
   // Debounced quote fetch - fires 800ms after the last amount change.
@@ -610,6 +651,9 @@ export function HomePage() {
 
       // Bridge-only chain remapping (e.g. USDC on Base → Arbitrum USDC + CCTP bridge)
       // is handled automatically by the SDK's createSwap method.
+      // For Solana destinations, forward the ATA-existence hint we
+      // resolved at quote time so the bridge fee committed at creation
+      // matches what calldata-fetch will rebuild later.
       const swap = await api.createSwap({
         sourceAsset,
         targetAsset,
@@ -618,7 +662,23 @@ export function HomePage() {
         targetAddress,
         userAddress: connectedAddress,
         gasless: gaslessEnabled,
+        bridgeRecipientSetup,
       });
+      // Pin the create-time ATA-existence answer locally so the claim
+      // path uses the same hookData / maxFee variant we just funded for.
+      // Best-effort: failure to write doesn't block the swap (claim
+      // falls back to re-probing with a console warning).
+      if (bridgeRecipientSetup !== undefined) {
+        await updateSwap(swap.id, {
+          bridge_recipient_setup: bridgeRecipientSetup,
+        }).catch((err) =>
+          console.warn(
+            "Failed to pin bridge_recipient_setup for swap",
+            swap.id,
+            err,
+          ),
+        );
+      }
       navigate(`/swap/${swap.id}/wizard`);
     } catch (e) {
       console.error(e);

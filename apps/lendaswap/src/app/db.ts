@@ -14,6 +14,18 @@ export interface StoredSwapExtras {
   refund_pk?: string;
   // Public key for receiving (EVM → BTC swaps)
   receiver_pk?: string;
+  /**
+   * Pinned ATA-existence answer for non-EVM CCTP destinations (Solana).
+   * Recorded at swap creation after the frontend probes Solana RPC, then
+   * read back at claim time so the bridge fee committed at create matches
+   * the hookData / `maxFee` chosen at burn (otherwise the funded amount
+   * and the burn-time fee can diverge if the recipient's ATA state changes
+   * between create and claim — see PR review for the full failure mode).
+   *
+   * Absent for EVM-target swaps and for older swaps that pre-date this
+   * field; callers should fall back to re-probing in that case.
+   */
+  bridge_recipient_setup?: boolean;
 }
 
 /**

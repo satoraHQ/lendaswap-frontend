@@ -15,11 +15,13 @@ import {
   optimism,
   polygon,
   sei,
+  solana,
   sonic,
   unichain,
   worldchain,
 } from "@reown/appkit/networks";
 import { createAppKit } from "@reown/appkit/react";
+import { SolanaAdapter } from "@reown/appkit-adapter-solana";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PostHogProvider } from "posthog-js/react";
@@ -74,9 +76,15 @@ const wagmiAdapter = new WagmiAdapter({
   transports,
 });
 
+// Solana adapter — surfaces Phantom / Solflare / Backpack / etc. in the
+// same connect modal as EVM wallets. Used for read-only auto-fill of the
+// destination address on outbound CCTP-to-Solana swaps; no signing happens
+// on Solana, so we don't pass any RPC config beyond AppKit's defaults.
+const solanaAdapter = new SolanaAdapter();
+
 createAppKit({
-  adapters: [wagmiAdapter],
-  networks: [networks[0], ...networks.slice(1)],
+  adapters: [wagmiAdapter, solanaAdapter],
+  networks: [networks[0], ...networks.slice(1), solana],
   projectId,
   metadata: {
     name: "LendaSwap",

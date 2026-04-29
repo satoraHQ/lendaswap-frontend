@@ -1,22 +1,18 @@
 import {
   isArbitrumToken,
-  isAvalancheToken,
   isBaseToken,
   isBridgeOnlyChain,
   isBtc,
   isEthereumToken,
-  isLineaToken,
   isOptimismToken,
   isPolygonToken,
-  isSonicToken,
+  isSolanaToken,
   type TokenInfo,
   toChainName,
 } from "@lendasat/lendaswap-sdk-pure";
-import NetworkAvalanche from "@web3icons/react/icons/networks/NetworkAvalanche";
 import NetworkBase from "@web3icons/react/icons/networks/NetworkBase";
-import NetworkLinea from "@web3icons/react/icons/networks/NetworkLinea";
 import NetworkOptimism from "@web3icons/react/icons/networks/NetworkOptimism";
-import NetworkSonic from "@web3icons/react/icons/networks/NetworkSonic";
+import NetworkSolana from "@web3icons/react/icons/networks/NetworkSolana";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -66,9 +62,7 @@ type NetworkTabId =
   | "polygon"
   | "base"
   | "optimism"
-  | "avalanche"
-  | "linea"
-  | "sonic"
+  | "solana"
   | "other";
 
 const networkTabs: {
@@ -127,22 +121,10 @@ const networkTabs: {
     filter: (a) => isOptimismToken(a.chain),
   },
   {
-    id: "avalanche",
-    label: "Avalanche",
-    icon: <NetworkAvalanche variant="branded" size={14} />,
-    filter: (a) => isAvalancheToken(a.chain),
-  },
-  {
-    id: "linea",
-    label: "Linea",
-    icon: <NetworkLinea variant="branded" size={14} />,
-    filter: (a) => isLineaToken(a.chain),
-  },
-  {
-    id: "sonic",
-    label: "Sonic",
-    icon: <NetworkSonic variant="branded" size={14} />,
-    filter: (a) => isSonicToken(a.chain),
+    id: "solana",
+    label: "Solana",
+    icon: <NetworkSolana variant="branded" size={14} />,
+    filter: (a) => isSolanaToken(a.chain),
   },
   {
     id: "other",
@@ -152,9 +134,7 @@ const networkTabs: {
       isBridgeOnlyChain(a.chain) &&
       !isBaseToken(a.chain) &&
       !isOptimismToken(a.chain) &&
-      !isAvalancheToken(a.chain) &&
-      !isLineaToken(a.chain) &&
-      !isSonicToken(a.chain),
+      !isSolanaToken(a.chain),
   },
 ];
 

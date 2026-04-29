@@ -1,5 +1,6 @@
 import {
   type Chain,
+  isSolanaToken,
   type TokenInfo,
   toChain,
   toChainName,
@@ -23,6 +24,7 @@ import NetworkOptimism from "@web3icons/react/icons/networks/NetworkOptimism";
 import NetworkPlasma from "@web3icons/react/icons/networks/NetworkPlasma";
 import NetworkRootstock from "@web3icons/react/icons/networks/NetworkRootstock";
 import NetworkSeiNetwork from "@web3icons/react/icons/networks/NetworkSeiNetwork";
+import NetworkSolana from "@web3icons/react/icons/networks/NetworkSolana";
 import NetworkSonic from "@web3icons/react/icons/networks/NetworkSonic";
 import NetworkStable from "@web3icons/react/icons/networks/NetworkStable";
 import NetworkTempo from "@web3icons/react/icons/networks/NetworkTempo";
@@ -116,6 +118,12 @@ export function getTokenNetworkIcon(tokenId: TokenInfo): ReactElement {
   }
   if (tokenId.chain === "Arkade") {
     return <ArkadeIcon width={8} height={8} />;
+  }
+  // Solana isn't in the backend's Chain union — bridge-only chains are
+  // cast in via `getCctpBridgeTokens`, so compare against the runtime
+  // string via the SDK helper.
+  if (isSolanaToken(tokenId.chain as string)) {
+    return <NetworkSolana variant="branded" size={16} />;
   }
   if (!tokenId.chain) {
     // Fallback for unknown tokens
@@ -259,6 +267,7 @@ const BLOCK_EXPLORERS: Record<string, string> = {
   Bitcoin: "https://mempool.space",
   Arkade: "https://arkade.space",
   Lightning: "https://arkade.space",
+  Solana: "https://solscan.io",
 };
 
 /** Fallback for unrecognized EVM chains — Etherscan's multi-chain aggregator. */
@@ -279,7 +288,9 @@ export function getBlockexplorerAddressLink(
 ): string {
   if (!address) return "";
   const base = BLOCK_EXPLORERS[chain] ?? EVM_EXPLORER_FALLBACK;
-  return `${base}/address/${address}`;
+  // Solscan uses `/account/<pubkey>` rather than the EVM-style `/address/`.
+  const path = isSolanaToken(chain) ? "account" : "address";
+  return `${base}/${path}/${address}`;
 }
 
 // ---------------------------------------------------------------------------

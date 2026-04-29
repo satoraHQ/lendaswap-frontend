@@ -7,6 +7,14 @@ export interface UseQuoteParams {
   sourceToken: string | undefined;
   targetChain: Chain | undefined;
   targetToken: string | undefined;
+  /**
+   * Optional ATA-existence hint for non-EVM CCTP destinations (Solana).
+   * Forwarded to `/quote` so the bridge fee reflects whether Circle has
+   * to pre-fund the recipient's USDC account. Pair changes (chain
+   * change, address edit, RPC re-probe) reset the dedupe key so the
+   * fee re-renders.
+   */
+  bridgeRecipientSetup?: boolean;
 }
 
 export interface RefreshArgs {
@@ -31,7 +39,13 @@ export interface UseQuoteResult {
  * are aborted when superseded or when the asset pair changes.
  */
 export function useQuote(params: UseQuoteParams): UseQuoteResult {
-  const { sourceChain, sourceToken, targetChain, targetToken } = params;
+  const {
+    sourceChain,
+    sourceToken,
+    targetChain,
+    targetToken,
+    bridgeRecipientSetup,
+  } = params;
   const [quote, setQuote] = useState<QuoteResponse | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -47,7 +61,10 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
   const quoteRef = useRef<QuoteResponse | undefined>(undefined);
 
   // Reset state when the asset pair changes so a stale quote from the previous
-  // pair doesn't leak through.
+  // pair doesn't leak through. `bridgeRecipientSetup` flipping doesn't
+  // require resetting `quote` — the dedupe key in `refresh` already
+  // includes it, so a fresh fetch fires while the previous (slightly
+  // pessimistic) quote stays on screen.
   useEffect(() => {
     if (!sourceChain || !sourceToken || !targetChain || !targetToken) {
       return;
@@ -73,7 +90,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
       // callers re-invoking after a cancelled in-flight request still
       // get the response back and can run their follow-up side-effects
       // (e.g. syncing the opposite amount into UI state).
-      const key = `${sourceChain}|${sourceToken}|${targetChain}|${targetToken}|s=${args.sourceAmount ?? ""}|t=${args.targetAmount ?? ""}`;
+      const key = `${sourceChain}|${sourceToken}|${targetChain}|${targetToken}|s=${args.sourceAmount ?? ""}|t=${args.targetAmount ?? ""}|setup=${bridgeRecipientSetup ?? ""}`;
       if (lastRequestKeyRef.current === key) {
         return quoteRef.current;
       }
@@ -92,6 +109,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
           targetToken,
           sourceAmount: args.sourceAmount,
           targetAmount: args.targetAmount,
+          bridgeRecipientSetup,
         });
         if (abort.signal.aborted) {
           return undefined;
@@ -113,7 +131,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
         }
       }
     },
-    [sourceChain, sourceToken, targetChain, targetToken],
+    [sourceChain, sourceToken, targetChain, targetToken, bridgeRecipientSetup],
   );
 
   return { quote, isLoading, refresh };
