@@ -7,7 +7,7 @@
  * source-chain explorer) and Circle's bridge contribution.
  */
 
-import { IRIS_API_MAINNET, toChain } from "@lendasat/lendaswap-sdk-pure";
+import { toChain } from "@lendasat/lendaswap-sdk-pure";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ExternalLink } from "lucide-react";
 import { useState } from "react";
@@ -16,6 +16,7 @@ import type { GetSwapResponse } from "../../../api";
 import { db } from "../../../db";
 import { formatAmount, getDirectionConfig, getSwapDisplayInfo } from "./config";
 import { AddressRow, AmountRow, TxHashRow } from "./DetailRows";
+import { getRangeUsdcUrl } from "./rangeExplorer";
 import { SuccessLayout } from "./SuccessLayout";
 
 export function CctpInboundDetails({
@@ -84,31 +85,21 @@ export function CctpInboundDetails({
         )}
 
         {burnTxHash && (
-          <TxHashRow
-            label={`Burn Transaction (${sourceChainName})`}
-            txHash={burnTxHash}
-            chain={sourceChainId}
-            copiedAddress={copiedAddress}
-            onCopy={handleCopy}
-          />
-        )}
-
-        {burnTxHash && session?.source_domain !== undefined && (
           <div className="border-border flex flex-col gap-2 border-t pt-2 text-sm">
-            <span className="text-muted-foreground">CCTP Attestation</span>
+            <span className="text-muted-foreground">CCTP Transfer</span>
             <div className="flex items-center gap-2">
               <a
-                href={`${IRIS_API_MAINNET}/v2/messages/${session.source_domain}?transactionHash=${burnTxHash}`}
+                href={getRangeUsdcUrl(burnTxHash)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 break-all font-mono text-xs hover:underline"
               >
-                iris-api.circle.com — message details
+                View on Range Explorer
               </a>
               <div className="flex shrink-0 gap-1">
                 <Button size="icon" variant="ghost" asChild className="h-8 w-8">
                   <a
-                    href={`${IRIS_API_MAINNET}/v2/messages/${session.source_domain}?transactionHash=${burnTxHash}`}
+                    href={getRangeUsdcUrl(burnTxHash)}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -120,30 +111,9 @@ export function CctpInboundDetails({
           </div>
         )}
 
-        {(() => {
-          // evm_fund_txid is only present on evm_to_* responses — which is
-          // always the case for CCTP-inbound swaps (the backend-side source
-          // is Arbitrum USDC), but TS doesn't infer that from the union.
-          const fundTx =
-            swapData.direction === "evm_to_arkade" ||
-            swapData.direction === "evm_to_bitcoin" ||
-            swapData.direction === "evm_to_lightning"
-              ? swapData.evm_fund_txid
-              : null;
-          return fundTx ? (
-            <TxHashRow
-              label="HTLC Lock Transaction (Arbitrum)"
-              txHash={fundTx}
-              chain="42161"
-              copiedAddress={copiedAddress}
-              onCopy={handleCopy}
-            />
-          ) : null;
-        })()}
-
         {config.swapTxId && (
           <TxHashRow
-            label="Transaction Hash"
+            label={`Claim Transaction (${targetNetwork})`}
             txHash={config.swapTxId}
             chain={swapData.target_token.chain}
             copiedAddress={copiedAddress}

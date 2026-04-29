@@ -4,20 +4,17 @@ import {
   toChain,
   trackCctpMessage,
 } from "@lendasat/lendaswap-sdk-pure";
-import { Loader2 } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "#/components/ui/button";
 import type { GetSwapResponse } from "../../../api";
 import {
   getBridgeInfo,
   getDirectionConfig,
   getSwapDisplayInfo,
 } from "./config";
-import {
-  AddressRow,
-  AmountRow,
-  CrossChainStatusRow,
-  TxHashRow,
-} from "./DetailRows";
+import { AddressRow, AmountRow, CrossChainStatusRow } from "./DetailRows";
+import { getRangeUsdcUrl } from "./rangeExplorer";
 import { SuccessLayout } from "./SuccessLayout";
 
 export function CctpDetails({ swapData }: { swapData: GetSwapResponse }) {
@@ -40,7 +37,6 @@ export function CctpDetails({ swapData }: { swapData: GetSwapResponse }) {
 
   // CCTP tracking state
   const [cctpStatus, setCctpStatus] = useState<CctpMessageStatus | null>(null);
-  const [forwardTxHash, setForwardTxHash] = useState<string | null>(null);
   const [cctpAmount, setCctpAmount] = useState<string | null>(null);
   const [cctpFee, setCctpFee] = useState<string | null>(null);
   const [cctpError, setCctpError] = useState<string | null>(null);
@@ -61,7 +57,6 @@ export function CctpDetails({ swapData }: { swapData: GetSwapResponse }) {
       .then((result) => {
         if (!cancelled) {
           setCctpStatus("COMPLETE");
-          setForwardTxHash(result.forwardTxHash ?? null);
           setCctpAmount(result.amount ?? null);
           setCctpFee(result.feeExecuted ?? null);
         }
@@ -163,14 +158,31 @@ export function CctpDetails({ swapData }: { swapData: GetSwapResponse }) {
           />
         )}
 
-        {config.swapTxId && (
-          <TxHashRow
-            label={`Swap Transaction (${bridgeInfo.sourceChainName})`}
-            txHash={config.swapTxId}
-            chain={swapData.target_token.chain}
-            copiedAddress={copiedAddress}
-            onCopy={handleCopy}
-          />
+        {bridgeTxHash && (
+          <div className="border-border flex flex-col gap-2 border-t pt-2 text-sm">
+            <span className="text-muted-foreground">CCTP Transfer</span>
+            <div className="flex items-center gap-2">
+              <a
+                href={getRangeUsdcUrl(bridgeTxHash)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 break-all font-mono text-xs hover:underline"
+              >
+                View on Range Explorer
+              </a>
+              <div className="flex shrink-0 gap-1">
+                <Button size="icon" variant="ghost" asChild className="h-8 w-8">
+                  <a
+                    href={getRangeUsdcUrl(bridgeTxHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
 
         <CrossChainStatusRow
@@ -178,16 +190,6 @@ export function CctpDetails({ swapData }: { swapData: GetSwapResponse }) {
           statusText={statusText}
           description={description}
         />
-
-        {forwardTxHash && (
-          <TxHashRow
-            label={`Destination Transaction (${targetNetwork})`}
-            txHash={forwardTxHash}
-            chain={toChain(targetNetwork)}
-            copiedAddress={copiedAddress}
-            onCopy={handleCopy}
-          />
-        )}
       </div>
     </SuccessLayout>
   );

@@ -6,18 +6,14 @@ import {
 } from "@lendasat/lendaswap-sdk-pure";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Button } from "#/components/ui/button";
 import type { GetSwapResponse } from "../../../api";
 import {
   getBridgeInfo,
   getDirectionConfig,
   getSwapDisplayInfo,
 } from "./config";
-import {
-  AddressRow,
-  AmountRow,
-  CrossChainStatusRow,
-  TxHashRow,
-} from "./DetailRows";
+import { AddressRow, AmountRow, CrossChainStatusRow } from "./DetailRows";
 import { SuccessLayout } from "./SuccessLayout";
 
 export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
@@ -41,7 +37,6 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
   // LayerZero tracking state
   const [bridgeStatus, setBridgeStatus] =
     useState<LayerZeroMessageStatus | null>(null);
-  const [dstTxHash, setDstTxHash] = useState<string | null>(null);
   const [bridgeError, setBridgeError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,11 +51,8 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
         if (!cancelled) setBridgeStatus(status);
       },
     })
-      .then((result) => {
-        if (!cancelled) {
-          setBridgeStatus("DELIVERED");
-          setDstTxHash(result.dstTxHash ?? null);
-        }
+      .then(() => {
+        if (!cancelled) setBridgeStatus("DELIVERED");
       })
       .catch((err) => {
         if (!cancelled) setBridgeError(String(err));
@@ -86,18 +78,7 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
     bridgeStatus === "DELIVERED" || !bridgeTxHash ? (
       <>Arrived on {targetNetwork} via LayerZero.</>
     ) : bridgeError ? (
-      <>
-        Tracking failed. Your funds are safe — check{" "}
-        <a
-          href={getLzExplorerUrl(bridgeTxHash)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline"
-        >
-          LayerZero Scan
-        </a>{" "}
-        for status.
-      </>
+      <>Tracking failed. Your funds are safe.</>
     ) : (
       <>
         Bridging from Arbitrum to {targetNetwork} via LayerZero. Usually 30-60s.
@@ -131,14 +112,31 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
           />
         )}
 
-        {config.swapTxId && (
-          <TxHashRow
-            label={`Swap Transaction (${bridgeInfo.sourceChainName})`}
-            txHash={config.swapTxId}
-            chain={swapData.target_token.chain}
-            copiedAddress={copiedAddress}
-            onCopy={handleCopy}
-          />
+        {bridgeTxHash && (
+          <div className="border-border flex flex-col gap-2 border-t pt-2 text-sm">
+            <span className="text-muted-foreground">LayerZero Transfer</span>
+            <div className="flex items-center gap-2">
+              <a
+                href={getLzExplorerUrl(bridgeTxHash)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 break-all font-mono text-xs hover:underline"
+              >
+                View on LayerZero Scan
+              </a>
+              <div className="flex shrink-0 gap-1">
+                <Button size="icon" variant="ghost" asChild className="h-8 w-8">
+                  <a
+                    href={getLzExplorerUrl(bridgeTxHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
 
         <CrossChainStatusRow
@@ -146,30 +144,6 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
           statusText={statusText}
           description={description}
         />
-
-        {dstTxHash && (
-          <TxHashRow
-            label={`Destination Transaction (${targetNetwork})`}
-            txHash={dstTxHash}
-            chain={toChain(targetNetwork)}
-            copiedAddress={copiedAddress}
-            onCopy={handleCopy}
-          />
-        )}
-
-        {bridgeTxHash && (
-          <div className="pt-1">
-            <a
-              href={getLzExplorerUrl(bridgeTxHash)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
-            >
-              View on LayerZero Scan
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-        )}
       </div>
     </SuccessLayout>
   );

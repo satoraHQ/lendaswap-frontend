@@ -36,6 +36,7 @@ export default defineConfig({
   ],
 
   resolve: {
+    dedupe: ["viem", "@zerodev/sdk", "@zerodev/ecdsa-validator", "zod"],
     alias: {
       "#/components": path.resolve(
         __dirname,
