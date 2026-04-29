@@ -14,7 +14,7 @@ import {
 } from "#/components/ui/dialog";
 import { api } from "../api";
 
-const SUPPORT_EMAIL = "support@lendasat.com";
+const SUPPORT_EMAIL = "support@satora.io";
 
 /** Error messages the user can resolve themselves - no support needed. */
 const KNOWN_ERROR_PATTERNS: Array<{ pattern: RegExp; action: string }> = [
