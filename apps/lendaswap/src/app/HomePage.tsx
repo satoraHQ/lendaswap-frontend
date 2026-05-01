@@ -313,19 +313,22 @@ export function HomePage() {
   const targetChain = targetAsset?.chain;
 
   // Solana destinations: probe RPC for whether the recipient already has
-  // a USDC ATA. Only meaningful when the target chain is Solana AND the
-  // user has typed/pasted a valid Solana pubkey. The result flips the
-  // bridge fee in the quote between the standard (~$0.30) and ATA-setup
-  // (~$0.48) variants. `undefined` while we don't yet have a definitive
-  // answer — backend then falls back to its conservative default.
+  // a USDC ATA. The result flips the bridge fee in the quote between the
+  // standard (~$0.30) and ATA-setup (~$0.48) variants. Default `true`
+  // (paranoid: assume ATA missing) for Solana whenever the probe hasn't
+  // confirmed otherwise — under-charging would cause the burn to underflow
+  // when the ATA actually needs creating. EVM destinations always `false`.
   const isSolanaTarget = !!targetChain && isSolanaToken(targetChain);
-  const [bridgeRecipientSetup, setBridgeRecipientSetup] = useState<
-    boolean | undefined
-  >(undefined);
+  const [bridgeRecipientSetup, setBridgeRecipientSetup] =
+    useState<boolean>(false);
 
   useEffect(() => {
-    if (!isSolanaTarget || !isValidSolanaAddress(targetAddress)) {
-      setBridgeRecipientSetup(undefined);
+    if (!isSolanaTarget) {
+      setBridgeRecipientSetup(false);
+      return;
+    }
+    if (!isValidSolanaAddress(targetAddress)) {
+      setBridgeRecipientSetup(true);
       return;
     }
     let cancelled = false;
@@ -338,10 +341,12 @@ export function HomePage() {
         const exists = await solanaAtaExists(ata);
         if (!cancelled) setBridgeRecipientSetup(!exists);
       } catch (err) {
-        // RPC failure: leave undefined so the backend uses its default.
         if (!cancelled) {
-          console.warn("Solana ATA probe failed in quote path:", err);
-          setBridgeRecipientSetup(undefined);
+          console.warn(
+            "Solana ATA probe failed in quote path; assuming ATA missing:",
+            err,
+          );
+          setBridgeRecipientSetup(true);
         }
       }
     })();
@@ -668,17 +673,15 @@ export function HomePage() {
       // path uses the same hookData / maxFee variant we just funded for.
       // Best-effort: failure to write doesn't block the swap (claim
       // falls back to re-probing with a console warning).
-      if (bridgeRecipientSetup !== undefined) {
-        await updateSwap(swap.id, {
-          bridge_recipient_setup: bridgeRecipientSetup,
-        }).catch((err) =>
-          console.warn(
-            "Failed to pin bridge_recipient_setup for swap",
-            swap.id,
-            err,
-          ),
-        );
-      }
+      await updateSwap(swap.id, {
+        bridge_recipient_setup: bridgeRecipientSetup,
+      }).catch((err) =>
+        console.warn(
+          "Failed to pin bridge_recipient_setup for swap",
+          swap.id,
+          err,
+        ),
+      );
       navigate(`/swap/${swap.id}/wizard`);
     } catch (e) {
       console.error(e);

@@ -8,13 +8,13 @@ export interface UseQuoteParams {
   targetChain: Chain | undefined;
   targetToken: string | undefined;
   /**
-   * Optional ATA-existence hint for non-EVM CCTP destinations (Solana).
-   * Forwarded to `/quote` so the bridge fee reflects whether Circle has
-   * to pre-fund the recipient's USDC account. Pair changes (chain
-   * change, address edit, RPC re-probe) reset the dedupe key so the
-   * fee re-renders.
+   * ATA-existence flag for non-EVM CCTP destinations (Solana). Forwarded
+   * to `/quote` so the bridge fee reflects whether Circle has to pre-fund
+   * the recipient's USDC account. EVM destinations always pass `false`.
+   * Pair changes (chain change, address edit, RPC re-probe) reset the
+   * dedupe key so the fee re-renders.
    */
-  bridgeRecipientSetup?: boolean;
+  bridgeRecipientSetup: boolean;
 }
 
 export interface RefreshArgs {
@@ -90,7 +90,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
       // callers re-invoking after a cancelled in-flight request still
       // get the response back and can run their follow-up side-effects
       // (e.g. syncing the opposite amount into UI state).
-      const key = `${sourceChain}|${sourceToken}|${targetChain}|${targetToken}|s=${args.sourceAmount ?? ""}|t=${args.targetAmount ?? ""}|setup=${bridgeRecipientSetup ?? ""}`;
+      const key = `${sourceChain}|${sourceToken}|${targetChain}|${targetToken}|s=${args.sourceAmount ?? ""}|t=${args.targetAmount ?? ""}|setup=${bridgeRecipientSetup}`;
       if (lastRequestKeyRef.current === key) {
         return quoteRef.current;
       }
