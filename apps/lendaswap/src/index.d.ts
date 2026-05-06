@@ -13,7 +13,7 @@ declare module "*.svg" {
 /**
  * Speed Wallet Mini App Integration
  *
- * When LendaSwap runs inside Speed Wallet, these global interfaces
+ * When Satora runs inside Speed Wallet, these global interfaces
  * are available for triggering native payment flows.
  */
 

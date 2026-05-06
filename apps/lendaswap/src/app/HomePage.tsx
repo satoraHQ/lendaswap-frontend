@@ -787,7 +787,7 @@ export function HomePage() {
       {/* Sell/Buy container with arrow */}
       <div className="relative">
         {/* Sell */}
-        <div className="bg-muted group/sell overflow-hidden rounded-2xl p-4 pb-5">
+        <div className="group/sell bg-muted overflow-hidden rounded-2xl p-4 pb-5 dark:border dark:border-white/[0.07] dark:bg-[#1C1F1D]/75 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:backdrop-blur-xl dark:backdrop-saturate-[1.4]">
           <div className="mb-2 flex items-center justify-between">
             <div className="text-muted-foreground text-sm">Sell</div>
             {sourceBalance !== undefined && sourceAsset && (
@@ -886,7 +886,7 @@ export function HomePage() {
         </button>
 
         {/* Buy */}
-        <div className="bg-muted mt-1 overflow-hidden rounded-2xl p-4 pt-5">
+        <div className="bg-muted mt-1 overflow-hidden rounded-2xl p-4 pt-5 dark:border dark:border-white/[0.07] dark:bg-[#1C1F1D]/75 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:backdrop-blur-xl dark:backdrop-saturate-[1.4]">
           <div className="text-muted-foreground mb-2 text-sm">Buy</div>
           <div className="flex items-center justify-between gap-4">
             <AmountInput

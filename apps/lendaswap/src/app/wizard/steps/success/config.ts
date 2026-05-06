@@ -35,7 +35,7 @@ export function getDirectionConfig(swapData: GetSwapResponse): DirectionConfig {
     : null;
 
   const makeTweet = (sent: string, received: string) =>
-    `Swapped ${sent} ${sourceSymbol} → ${received} ${targetSymbol} in ${swapDurationSeconds}s on @lendasat\n\nTrustless atomic swap via @arkade_os`;
+    `Swapped ${sent} ${sourceSymbol} → ${received} ${targetSymbol} in ${swapDurationSeconds}s on @satoraswaps\n\nTrustless atomic swap via @arkade_os`;
 
   const sent = formatAmount(
     swapData.source_amount,

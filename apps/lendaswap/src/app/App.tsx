@@ -246,7 +246,7 @@ export default function App() {
             <DebugNavigation />
 
             <div className="text-muted-foreground space-y-2 text-center text-sm">
-              <p>© 2026 Lendasat. All rights reserved.</p>
+              <p>© 2026 Satora. All rights reserved.</p>
               <p>
                 <button
                   type="button"

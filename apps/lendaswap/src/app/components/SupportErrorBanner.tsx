@@ -64,7 +64,9 @@ interface SupportErrorBannerProps {
 }
 
 function buildMailtoUrl(error: string, swapId?: string, xpub?: string): string {
-  const subject = swapId ? `Satora - Swap ${swapId}` : "Satora Request";
+  const subject = swapId
+    ? `Satora Support - Swap ${swapId}`
+    : "Satora Support Request";
 
   const body = [
     swapId && `Swap ID: ${swapId}`,

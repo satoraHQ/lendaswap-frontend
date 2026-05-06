@@ -95,13 +95,13 @@ export function AppHeader({
               <XLogo className="h-3.5 w-3.5 fill-current" />
             </a>
 
-            {/* Lendasat Website Link */}
+            {/* Satora Website Link */}
             <a
-              href="https://lendasat.com"
+              href="https://satora.io"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-              aria-label="Visit lendasat.com"
+              aria-label="Visit satora.io"
             >
               <Globe className="h-4 w-4" />
             </a>

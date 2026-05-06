@@ -247,27 +247,27 @@ export function AddressInput({
   }, [value, isSolanaTarget]);
 
   const getPlaceholder = () => {
-    if (!targetToken) return "";
+    if (!targetToken) return "Receive address";
     if (isLightning(targetToken))
-      return "BOLT11 invoice or Lightning address (LNURL)";
-    if (isArkade(targetToken)) return "Provide an Arkade address";
-    if (isBtcOnchain(targetToken)) return "Provide a Bitcoin address";
-    if (isSolanaToken(targetToken.chain)) return "Provide a Solana address";
-    if (isEvmToken(targetToken.chain)) return "Provide an EVM address";
-    return "";
+      return "Receive address (BOLT11 invoice or Lightning address)";
+    if (isArkade(targetToken)) return "Receive address (Arkade)";
+    if (isBtcOnchain(targetToken)) return "Receive address (Bitcoin)";
+    if (isSolanaToken(targetToken.chain)) return "Receive address (Solana)";
+    if (isEvmToken(targetToken.chain)) return "Receive address (EVM)";
+    return "Receive address";
   };
 
   return (
-    <div className="rounded-2xl bg-muted p-4">
-      <div className="text-sm text-muted-foreground mb-2">Receive address</div>
+    <div>
       <div className="relative">
         <Input
           type="text"
+          mono
           placeholder={getPlaceholder()}
           value={value}
           onChange={(e) => handleInputChange(e.target.value)}
           disabled={disabled}
-          className={`px-3 py-2 min-h-[2.75rem] bg-background border-0 rounded-xl text-sm font-mono placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-ring ${
+          className={`${
             isEvmTarget || isSolanaTarget ? "pr-28" : ""
           } ${disabled ? "cursor-not-allowed opacity-60" : ""} ${className}`}
           data-1p-ignore
