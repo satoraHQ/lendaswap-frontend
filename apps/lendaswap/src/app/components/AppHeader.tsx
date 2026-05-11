@@ -75,7 +75,7 @@ export function AppHeader({
 
             {/* GitHub Link */}
             <a
-              href="https://github.com/lendasat"
+              href="https://github.com/satoraHQ"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
