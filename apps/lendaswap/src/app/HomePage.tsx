@@ -261,11 +261,19 @@ export function HomePage() {
       } else {
         setTargetAddress("");
       }
+    } else if (
+      isEmbedded &&
+      targetAsset &&
+      isArkade(targetAsset) &&
+      arkAddress
+    ) {
+      // Embedded host wallet provides the Ark address — auto-fill it.
+      setTargetAddress(arkAddress);
     } else {
       // Switching to a BTC target - clear any stale EVM address
       setTargetAddress("");
     }
-  }, [targetChainKey]);
+  }, [targetChainKey, isEmbedded, arkAddress]);
 
   // Also react to wallet connect/disconnect while target is EVM
   // biome-ignore lint/correctness/useExhaustiveDependencies: only re-run on wallet connect/disconnect events
@@ -736,34 +744,34 @@ export function HomePage() {
     return (
       <div className="flex animate-pulse flex-col p-3">
         {/* Sell skeleton */}
-        <div className="bg-muted rounded-2xl p-4 pb-5">
-          <div className="bg-muted-foreground/20 mb-3 h-4 w-8 rounded" />
+        <div className="rounded-2xl bg-muted p-4 pb-5">
+          <div className="mb-3 h-4 w-8 rounded bg-muted-foreground/20" />
           <div className="flex items-center justify-between gap-4">
-            <div className="bg-muted-foreground/20 h-10 flex-1 rounded-lg" />
-            <div className="bg-muted-foreground/20 h-10 w-28 rounded-full" />
+            <div className="h-10 flex-1 rounded-lg bg-muted-foreground/20" />
+            <div className="h-10 w-28 rounded-full bg-muted-foreground/20" />
           </div>
         </div>
         {/* Arrow skeleton */}
         <div className="relative z-10 -my-3 flex justify-center">
-          <div className="bg-background h-10 w-10 rounded-xl p-1">
-            <div className="bg-muted h-full w-full rounded-lg" />
+          <div className="h-10 w-10 rounded-xl bg-background p-1">
+            <div className="h-full w-full rounded-lg bg-muted" />
           </div>
         </div>
         {/* Buy skeleton */}
-        <div className="bg-muted rounded-2xl p-4 pt-5">
-          <div className="bg-muted-foreground/20 mb-3 h-4 w-8 rounded" />
+        <div className="rounded-2xl bg-muted p-4 pt-5">
+          <div className="mb-3 h-4 w-8 rounded bg-muted-foreground/20" />
           <div className="flex items-center justify-between gap-4">
-            <div className="bg-muted-foreground/20 h-10 flex-1 rounded-lg" />
-            <div className="bg-muted-foreground/20 h-10 w-28 rounded-full" />
+            <div className="h-10 flex-1 rounded-lg bg-muted-foreground/20" />
+            <div className="h-10 w-28 rounded-full bg-muted-foreground/20" />
           </div>
         </div>
         {/* Address skeleton */}
-        <div className="bg-muted mt-3 rounded-2xl p-4">
-          <div className="bg-muted-foreground/20 mb-3 h-4 w-32 rounded" />
-          <div className="bg-muted-foreground/20 h-12 w-full rounded-xl" />
+        <div className="mt-3 rounded-2xl bg-muted p-4">
+          <div className="mb-3 h-4 w-32 rounded bg-muted-foreground/20" />
+          <div className="h-12 w-full rounded-xl bg-muted-foreground/20" />
         </div>
         {/* Button skeleton */}
-        <div className="bg-muted-foreground/20 mt-3 h-14 w-full rounded-2xl" />
+        <div className="mt-3 h-14 w-full rounded-2xl bg-muted-foreground/20" />
       </div>
     );
   }
@@ -787,9 +795,9 @@ export function HomePage() {
       {/* Sell/Buy container with arrow */}
       <div className="relative">
         {/* Sell */}
-        <div className="group/sell bg-muted overflow-hidden rounded-2xl p-4 pb-5 dark:border dark:border-white/[0.07] dark:bg-[#1C1F1D]/75 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:backdrop-blur-xl dark:backdrop-saturate-[1.4]">
+        <div className="group/sell overflow-hidden rounded-2xl bg-muted p-4 pb-5 dark:border dark:border-white/[0.07] dark:bg-[#1C1F1D]/75 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:backdrop-blur-xl dark:backdrop-saturate-[1.4]">
           <div className="mb-2 flex items-center justify-between">
-            <div className="text-muted-foreground text-sm">Sell</div>
+            <div className="text-sm text-muted-foreground">Sell</div>
             {sourceBalance !== undefined && sourceAsset && (
               <div className="flex gap-1 opacity-0 transition-opacity group-hover/sell:opacity-100">
                 {([25, 50, 75, 100] as const).map((pct) => (
@@ -801,7 +809,7 @@ export function HomePage() {
                       const amt = (sourceBalance * BigInt(pct)) / 100n;
                       setSourceAmountState(Number(amt));
                     }}
-                    className="bg-background text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-full px-2 py-0.5 text-xs transition-colors"
+                    className="rounded-full bg-background px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
                   >
                     {pct === 100 ? "Max" : `${pct}%`}
                   </button>
@@ -878,16 +886,16 @@ export function HomePage() {
           }}
           className={`group/swap absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 ${!sourceAsset || isBtcOnchain(sourceAsset) ? "cursor-not-allowed opacity-50" : ""}`}
         >
-          <div className="bg-background rounded-xl p-1 transition-transform duration-200 ease-out group-hover/swap:scale-110 group-active/swap:scale-125">
-            <div className="bg-muted group-hover/swap:bg-muted/80 rounded-lg p-1.5 transition-colors">
-              <ArrowDown className="text-muted-foreground h-5 w-5" />
+          <div className="rounded-xl bg-background p-1 transition-transform duration-200 ease-out group-hover/swap:scale-110 group-active/swap:scale-125">
+            <div className="rounded-lg bg-muted p-1.5 transition-colors group-hover/swap:bg-muted/80">
+              <ArrowDown className="h-5 w-5 text-muted-foreground" />
             </div>
           </div>
         </button>
 
         {/* Buy */}
-        <div className="bg-muted mt-1 overflow-hidden rounded-2xl p-4 pt-5 dark:border dark:border-white/[0.07] dark:bg-[#1C1F1D]/75 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:backdrop-blur-xl dark:backdrop-saturate-[1.4]">
-          <div className="text-muted-foreground mb-2 text-sm">Buy</div>
+        <div className="mt-1 overflow-hidden rounded-2xl bg-muted p-4 pt-5 dark:border dark:border-white/[0.07] dark:bg-[#1C1F1D]/75 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:backdrop-blur-xl dark:backdrop-saturate-[1.4]">
+          <div className="mb-2 text-sm text-muted-foreground">Buy</div>
           <div className="flex items-center justify-between gap-4">
             <AmountInput
               value={targetAmount}
@@ -921,7 +929,7 @@ export function HomePage() {
             </div>
           </div>
           <div className="mt-1.5 flex justify-end">
-            <span className="text-muted-foreground text-xs">
+            <span className="text-xs text-muted-foreground">
               {targetAsset && targetBalance !== undefined
                 ? `${formatBalance(targetBalance, targetAsset)} ${targetAsset.symbol}`
                 : "\u00A0"}
@@ -942,16 +950,14 @@ export function HomePage() {
             setTargetAmountState(amount);
           }}
           setAddressIsValid={setIsAddressValid}
-          disabled={
-            isEmbedded && !!arkAddress && !!targetAsset && isArkade(targetAsset)
-          }
+          disabled={false}
           targetAmountSats={
             targetAsset && isBtc(targetAsset) ? targetAmount : undefined
           }
         />
         {/*Fees - below inputs, above Continue button*/}
         {(isLoadingQuote || quote) && (
-          <div className="text-muted-foreground/70 space-y-1 pt-2 text-xs">
+          <div className="space-y-1 pt-2 text-xs text-muted-foreground/70">
             {!isLoadingQuote && isBelowMin && (
               <div className="text-destructive">
                 Amount too low - minimum is {quote.min_amount.toLocaleString()}{" "}
@@ -967,7 +973,7 @@ export function HomePage() {
             <div className="flex flex-col items-end space-y-1">
               <button
                 type="button"
-                className="hover:text-muted-foreground flex items-center gap-0.5 transition-colors"
+                className="flex items-center gap-0.5 transition-colors hover:text-muted-foreground"
                 onClick={() => setFeeExpanded((v) => !v)}
               >
                 Total Fee:{" "}
@@ -981,7 +987,7 @@ export function HomePage() {
                 />
               </button>
               {feeExpanded && (
-                <div className="text-muted-foreground/50 space-y-0.5 text-right">
+                <div className="space-y-0.5 text-right text-muted-foreground/50">
                   {isLoadingQuote ? (
                     <>
                       <Skeleton className="ml-auto h-3 w-32" />

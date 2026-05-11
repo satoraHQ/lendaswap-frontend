@@ -62,6 +62,7 @@ export function AddressInput({
   const [validationError, setValidationError] = useState<string>("");
   const isSpeedWallet = isValidSpeedWalletContext();
   const { isEmbedded } = useWalletBridge();
+
   const { isConnected: isNwcConnected, makeInvoice } = useNwc();
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
 
@@ -288,7 +289,7 @@ export function AddressInput({
                   }
                 }}
                 type="button"
-                className="h-7 text-xs px-2"
+                className="h-7 px-2 text-xs"
               >
                 Use wallet
               </Button>
@@ -298,9 +299,9 @@ export function AddressInput({
                 size="sm"
                 onClick={() => open().catch(console.error)}
                 type="button"
-                className="h-7 text-xs px-2"
+                className="h-7 px-2 text-xs"
               >
-                <Wallet className="w-3 h-3 mr-1" />
+                <Wallet className="mr-1 h-3 w-3" />
                 Connect
               </Button>
             ) : null}
@@ -318,7 +319,7 @@ export function AddressInput({
                 size="sm"
                 onClick={() => onChange(solanaAddress)}
                 type="button"
-                className="h-7 text-xs px-2"
+                className="h-7 px-2 text-xs"
               >
                 Use wallet
               </Button>
@@ -332,9 +333,9 @@ export function AddressInput({
                   )
                 }
                 type="button"
-                className="h-7 text-xs px-2"
+                className="h-7 px-2 text-xs"
               >
-                <Wallet className="w-3 h-3 mr-1" />
+                <Wallet className="mr-1 h-3 w-3" />
                 Connect
               </Button>
             ) : null}
@@ -346,12 +347,12 @@ export function AddressInput({
 
       {/* Address Error Display */}
       {validationError && (
-        <p className="text-destructive text-xs mt-2">{validationError}</p>
+        <p className="mt-2 text-xs text-destructive">{validationError}</p>
       )}
 
       {/* Solana off-curve soft warning — non-blocking. */}
       {!validationError && solanaWarning && (
-        <p className="text-amber-500 text-xs mt-2">{solanaWarning}</p>
+        <p className="mt-2 text-xs text-amber-500">{solanaWarning}</p>
       )}
 
       {/* Generate Invoice via NWC */}
@@ -364,16 +365,16 @@ export function AddressInput({
             isGeneratingInvoice || !targetAmountSats || targetAmountSats <= 0
           }
           type="button"
-          className="mt-2 h-8 text-xs px-3 text-muted-foreground hover:text-foreground"
+          className="mt-2 h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
         >
           {isGeneratingInvoice ? (
             <>
-              <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+              <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
               Generating invoice...
             </>
           ) : (
             <>
-              <Zap className="w-3 h-3 mr-1.5" />
+              <Zap className="mr-1.5 h-3 w-3" />
               Generate invoice from wallet
             </>
           )}
