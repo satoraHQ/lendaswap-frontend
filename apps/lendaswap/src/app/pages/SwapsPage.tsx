@@ -34,7 +34,6 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
 import { api, getTokenIcon } from "../api";
-import { VersionFooter } from "../components/VersionFooter";
 import {
   getTargetChainDisplayName,
   getTokenNetworkIcon,
@@ -524,11 +523,6 @@ export function SwapsPage() {
             })}
           </div>
         )}
-
-        {/* Version footer */}
-        <div className="pt-6">
-          <VersionFooter />
-        </div>
       </div>
 
       {/* Delete single swap dialog */}

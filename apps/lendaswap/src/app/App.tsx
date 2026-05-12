@@ -17,6 +17,7 @@ import { ChatwootWidget } from "./components/ChatwootWidget";
 import { DebugNavigation } from "./components/DebugNavigation";
 import { ImportMnemonicDialog } from "./components/ImportMnemonicDialog";
 import { LandingSection } from "./components/LandingSection";
+import { VersionFooter } from "./components/VersionFooter";
 import { HomePage } from "./HomePage";
 import { RefundPage, SwapsPage, TermsOfServicePage, TrackPage } from "./pages";
 import { SwapWizardPage } from "./wizard";
@@ -256,6 +257,7 @@ export default function App() {
                   Terms of Service
                 </button>
               </p>
+              <VersionFooter />
             </div>
           </div>
         </footer>
