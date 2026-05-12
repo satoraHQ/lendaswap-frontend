@@ -10,9 +10,8 @@ const FALLBACK_RPCS: Record<number, string[]> = {
   // Polygon - viem's default (polygon.drpc.org) doesn't support eth_call,
   // so we list working public RPCs explicitly.
   137: [
-    "https://tenderly.rpc.polygon.community",
-    "https://polygon-mainnet.gateway.tatum.io",
     "https://polygon.drpc.org",
+    "https://tenderly.rpc.polygon.community",
     "https://polygon-bor-rpc.publicnode.com",
   ],
   // Ethereum
@@ -47,5 +46,14 @@ export function buildTransport(chain: Chain) {
     return http(urls[0]);
   }
 
-  return fallback(urls.map((url) => http(url)));
+  return fallback(
+    urls.map((url) => http(url)),
+    {
+      rank: {
+        interval: 60_000,
+        sampleCount: 3,
+        timeout: 1_000,
+      },
+    },
+  );
 }
