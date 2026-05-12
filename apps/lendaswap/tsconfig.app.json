@@ -5,6 +5,13 @@
     "types": ["node", "vite/client"],
     "baseUrl": ".",
     "paths": {
+      // The pure-ts-sdk is consumed via a `link:` to its own package
+      // (not a workspace member), so it brings its own `viem` install.
+      // Force every `viem` import — ours and the SDK's re-exported
+      // types — onto this app's single copy, else tsc sees two distinct
+      // viem type trees and rejects assignments between them.
+      "viem": ["./node_modules/viem"],
+      "viem/*": ["./node_modules/viem/*"],
       "#/components/*": ["../../packages/shadcn/src/components/*"],
       "#/lib/utils": ["../../packages/shadcn/src/lib/utils.ts"],
       "#/lib/*": ["../../packages/shadcn/src/lib/*"],
