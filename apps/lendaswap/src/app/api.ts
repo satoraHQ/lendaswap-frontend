@@ -10,6 +10,7 @@ import {
   IdbWalletStorage,
   type TokenInfo as PureTokenInfo,
   type QuoteResponse,
+  type RecoverAllSwapsResult,
   type RefundResult,
   Client as SdkClient,
   type StoredSwap,
@@ -29,6 +30,7 @@ export type {
   GetSwapResponse,
   PureTokenInfo,
   QuoteResponse,
+  RecoverAllSwapsResult,
   RefundResult,
   StoredSwap,
   SwapStatus,
@@ -155,10 +157,16 @@ async function getClients(): Promise<SdkClient> {
 
     sdkClient = await builder.build();
 
-    // If wallet was migrated from v2 (legacy WASM SDK), recover swaps from server
+    // If wallet was migrated from v2 (legacy WASM SDK), recover swaps from server.
     if (walletStorage.migratedFromLegacy) {
       console.log("Migrated wallet from v2 - recovering swaps from server");
-      await sdkClient.recoverSwaps();
+      const recovery = await sdkClient.recoverAllSwaps();
+      if (!recovery.complete) {
+        console.warn(
+          "Migrated wallet recovery stopped before completion:",
+          recovery.errorMessage,
+        );
+      }
     }
   }
 
@@ -413,9 +421,9 @@ export const api = {
     return await client.getVersion();
   },
 
-  async recoverSwaps(): Promise<StoredSwap[]> {
+  async recoverAllSwaps(): Promise<RecoverAllSwapsResult> {
     const client = await getClients();
-    return await client.recoverSwaps();
+    return await client.recoverAllSwaps();
   },
 
   async getMnemonic(): Promise<string> {

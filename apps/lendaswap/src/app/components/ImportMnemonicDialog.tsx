@@ -134,12 +134,19 @@ export function ImportMnemonicDialog({
       console.log(`Recovery: Using Xpub for recovery`);
 
       // 2. Call the recovery API with the Xpub
-      const recoveredSwaps = await api.recoverSwaps();
+      const recovery = await api.recoverAllSwaps();
 
-      console.log(`Recovery: Found ${recoveredSwaps.length} swaps`);
+      console.log(`Recovery: Found ${recovery.swaps.length} swaps`);
+
+      if (!recovery.complete) {
+        console.warn(
+          "Recovery stopped before completion:",
+          recovery.errorMessage,
+        );
+      }
 
       console.log(
-        `Recovery complete: ${recoveredSwaps.length} swaps restored}`,
+        `Recovery ${recovery.complete ? "complete" : "partially complete"}: ${recovery.swaps.length} swaps restored`,
       );
 
       // Show success
