@@ -457,9 +457,7 @@ export const api = {
     relay_fee?: string;
     aa: {
       entry_point: string;
-      account_factory: string;
-      account_impl: string;
-      salt: string;
+      delegation_target: string;
     };
   }> {
     const resp = await fetch(
