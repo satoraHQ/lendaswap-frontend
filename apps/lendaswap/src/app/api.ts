@@ -134,43 +134,44 @@ const ORG_CODE = import.meta.env.VITE_ORG_CODE || "";
 
 const REQUEST_SOURCE = import.meta.env.VITE_REQUEST_SOURCE?.trim() || "";
 
-// Lazy-initialized SDK clients
+// Lazy-initialized SDK client.
 let sdkClient: SdkClient | null = null;
 
 async function getClients(): Promise<SdkClient> {
-  if (!sdkClient) {
-    const walletStorage = new IdbWalletStorage();
+  if (sdkClient) return sdkClient;
 
-    let builder = SdkClient.builder()
-      .withBaseUrl(API_BASE_URL)
-      .withEsploraUrl(ESPLORA_URL)
-      .withSignerStorage(walletStorage)
-      .withArkadeServerUrl(ARK_SERVER_URL)
-      .withSwapStorage(new IdbSwapStorage())
-      .withOrgCode(ORG_CODE);
+  const walletStorage = new IdbWalletStorage();
 
-    if (REQUEST_SOURCE) {
-      builder = builder.withDefaultHeaders({
-        "X-Request-Source": REQUEST_SOURCE,
-      });
-    }
+  let builder = SdkClient.builder()
+    .withBaseUrl(API_BASE_URL)
+    .withEsploraUrl(ESPLORA_URL)
+    .withSignerStorage(walletStorage)
+    .withArkadeServerUrl(ARK_SERVER_URL)
+    .withSwapStorage(new IdbSwapStorage())
+    .withReferralCode(ORG_CODE);
 
-    sdkClient = await builder.build();
+  if (REQUEST_SOURCE) {
+    builder = builder.withDefaultHeaders({
+      "X-Request-Source": REQUEST_SOURCE,
+    });
+  }
 
-    // If wallet was migrated from v2 (legacy WASM SDK), recover swaps from server.
-    if (walletStorage.migratedFromLegacy) {
-      console.log("Migrated wallet from v2 - recovering swaps from server");
-      const recovery = await sdkClient.recoverAllSwaps();
-      if (!recovery.complete) {
-        console.warn(
-          "Migrated wallet recovery stopped before completion:",
-          recovery.errorMessage,
-        );
-      }
+  const client = await builder.build();
+
+  // If wallet was migrated from v2 (legacy WASM SDK), recover swaps from server.
+  if (walletStorage.migratedFromLegacy) {
+    console.log("Migrated wallet from v2 - recovering swaps from server");
+    const recovery = await client.recoverAllSwaps();
+    if (!recovery.complete) {
+      console.warn(
+        "Migrated wallet recovery stopped before completion:",
+        recovery.errorMessage,
+      );
     }
   }
 
-  return sdkClient;
+  sdkClient = client;
+  return client;
 }
 
 export const api = {
