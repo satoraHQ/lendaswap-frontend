@@ -64,8 +64,7 @@ function useStepInfo() {
     };
   } else if (location.pathname === "/swaps") {
     return {
-      title: "Your Swaps",
-      description: "View and manage all your swaps",
+      title: "Past Swaps",
     };
   } else if (location.pathname.startsWith("/track")) {
     return {

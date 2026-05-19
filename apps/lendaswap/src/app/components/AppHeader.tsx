@@ -1,10 +1,10 @@
 import { useAppKit } from "@reown/appkit/react";
 import {
-  ArrowLeftRight,
   Download,
   Eye,
   Github,
   Globe,
+  History,
   Key,
   Menu,
   Upload,
@@ -121,7 +121,7 @@ export function AppHeader({
                     onClick={() => navigate("/swaps")}
                     className="gap-2"
                   >
-                    <ArrowLeftRight className="h-4 w-4" />
+                    <History className="h-4 w-4" />
                     Swaps
                   </DropdownMenuItem>
 
@@ -196,7 +196,7 @@ export function AppHeader({
                 className="gap-2"
                 title="Swaps"
               >
-                <ArrowLeftRight className="h-4 w-4" />
+                <History className="h-4 w-4" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
