@@ -130,7 +130,7 @@ const ARK_SERVER_URL =
 const ESPLORA_URL =
   import.meta.env.VITE_ESPLORA_URL || "https://mempool.space/api";
 
-const ORG_CODE = import.meta.env.VITE_ORG_CODE || "";
+const REF_CODE = import.meta.env.VITE_REF_CODE || "";
 
 const REQUEST_SOURCE = import.meta.env.VITE_REQUEST_SOURCE?.trim() || "";
 
@@ -148,7 +148,7 @@ async function getClients(): Promise<SdkClient> {
     .withSignerStorage(walletStorage)
     .withArkadeServerUrl(ARK_SERVER_URL)
     .withSwapStorage(new IdbSwapStorage())
-    .withReferralCode(ORG_CODE);
+    .withReferralCode(REF_CODE);
 
   if (REQUEST_SOURCE) {
     builder = builder.withDefaultHeaders({
