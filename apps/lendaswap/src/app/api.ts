@@ -487,6 +487,14 @@ export const api = {
     return await client.getSwapDepositorKey(swapId);
   },
 
+  async getEvmDepositorKey(): Promise<{
+    privateKey: string;
+    address: string;
+  }> {
+    const client = await getClients();
+    return client.getEvmDepositorKey();
+  },
+
   async hasReceivedVtxo(swapId: string): Promise<boolean> {
     const client = await getClients();
     return await client.hasReceivedVtxo(swapId);

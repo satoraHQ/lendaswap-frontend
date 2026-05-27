@@ -19,7 +19,13 @@ import { ImportMnemonicDialog } from "./components/ImportMnemonicDialog";
 import { LandingSection } from "./components/LandingSection";
 import { VersionFooter } from "./components/VersionFooter";
 import { HomePage } from "./HomePage";
-import { RefundPage, SwapsPage, TermsOfServicePage, TrackPage } from "./pages";
+import {
+  CctpRecoveryPage,
+  RefundPage,
+  SwapsPage,
+  TermsOfServicePage,
+  TrackPage,
+} from "./pages";
 import { SwapWizardPage } from "./wizard";
 
 /** Redirect `/` to the default pair, preserving query params like `?ref=`. */
@@ -206,6 +212,7 @@ export default function App() {
                     element={<SwapWizardPage />}
                   />
                   <Route path="/swap/:swapId/refund" element={<RefundPage />} />
+                  <Route path="/recover/cctp" element={<CctpRecoveryPage />} />
                   <Route
                     path="*"
                     element={
