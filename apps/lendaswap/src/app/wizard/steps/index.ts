@@ -1,3 +1,4 @@
+export { CctpInboundRecoveryStep } from "./CctpInboundRecoveryStep";
 export { DepositArkadeStep } from "./DepositArkadeStep";
 export { DepositBitcoinStep } from "./DepositBitcoinStep";
 export { DepositEvmGaslessStep } from "./DepositEvmGaslessStep";

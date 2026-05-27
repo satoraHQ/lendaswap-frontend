@@ -21,6 +21,7 @@ import { SupportErrorBanner } from "../components/SupportErrorBanner";
 import { db } from "../db";
 import { assertNever } from "../utils/assertNever";
 import {
+  CctpInboundRecoveryStep,
   DepositArkadeStep,
   DepositBitcoinStep,
   DepositEvmGaslessStep,
@@ -482,26 +483,35 @@ export function SwapWizardPage() {
             )}
 
           {currentStep === "expired" && (
-            <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">
-              <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-6 py-4">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Swap ID:
-                </p>
-                <code className="flex-1 font-mono text-xs text-foreground">
-                  {displaySwapData.id}
-                </code>
-                <div className="h-2 w-2 animate-pulse rounded-full bg-primary/50" />
+            <div className="space-y-4">
+              <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">
+                <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-6 py-4">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Swap ID:
+                  </p>
+                  <code className="flex-1 font-mono text-xs text-foreground">
+                    {displaySwapData.id}
+                  </code>
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-primary/50" />
+                </div>
+
+                <div className="space-y-4 p-6">
+                  <h3 className="text-xl font-semibold text-destructive">
+                    Swap Expired
+                  </h3>
+                  <p className="text-muted-foreground">
+                    This swap has expired. The time window to complete the swap
+                    has passed.
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-4 p-6">
-                <h3 className="text-xl font-semibold text-destructive">
-                  Swap Expired
-                </h3>
-                <p className="text-muted-foreground">
-                  This swap has expired. The time window to complete the swap
-                  has passed.
-                </p>
-              </div>
+              {/* CCTP-inbound recovery: rendered only when a session with a
+                  recorded burn_tx_hash exists — the component self-hides
+                  otherwise. */}
+              {cctpSession?.burn_tx_hash && (
+                <CctpInboundRecoveryStep swapId={displaySwapData.id} />
+              )}
             </div>
           )}
 
