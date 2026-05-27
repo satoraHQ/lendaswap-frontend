@@ -14,7 +14,6 @@
 
 import {
   type CctpChainName,
-  checkCctpRecoverable,
   type RecoveryProgress,
   recoverCctpInbound,
 } from "@lendasat/lendaswap-sdk-pure";
@@ -76,15 +75,6 @@ export function CctpInboundRecoveryStep({
   const [sweepOpHash, setSweepOpHash] = useState<Hex | null>(null);
   const [sweepTxHash, setSweepTxHash] = useState<Hex | null>(null);
   const [recoveredAmount, setRecoveredAmount] = useState<bigint | null>(null);
-  /**
-   * Preflight result — `undefined` while the check is in flight, then
-   * `true` when there's USDC to sweep or an unconsumed burn, `false`
-   * when the burn was already claimed AND the smart account is empty.
-   * Drives whether the whole card renders or stays hidden.
-   */
-  const [recoverable, setRecoverable] = useState<boolean | undefined>(
-    undefined,
-  );
 
   // Default the recipient field to the user's connected wallet — most
   // common destination for a recovery sweep. They can overwrite freely.
@@ -109,53 +99,6 @@ export function CctpInboundRecoveryStep({
       return undefined;
     }
   }, [session]);
-
-  // Preflight: figure out if there's anything to recover before we even
-  // render the card. Hides the UI when the CCTP message has already been
-  // claimed AND the smart account is empty (i.e. earlier recovery or
-  // normal flow already swept). Skips the check while a recovery run is
-  // in flight on this page so we don't flicker the UI mid-flow.
-  useEffect(() => {
-    if (!hasBurnTx) return;
-    if (phase !== "idle") return;
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const { address: smartAccountAddress } =
-          await api.getSwapDepositorKey(swapId);
-        const bundlerUrl = import.meta.env.VITE_AA_BUNDLER_URL as
-          | string
-          | undefined;
-        const paymasterPolicyId = import.meta.env.VITE_AA_POLICY_ID as
-          | string
-          | undefined;
-        if (!bundlerUrl || !paymasterPolicyId) {
-          // Without the AA endpoint we can't drive a recovery anyway —
-          // surface the card so the user sees the explicit error.
-          if (!cancelled) setRecoverable(true);
-          return;
-        }
-        const result = await checkCctpRecoverable(
-          { aa: { bundlerUrl, paymasterPolicyId } },
-          {
-            smartAccountAddress: smartAccountAddress as Address,
-            burnTxHash: session?.burn_tx_hash as Hex,
-            sourceChain: session?.source_chain as CctpChainName,
-          },
-        );
-        if (!cancelled) setRecoverable(result.recoverable);
-      } catch (e) {
-        console.warn("CCTP recovery preflight failed:", e);
-        // Don't hide on transient failures.
-        if (!cancelled) setRecoverable(true);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [hasBurnTx, phase, swapId, session?.burn_tx_hash, session?.source_chain]);
 
   async function handleRecover() {
     if (!session?.burn_tx_hash) {
@@ -249,14 +192,6 @@ export function CctpInboundRecoveryStep({
   }
 
   if (!hasBurnTx) {
-    return null;
-  }
-
-  // Preflight pending or finished negatively → render nothing. We don't
-  // show a loading skeleton because the expired-swap page already has
-  // its own "Swap Expired" copy; flashing a temporary recovery card
-  // would be jarring if it ends up hidden.
-  if (recoverable === undefined || recoverable === false) {
     return null;
   }
 
