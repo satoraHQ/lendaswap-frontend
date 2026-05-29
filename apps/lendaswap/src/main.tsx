@@ -89,6 +89,14 @@ createAppKit({
     url: window.location.origin,
     icons: [],
   },
+  enableCoinbase: false,
+  features: {
+    analytics: false,
+    swaps: false,
+    onramp: false,
+    email: false,
+    socials: false,
+  },
 });
 
 const queryClient = new QueryClient();
