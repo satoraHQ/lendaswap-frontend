@@ -232,64 +232,17 @@ export function TermsOfServicePage() {
 
           <section>
             <h2 className="text-lg md:text-xl font-semibold text-foreground mb-3">
-              10. Analytics &amp; Privacy
+              10. Privacy
             </h2>
             <p>
-              We use analytics to understand how our service is used and to
-              improve reliability. Our analytics provider is PostHog, which
-              processes data on servers located in the European Union.
+              We do not use frontend analytics or tracking scripts. The service
+              may still process the information you provide to create and manage
+              swaps, and our infrastructure may retain operational logs needed
+              for security, debugging, and reliability.
             </p>
             <p className="mt-4">
-              <strong className="text-foreground">Data we collect:</strong>
-            </p>
-            <ul className="list-disc pl-6 mt-3 space-y-1.5">
-              <li>
-                Swap lifecycle events (initiation, completion, refund) including
-                swap direction, token types, and fee amounts
-              </li>
-              <li>Page views and general usage patterns</li>
-              <li>
-                Device and browser information (screen size, browser type,
-                operating system)
-              </li>
-            </ul>
-            <p className="mt-4">
-              <strong className="text-foreground">
-                Data we do NOT collect:
-              </strong>
-            </p>
-            <ul className="list-disc pl-6 mt-3 space-y-1.5">
-              <li>Wallet balances or private keys</li>
-              <li>Seed phrases or recovery phrases</li>
-              <li>
-                Personally identifiable information (names, email addresses)
-              </li>
-              <li>
-                IP addresses are not stored &mdash; only a rough geographic
-                region is derived at ingestion time
-              </li>
-            </ul>
-            <p className="mt-4">
-              We automatically strip any sensitive data patterns (such as
-              private keys or seed phrases) from analytics events before they
-              are transmitted.
-            </p>
-            <p className="mt-4">
-              <strong className="text-foreground">Legal basis:</strong> We
-              process this data under legitimate interest (GDPR Article 6(1)(f))
-              for the purpose of maintaining and improving the service. We have
-              determined that this minimal, non-personal data collection does
-              not override your rights and freedoms.
-            </p>
-            <p className="mt-4">
-              <strong className="text-foreground">Opt-out:</strong> You may opt
-              out of analytics by using a browser extension that blocks tracking
-              scripts (such as uBlock Origin) or by enabling your browser&apos;s
-              Do-Not-Track setting, which our analytics provider respects.
-            </p>
-            <p className="mt-4">
-              Analytics data is retained for a maximum of 12 months from the
-              date of collection, after which it is automatically deleted.
+              We do not collect wallet balances, private keys, seed phrases, or
+              recovery phrases.
             </p>
           </section>
 

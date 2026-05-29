@@ -8,7 +8,6 @@ import {
 } from "@lendasat/lendaswap-sdk-pure";
 import { useAppKit } from "@reown/appkit/react";
 import { ArrowRight, ChevronDown, Clock, Loader2, Zap } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
 import { useEffect, useMemo, useState } from "react";
 import type {
   Account,
@@ -53,7 +52,6 @@ function formatAmount(raw: number | string, decimals: number): string {
 }
 
 export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
-  const posthog = usePostHog();
   const { address } = useAccount();
   const { open } = useAppKit();
 
@@ -164,12 +162,6 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
 
       const label = settlement === "swap-back" ? sourceSymbol : "WBTC";
       setRefundSuccess(`Refund as ${label} successful! Transaction: ${txHash}`);
-
-      posthog?.capture("swap_refunded", {
-        swap_id: swapId,
-        refund_mode: `collab-${settlement}`,
-        refund_txid: txHash,
-      });
     } catch (err) {
       console.error("Collaborative refund error:", err);
       setRefundError(
@@ -212,12 +204,6 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
       const { txHash } = await api.refundEvmWithSigner(swapId, signer, mode);
 
       setRefundSuccess(`Refund successful! Transaction: ${txHash}`);
-
-      posthog?.capture("swap_refunded", {
-        swap_id: swapId,
-        refund_mode: `manual-${mode}`,
-        refund_txid: txHash,
-      });
     } catch (err) {
       console.error("Manual refund error:", err);
       setRefundError(
@@ -238,7 +224,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
       <div className="space-y-6">
         {/* Status line */}
         {!refundSuccess && (
-          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {collabAvailable ? (
               <>
                 <Zap className="h-4 w-4 text-blue-500" />
@@ -325,7 +311,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
             )}
 
             {!isWbtcSource && (
-              <p className="text-muted-foreground text-xs">
+              <p className="text-xs text-muted-foreground">
                 Refunding as {sourceSymbol} swaps {htlcTokenSymbol} back via a
                 DEX - amount may vary slightly due to exchange rate.
               </p>
@@ -350,9 +336,9 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs">
             <span className="font-medium">{sourceSymbol}</span>
-            <ArrowRight className="text-muted-foreground h-3 w-3" />
+            <ArrowRight className="h-3 w-3 text-muted-foreground" />
             <span className="font-medium">{targetSymbol}</span>
-            <span className="text-muted-foreground ml-1">
+            <span className="ml-1 text-muted-foreground">
               ({sourceAmount} {sourceSymbol} on{" "}
               {toChainName(swapData.source_token.chain)})
             </span>
@@ -380,7 +366,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
 
           <div className="text-xs">
             <p className="text-muted-foreground">HTLC Address</p>
-            <p className="text-muted-foreground break-all font-mono">
+            <p className="break-all font-mono text-muted-foreground">
               {swapData.evm_htlc_address}
             </p>
           </div>
@@ -389,7 +375,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
         {/* Manual refund disclosure - only shown when collab is available and timelock has also passed */}
         {collabAvailable && isLocktimePassed && !refundSuccess && (
           <Collapsible>
-            <CollapsibleTrigger className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors">
+            <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground">
               <ChevronDown className="h-3 w-3" />
               Advanced: refund manually via wallet
             </CollapsibleTrigger>

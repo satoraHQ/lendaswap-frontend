@@ -152,7 +152,6 @@ function determineStepFromStatus(
 }
 
 export function SwapWizardPage() {
-  // const posthog = usePostHog();
   const { swapId } = useParams<{ swapId: string }>();
   const navigate = useNavigate();
 

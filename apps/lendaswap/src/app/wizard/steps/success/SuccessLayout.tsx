@@ -6,7 +6,6 @@ import {
   Copy,
   Heart,
 } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "#/components/ui/button";
@@ -38,12 +37,7 @@ export function SuccessLayout({
   children,
 }: SuccessLayoutProps) {
   const navigate = useNavigate();
-  const posthog = usePostHog();
   const swapId = swapData.id;
-
-  const swapDurationSeconds = swapData.created_at
-    ? Math.floor((Date.now() - new Date(swapData.created_at).getTime()) / 1000)
-    : null;
 
   const isArkadeTarget =
     swapData.direction === "evm_to_arkade" ||
@@ -67,29 +61,18 @@ export function SuccessLayout({
     };
   }, [swapId, isArkadeTarget]);
 
-  useEffect(() => {
-    posthog?.capture("swap_completed", {
-      swap_id: swapId,
-      swap_direction: swapData.direction,
-      source_token: swapData.source_token,
-      target_token: swapData.target_token,
-      fee_sats: swapData.fee_sats,
-      duration_seconds: swapDurationSeconds,
-    });
-  }, [swapId, swapData, posthog, swapDurationSeconds]); // eslint-disable-line react-hooks/exhaustive-deps
-
   return (
-    <div className="border-border/50 bg-card/80 overflow-hidden rounded-2xl border shadow-xl backdrop-blur-sm">
+    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">
       {/* Header */}
-      <div className="border-border/50 bg-muted/30 flex items-center justify-between border-b px-6 py-4">
+      <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="relative">
-            <div className="bg-muted border-border flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border">
+            <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
               <div className="flex h-5 w-5 items-center justify-center">
                 {getTokenIcon(swapData.source_token)}
               </div>
             </div>
-            <div className="bg-background absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full p-[1px]">
+            <div className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background p-[1px]">
               <div className="flex h-full w-full items-center justify-center rounded-full [&_svg]:h-full [&_svg]:w-full">
                 {getTokenNetworkIcon(
                   sourceChainOverride
@@ -103,14 +86,14 @@ export function SuccessLayout({
               </div>
             </div>
           </div>
-          <ArrowRight className="text-muted-foreground h-3.5 w-3.5" />
+          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
           <div className="relative">
-            <div className="bg-muted border-border flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border">
+            <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
               <div className="flex h-5 w-5 items-center justify-center">
                 {getTokenIcon(swapData.target_token)}
               </div>
             </div>
-            <div className="bg-background absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full p-[1px]">
+            <div className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background p-[1px]">
               <div className="flex h-full w-full items-center justify-center rounded-full [&_svg]:h-full [&_svg]:w-full">
                 {getTokenNetworkIcon(
                   targetChainOverride
@@ -132,7 +115,7 @@ export function SuccessLayout({
           <button
             type="button"
             onClick={() => onCopyAddress(swapId)}
-            className="text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 transition-colors"
+            className="flex cursor-pointer items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
             title="Copy Swap ID"
           >
             <code className="font-mono text-[10px]">{swapId.slice(0, 8)}…</code>
@@ -150,8 +133,8 @@ export function SuccessLayout({
       <div className="p-6">
         <div className="flex flex-col items-center space-y-6">
           {/* Success Icon */}
-          <div className="bg-foreground flex h-16 w-16 items-center justify-center rounded-full">
-            <Check className="text-background h-8 w-8" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-foreground">
+            <Check className="h-8 w-8 text-background" />
           </div>
 
           {/* Success Message */}
@@ -164,7 +147,7 @@ export function SuccessLayout({
             ) : (
               <h3 className="text-2xl font-semibold">Swap Complete!</h3>
             )}
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-muted-foreground">
               Your {targetSymbol} has been successfully sent to your address
             </p>
           </div>

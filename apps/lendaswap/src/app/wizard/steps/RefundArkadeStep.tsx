@@ -3,7 +3,6 @@ import type {
   ArkadeToLightningSwapResponse,
 } from "@lendasat/lendaswap-sdk-pure";
 import { ArrowRight, Clock, Loader2, Unlock } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -19,7 +18,6 @@ interface RefundArkadeStepProps {
 }
 
 export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
-  const posthog = usePostHog();
   const [refundAddress, setRefundAddress] = useState("");
   const [isRefunding, setIsRefunding] = useState(false);
   const [refundError, setRefundError] = useState<string | null>(null);
@@ -86,13 +84,6 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
     try {
       const txid = await api.refundVhtlc(swapData.id, refundAddress);
       setRefundSuccess(`Refund successful! Transaction ID: ${txid}`);
-
-      posthog?.capture("swap_refunded", {
-        swap_id: swapData.id,
-        swap_direction: "arkade-to-evm",
-        refund_reason: "user_initiated",
-        refund_txid: txid,
-      });
     } catch (error) {
       console.error("Refund failed:", error);
       setRefundError(
@@ -171,21 +162,21 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
             <p className="text-sm font-medium">Swap</p>
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium">{sourceSymbol}</span>
-              <ArrowRight className="text-muted-foreground h-3 w-3" />
+              <ArrowRight className="h-3 w-3 text-muted-foreground" />
               <span className="text-xs font-medium">{targetSymbol}</span>
             </div>
           </div>
 
           <div className="space-y-1">
             <p className="text-sm font-medium">Swap Status</p>
-            <p className="text-muted-foreground break-all font-mono text-xs">
+            <p className="break-all font-mono text-xs text-muted-foreground">
               {swapData.status}
             </p>
           </div>
 
           <div className="space-y-1">
             <p className="text-sm font-medium">VHTLC Address</p>
-            <p className="text-muted-foreground break-all font-mono text-xs">
+            <p className="break-all font-mono text-xs text-muted-foreground">
               {"btc_vhtlc_address" in swapData
                 ? swapData.btc_vhtlc_address
                 : swapData.arkade_vhtlc_address}
@@ -197,12 +188,12 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
             {isLoadingAmounts ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-3 w-3 animate-spin" />
-                <p className="text-muted-foreground text-xs">Loading...</p>
+                <p className="text-xs text-muted-foreground">Loading...</p>
               </div>
             ) : amounts !== null ? (
               <div className="space-y-1">
                 {amounts.vtxoStatus === "not_funded" && (
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-xs text-muted-foreground">
                     Not yet funded
                   </p>
                 )}
@@ -229,19 +220,19 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
                   </>
                 )}
                 {amounts.vtxoStatus === "spent" && (
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-xs text-muted-foreground">
                     {amounts.spent.toLocaleString()} sats - already spent
                   </p>
                 )}
               </div>
             ) : (
-              <p className="text-muted-foreground text-xs">Unknown</p>
+              <p className="text-xs text-muted-foreground">Unknown</p>
             )}
           </div>
 
           <div className="space-y-1">
             <p className="text-sm font-medium">Refund Locktime</p>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-xs text-muted-foreground">
               {refundLocktimeDate.toLocaleString()}
             </p>
           </div>

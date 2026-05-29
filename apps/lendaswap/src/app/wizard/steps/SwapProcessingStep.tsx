@@ -8,7 +8,6 @@ import {
   ExternalLink,
   Loader2,
 } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "#/components/ui/button";
@@ -54,7 +53,6 @@ export function SwapProcessingStep({
   swapData,
   swapId,
 }: ConfirmingDepositStepProps) {
-  const posthog = usePostHog();
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
@@ -156,13 +154,6 @@ export function SwapProcessingStep({
             console.error(message, { swapId, address: solanaWallet });
             setRetryCount(maxRetries);
             setClaimError(message);
-            posthog?.capture("swap_failed", {
-              failure_type: "claim",
-              swap_id: swapData.id,
-              swap_direction: swapData.direction,
-              error_message: message,
-              retry_count: retryCount,
-            });
             return;
           }
           const stored = await getSwapById(swapId).catch(() => undefined);
@@ -202,14 +193,6 @@ export function SwapProcessingStep({
           setRetryCount(maxRetries);
           setClaimError(claimResponse.message);
 
-          posthog?.capture("swap_failed", {
-            failure_type: "claim",
-            swap_id: swapData.id,
-            swap_direction: swapData.direction,
-            error_message: claimResponse.message,
-            retry_count: retryCount,
-          });
-
           return;
         }
 
@@ -234,14 +217,6 @@ export function SwapProcessingStep({
               ? `${error.message} (Max retries reached)`
               : `Failed to claim tokens after ${maxRetries} attempts. Please try manually.`;
           setClaimError(errorMessage);
-
-          posthog?.capture("swap_failed", {
-            failure_type: "claim",
-            swap_id: swapData.id,
-            swap_direction: swapData.direction,
-            error_message: errorMessage,
-            retry_count: newRetryCount,
-          });
         } else {
           setClaimError(
             error instanceof Error
@@ -261,7 +236,7 @@ export function SwapProcessingStep({
     };
 
     autoClaim();
-  }, [swapData, swapId, isClaiming, retryCount, sleep, posthog?.capture]);
+  }, [swapData, swapId, isClaiming, retryCount, sleep]);
 
   const handleCopyTxId = async (txId: string) => {
     try {
@@ -454,18 +429,18 @@ export function SwapProcessingStep({
   const isLightning = swapData.direction === "evm_to_lightning";
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-xl overflow-hidden">
+    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between border-b border-border/50 bg-muted/30">
+      <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="relative">
-            <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center bg-muted border border-border">
-              <div className="w-5 h-5 flex items-center justify-center">
+            <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+              <div className="flex h-5 w-5 items-center justify-center">
                 {getTokenIcon(swapData.target_token)}
               </div>
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-background p-[1px] flex items-center justify-center">
-              <div className="w-full h-full rounded-full flex items-center justify-center [&_svg]:w-full [&_svg]:h-full">
+            <div className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background p-[1px]">
+              <div className="flex h-full w-full items-center justify-center rounded-full [&_svg]:h-full [&_svg]:w-full">
                 {getTokenNetworkIcon(swapData.target_token)}
               </div>
             </div>
@@ -478,17 +453,17 @@ export function SwapProcessingStep({
           <button
             type="button"
             onClick={() => handleCopyTxId(swapId)}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="flex cursor-pointer items-center gap-1 text-muted-foreground transition-colors hover:text-foreground"
             title="Copy Swap ID"
           >
-            <code className="text-[10px] font-mono">{swapId.slice(0, 8)}…</code>
+            <code className="font-mono text-[10px]">{swapId.slice(0, 8)}…</code>
             {copiedTxId === swapId ? (
               <CheckCheck className="h-3 w-3 text-green-500" />
             ) : (
               <Copy className="h-3 w-3" />
             )}
           </button>
-          <div className="h-2 w-2 rounded-full bg-primary/50 animate-pulse" />
+          <div className="h-2 w-2 animate-pulse rounded-full bg-primary/50" />
         </div>
       </div>
 
@@ -647,7 +622,7 @@ export function SwapProcessingStep({
               )}
               {/* Show claiming status inline when server is funded */}
               {swapData.status === "serverfunded" && !isLightning && (
-                <div className="from-primary/5 to-card mt-2 space-y-2 rounded-lg border bg-gradient-to-t p-4">
+                <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
                   <p className="text-sm font-medium">
                     {isClaiming
                       ? isEvmToBtc
@@ -657,7 +632,7 @@ export function SwapProcessingStep({
                         ? "VHTLC Funded"
                         : "HTLC Funded"}
                   </p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-xs text-muted-foreground">
                     {isClaiming
                       ? isEvmToBtc
                         ? "Claiming the Bitcoin VHTLC and publishing the transaction..."
@@ -669,7 +644,7 @@ export function SwapProcessingStep({
                         : "The HTLC has been funded. Preparing to claim your tokens..."}
                   </p>
                   {retryCount > 0 && retryCount < maxRetries && (
-                    <p className="text-muted-foreground text-xs">
+                    <p className="text-xs text-muted-foreground">
                       Retry attempt {retryCount}/{maxRetries}...
                     </p>
                   )}
@@ -679,7 +654,7 @@ export function SwapProcessingStep({
                     isEthereumToken(swapData.target_token.chain) &&
                     !address && (
                       <div className="space-y-2">
-                        <p className="text-muted-foreground text-xs">
+                        <p className="text-xs text-muted-foreground">
                           Connect your Ethereum wallet to claim your tokens.
                         </p>
                         <Button
@@ -692,7 +667,7 @@ export function SwapProcessingStep({
                       </div>
                     )}
                   {isBtcToEvm && !isClaiming && !claimError && address && (
-                    <p className="text-muted-foreground text-xs">
+                    <p className="text-xs text-muted-foreground">
                       {isEthereumToken(swapData.target_token.chain)
                         ? "You will need ETH in your wallet to pay for gas fees to claim your tokens."
                         : "Gas fees fully sponsored"}
