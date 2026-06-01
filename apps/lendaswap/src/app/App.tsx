@@ -32,7 +32,7 @@ import { SwapWizardPage } from "./wizard";
 function DefaultRedirect() {
   const location = useLocation();
   return (
-    <Navigate to={`/lightning:BTC/polygon:USDC${location.search}`} replace />
+    <Navigate to={`/lightning:BTC/42161:USDC${location.search}`} replace />
   );
 }
 
@@ -135,7 +135,7 @@ export default function App() {
   };
 
   return (
-    <div className="bg-background relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-background">
       {/* Modern Gradient Glows */}
       <div className="pointer-events-none fixed inset-0 z-0">
         {/* Top Left - Lime Gradient */}
@@ -180,15 +180,15 @@ export default function App() {
               <div className="text-center">
                 {stepInfo.isHomePage ? (
                   <div className="space-y-1">
-                    <div className="text-muted-foreground/60 flex items-center justify-center gap-1.5">
+                    <div className="flex items-center justify-center gap-1.5 text-muted-foreground/60">
                       <Zap className="h-3 w-3 md:h-3.5 md:w-3.5" />
                       <span className="font-sans text-xs font-semibold uppercase tracking-widest md:text-sm">
                         Lightning-fast
                       </span>
                     </div>
-                    <h1 className="from-foreground to-foreground/40 flex items-center justify-center gap-2 bg-gradient-to-b bg-clip-text font-sans text-xl font-bold tracking-tight text-transparent md:gap-3 md:text-3xl">
+                    <h1 className="flex items-center justify-center gap-2 bg-gradient-to-b from-foreground to-foreground/40 bg-clip-text font-sans text-xl font-bold tracking-tight text-transparent md:gap-3 md:text-3xl">
                       <span>Bitcoin</span>
-                      <ArrowLeftRight className="text-muted-foreground/30 h-4 w-4 md:h-6 md:w-6" />
+                      <ArrowLeftRight className="h-4 w-4 text-muted-foreground/30 md:h-6 md:w-6" />
                       <span>Stablecoins</span>
                     </h1>
                   </div>
@@ -198,7 +198,7 @@ export default function App() {
                   </h2>
                 )}
                 {stepInfo.description && (
-                  <p className="text-muted-foreground mt-2">
+                  <p className="mt-2 text-muted-foreground">
                     {stepInfo.description}
                   </p>
                 )}
@@ -219,7 +219,7 @@ export default function App() {
                       <div className="group relative">
                         {/* Lime glow effect on hover */}
                         <div className="group-hover:via-lime-400/8 absolute -inset-1 rounded-[28px] bg-gradient-to-br from-lime-400/0 via-lime-400/0 to-lime-400/0 opacity-0 blur-xl transition-all duration-500 group-hover:from-lime-400/10 group-hover:to-lime-400/10 group-hover:opacity-100" />
-                        <Card className="border-border from-card via-card relative !gap-0 rounded-3xl border bg-gradient-to-br to-lime-400/5 !py-0 shadow-sm">
+                        <Card className="relative !gap-0 rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 !py-0 shadow-sm">
                           <Routes>
                             <Route path="/" element={<DefaultRedirect />} />
                             <Route
@@ -252,13 +252,13 @@ export default function App() {
             {/* Debug Navigation */}
             <DebugNavigation />
 
-            <div className="text-muted-foreground space-y-2 text-center text-sm">
+            <div className="space-y-2 text-center text-sm text-muted-foreground">
               <p>© 2026 Satora. All rights reserved.</p>
               <p>
                 <button
                   type="button"
                   onClick={() => navigate("/terms")}
-                  className="hover:text-foreground underline transition-colors"
+                  className="underline transition-colors hover:text-foreground"
                 >
                   Terms of Service
                 </button>
