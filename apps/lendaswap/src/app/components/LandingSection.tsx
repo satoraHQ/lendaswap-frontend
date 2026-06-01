@@ -53,10 +53,10 @@ export function LandingSection() {
           </div>
         </div>
 
-        {/* Top Row - Bento Grid: Square left, Wide right */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+        {/* Feature squares: Secured · Powered · Instant */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Self-Custody - 100% Secured */}
-          <div className="md:col-span-2 group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5 aspect-square md:aspect-square">
+          <div className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5 aspect-square md:aspect-square">
             <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
             {/* Background circles - Apple-style behind shield, animate on hover */}
@@ -138,73 +138,217 @@ export function LandingSection() {
             </div>
           </div>
 
-          {/* Mobile App Promo - Wide */}
-          <div className="md:col-span-3 group relative rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5 aspect-square md:aspect-auto overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 rounded-3xl" />
-
-            {/* Coming Soon - Big background text */}
-            <div className="absolute top-[35%] right-4 sm:right-8 md:right-12 -translate-y-1/2 flex flex-col items-end pointer-events-none">
-              <span className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-lime-400/[0.08] leading-none transition-all duration-500 group-hover:text-lime-400/[0.15]">
-                COMING
-              </span>
-              <span className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-lime-400/[0.12] leading-none transition-all duration-500 group-hover:text-lime-400/[0.2]">
-                SOON
-              </span>
-            </div>
-
-            {/* Phone - floating, fades out at bottom */}
-            <div className="absolute top-[50%] left-10 sm:left-14 md:left-20 -translate-y-1/2">
-              <div
-                className="relative transition-transform duration-500 ease-out group-hover:-translate-y-2"
-                style={{
-                  perspective: "1000px",
-                  maskImage:
-                    "linear-gradient(to bottom, black 40%, transparent 90%)",
-                  WebkitMaskImage:
-                    "linear-gradient(to bottom, black 40%, transparent 90%)",
-                }}
-              >
-                {/* Phone Frame */}
-                <div className="relative w-[100px] sm:w-[110px] md:w-[110px] lg:w-[130px] aspect-[1/2] rounded-[20px] sm:rounded-[22px] md:rounded-[24px] bg-gradient-to-b from-zinc-700 to-zinc-900 dark:from-zinc-600 dark:to-zinc-800 p-[3px] sm:p-[3px] md:p-[4px]">
-                  {/* Inner bezel */}
-                  <div className="relative w-full h-full rounded-[17px] sm:rounded-[19px] md:rounded-[20px] bg-black overflow-hidden">
-                    {/* Dynamic Island */}
-                    <div className="absolute top-2.5 sm:top-3 md:top-3 left-1/2 -translate-x-1/2 w-[30px] sm:w-[32px] md:w-[34px] h-[8px] sm:h-[9px] md:h-[10px] bg-black rounded-full z-10" />
-                    {/* Screen */}
-                    <div className="w-full h-full bg-gradient-to-br from-lime-100 via-lime-50 to-white dark:from-lime-400/20 dark:via-lime-500/10 dark:to-lime-400/5" />
-                    {/* Screen reflection */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
+          {/* Powered by Arkade - Square */}
+          <div className="group relative aspect-square overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-purple-500/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-purple-500/30 hover:shadow-xl hover:shadow-purple-500/5">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-transparent to-purple-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="relative h-full flex flex-col justify-between">
+              {/* Pixel art space invader with classic animation on hover */}
+              <div className="flex-1 flex items-center justify-center">
+                <style>{`
+                        @keyframes invaderMove {
+                          0%, 100% { transform: translateX(-10px); }
+                          50% { transform: translateX(10px); }
+                        }
+                        @keyframes invaderFrame {
+                          0%, 49% { opacity: 1; }
+                          50%, 100% { opacity: 0; }
+                        }
+                        @keyframes invaderFrame2 {
+                          0%, 49% { opacity: 0; }
+                          50%, 100% { opacity: 1; }
+                        }
+                        .invader-container {
+                          animation: none;
+                        }
+                        .group:hover .invader-container {
+                          animation: invaderMove 1.5s ease-in-out infinite;
+                        }
+                        .invader-frame1 {
+                          opacity: 1;
+                        }
+                        .invader-frame2 {
+                          opacity: 0;
+                        }
+                        .group:hover .invader-frame1 {
+                          animation: invaderFrame 0.8s steps(1) infinite;
+                        }
+                        .group:hover .invader-frame2 {
+                          animation: invaderFrame2 0.8s steps(1) infinite;
+                        }
+                      `}</style>
+                <div className="relative invader-container">
+                  {/* Frame 1 - legs out */}
+                  <div className="grid grid-cols-11 gap-[1px] sm:gap-[2px] md:gap-[2px] lg:gap-[3px] absolute inset-0 invader-frame1">
+                    {[
+                      [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
+                      [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                      [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+                      [0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0],
+                      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                      [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                      [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1],
+                      [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0],
+                    ]
+                      .flat()
+                      .map((filled, i) => (
+                        <div
+                          key={`p1-${i.toString()}`}
+                          className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 rounded-sm ${
+                            filled
+                              ? "bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.5)]"
+                              : "bg-transparent"
+                          }`}
+                        />
+                      ))}
                   </div>
-                  {/* Side buttons */}
-                  <div className="absolute -right-[2px] top-[35%] w-[2px] sm:w-[3px] h-[18%] bg-zinc-600 dark:bg-zinc-500 rounded-r-sm" />
-                  <div className="absolute -left-[2px] top-[28%] w-[2px] sm:w-[3px] h-[12%] bg-zinc-600 dark:bg-zinc-500 rounded-l-sm" />
-                  <div className="absolute -left-[2px] top-[42%] w-[2px] sm:w-[3px] h-[18%] bg-zinc-600 dark:bg-zinc-500 rounded-l-sm" />
+                  {/* Frame 2 - legs in */}
+                  <div className="grid grid-cols-11 gap-[1px] sm:gap-[2px] md:gap-[2px] lg:gap-[3px] invader-frame2">
+                    {[
+                      [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
+                      [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+                      [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+                      [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1],
+                      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                      [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
+                      [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                    ]
+                      .flat()
+                      .map((filled, i) => (
+                        <div
+                          key={`p2-${i.toString()}`}
+                          className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 rounded-sm ${
+                            filled
+                              ? "bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.5)]"
+                              : "bg-transparent"
+                          }`}
+                        />
+                      ))}
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Text - positioned at bottom */}
-            <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 right-4 md:right-6">
-              <div className="text-base md:text-xl font-bold tracking-tight text-foreground">
-                Get the App
+              <div>
+                <div className="text-base md:text-xl font-bold tracking-tight text-foreground">
+                  Powered by Arkade · Bitcoin L2
+                </div>
+                <a
+                  href="https://arkadeos.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-1.5 text-xs md:text-sm font-medium text-purple-500 hover:text-purple-400 transition-colors"
+                >
+                  Learn more
+                  <ArrowDown className="h-3 w-3 rotate-[-90deg]" />
+                </a>
               </div>
-              <a
-                href="https://lendasat.com/app_waitlist"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 mt-1.5 text-xs md:text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors"
-              >
-                Join waitlist
-                <ArrowDown className="h-3 w-3 rotate-[-90deg]" />
-              </a>
+            </div>
+          </div>
+
+          {/* Instant */}
+          <div className="group relative aspect-[4/3] md:aspect-square overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5">
+            <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <style>{`
+                    @keyframes coinSpinLeft {
+                      0% { transform: translateX(0) rotateY(0deg); }
+                      50% { transform: translateX(20px) rotateY(180deg); }
+                      100% { transform: translateX(0) rotateY(360deg); }
+                    }
+                    @keyframes coinSpinRight {
+                      0% { transform: translateX(0) rotateY(0deg); }
+                      50% { transform: translateX(-20px) rotateY(180deg); }
+                      100% { transform: translateX(0) rotateY(360deg); }
+                    }
+                    .instant-coin-left, .instant-coin-right {
+                      animation: none;
+                    }
+                    .group:hover .instant-coin-left {
+                      animation: coinSpinLeft 0.8s ease-in-out;
+                    }
+                    .group:hover .instant-coin-right {
+                      animation: coinSpinRight 0.8s ease-in-out;
+                    }
+                  `}</style>
+            <div className="relative h-full flex flex-col justify-between">
+              {/* Coin swap animation area */}
+              <div className="flex-1 flex items-center justify-center">
+                <div className="flex items-center gap-3 md:gap-5">
+                  {/* USDT Coin - Left - Glossy Lime Glass */}
+                  <div
+                    className="instant-coin-left w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center shadow-xl relative"
+                    style={{
+                      perspective: "1000px",
+                      transformStyle: "preserve-3d",
+                      background:
+                        "linear-gradient(135deg, rgba(194,232,33,0.9) 0%, rgba(163,196,16,0.8) 50%, rgba(132,160,10,0.9) 100%)",
+                      boxShadow:
+                        "0 8px 32px rgba(163,196,16,0.3), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      backdropFilter: "blur(8px)",
+                    }}
+                  >
+                    <div
+                      className="absolute inset-1 rounded-full"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%)",
+                      }}
+                    />
+                    {/* Tether T Symbol */}
+                    <svg
+                      viewBox="0 0 339.43 295.27"
+                      className="relative w-7 h-7 md:w-9 md:h-9"
+                      fill="white"
+                      aria-hidden="true"
+                    >
+                      <path d="M191.19,144.8v0c-1.2.09-7.4,0.46-21.23,0.46-11,0-18.81-.33-21.55-0.46v0c-42.51-1.87-74.24-9.27-74.24-18.13s31.73-16.25,74.24-18.15v28.91c2.78,0.2,10.74.67,21.74,0.67,13.2,0,19.81-.55,21-0.66v-28.9c42.42,1.89,74.08,9.29,74.08,18.13s-31.65,16.24-74.08,18.12h0Zm0-39.25V79.68h59.2V40.23H89.21V79.68h59.19v25.86c-48.11,2.21-84.29,11.74-84.29,23.16s36.18,20.94,84.29,23.16v82.9h42.78v-82.93c48-2.21,84.12-11.73,84.12-23.14s-36.09-20.93-84.12-23.15h0Z" />
+                    </svg>
+                  </div>
+                  {/* Swap arrows */}
+                  <div className="flex flex-col items-center gap-0.5">
+                    <ArrowLeftRight className="w-5 h-5 md:w-7 md:h-7 text-lime-400/70" />
+                  </div>
+                  {/* Bitcoin Coin - Right - Glossy Lime Glass */}
+                  <div
+                    className="instant-coin-right w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center shadow-xl relative"
+                    style={{
+                      perspective: "1000px",
+                      transformStyle: "preserve-3d",
+                      background:
+                        "linear-gradient(135deg, rgba(194,232,33,0.95) 0%, rgba(163,196,16,0.85) 50%, rgba(132,160,10,0.95) 100%)",
+                      boxShadow:
+                        "0 8px 32px rgba(163,196,16,0.3), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1)",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      backdropFilter: "blur(8px)",
+                    }}
+                  >
+                    <div
+                      className="absolute inset-1 rounded-full"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%)",
+                      }}
+                    />
+                    {/* Bitcoin Logo */}
+                    <BitcoinIcon className="relative w-7 h-7 md:w-9 md:h-9 [&_path]:fill-white" />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="text-base md:text-xl font-bold tracking-tight text-foreground">
+                  Instant
+                </div>
+                <div className="text-xs md:text-sm text-muted-foreground leading-relaxed mt-0.5">
+                  Near-instant settlement
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Middle Row - Bento Grid: Wide left, Square right */}
+        {/* Wide tiles: Developer Docs · Atomic Swaps */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
           {/* Developer Docs - Wide */}
-          <div className="md:col-span-3 group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5 aspect-[4/3] md:aspect-auto">
+          <div className="md:col-span-3 group relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5 aspect-[4/3] md:aspect-auto md:min-h-[420px]">
             <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
             <style>{`
                     @keyframes typewriter {
@@ -392,215 +536,6 @@ export function LandingSection() {
                   View docs
                   <ArrowDown className="h-3 w-3 rotate-[-90deg]" />
                 </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Powered by Arkade - Square */}
-          <div className="md:col-span-2 group relative aspect-square overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-purple-500/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-purple-500/30 hover:shadow-xl hover:shadow-purple-500/5">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-transparent to-purple-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-            <div className="relative h-full flex flex-col justify-between">
-              {/* Pixel art space invader with classic animation on hover */}
-              <div className="flex-1 flex items-center justify-center">
-                <style>{`
-                        @keyframes invaderMove {
-                          0%, 100% { transform: translateX(-10px); }
-                          50% { transform: translateX(10px); }
-                        }
-                        @keyframes invaderFrame {
-                          0%, 49% { opacity: 1; }
-                          50%, 100% { opacity: 0; }
-                        }
-                        @keyframes invaderFrame2 {
-                          0%, 49% { opacity: 0; }
-                          50%, 100% { opacity: 1; }
-                        }
-                        .invader-container {
-                          animation: none;
-                        }
-                        .group:hover .invader-container {
-                          animation: invaderMove 1.5s ease-in-out infinite;
-                        }
-                        .invader-frame1 {
-                          opacity: 1;
-                        }
-                        .invader-frame2 {
-                          opacity: 0;
-                        }
-                        .group:hover .invader-frame1 {
-                          animation: invaderFrame 0.8s steps(1) infinite;
-                        }
-                        .group:hover .invader-frame2 {
-                          animation: invaderFrame2 0.8s steps(1) infinite;
-                        }
-                      `}</style>
-                <div className="relative invader-container">
-                  {/* Frame 1 - legs out */}
-                  <div className="grid grid-cols-11 gap-[1px] sm:gap-[2px] md:gap-[2px] lg:gap-[3px] absolute inset-0 invader-frame1">
-                    {[
-                      [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
-                      [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-                      [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-                      [0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0],
-                      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                      [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-                      [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1],
-                      [0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0],
-                    ]
-                      .flat()
-                      .map((filled, i) => (
-                        <div
-                          key={`p1-${i.toString()}`}
-                          className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 rounded-sm ${
-                            filled
-                              ? "bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.5)]"
-                              : "bg-transparent"
-                          }`}
-                        />
-                      ))}
-                  </div>
-                  {/* Frame 2 - legs in */}
-                  <div className="grid grid-cols-11 gap-[1px] sm:gap-[2px] md:gap-[2px] lg:gap-[3px] invader-frame2">
-                    {[
-                      [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
-                      [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-                      [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-                      [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1],
-                      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                      [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                      [0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
-                      [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-                    ]
-                      .flat()
-                      .map((filled, i) => (
-                        <div
-                          key={`p2-${i.toString()}`}
-                          className={`w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 lg:w-3.5 lg:h-3.5 rounded-sm ${
-                            filled
-                              ? "bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.5)]"
-                              : "bg-transparent"
-                          }`}
-                        />
-                      ))}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="text-base md:text-xl font-bold tracking-tight text-foreground">
-                  Powered by Arkade · Bitcoin L2
-                </div>
-                <a
-                  href="https://arkadeos.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-1.5 text-xs md:text-sm font-medium text-purple-500 hover:text-purple-400 transition-colors"
-                >
-                  Learn more
-                  <ArrowDown className="h-3 w-3 rotate-[-90deg]" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Row - 3 Feature Boxes */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Instant */}
-          <div className="group relative aspect-[4/3] md:aspect-square overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 p-4 md:p-6 shadow-sm transition-all duration-300 hover:border-lime-400/30 hover:shadow-xl hover:shadow-lime-400/5">
-            <div className="absolute inset-0 bg-gradient-to-br from-lime-400/0 via-transparent to-lime-400/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-            <style>{`
-                    @keyframes coinSpinLeft {
-                      0% { transform: translateX(0) rotateY(0deg); }
-                      50% { transform: translateX(20px) rotateY(180deg); }
-                      100% { transform: translateX(0) rotateY(360deg); }
-                    }
-                    @keyframes coinSpinRight {
-                      0% { transform: translateX(0) rotateY(0deg); }
-                      50% { transform: translateX(-20px) rotateY(180deg); }
-                      100% { transform: translateX(0) rotateY(360deg); }
-                    }
-                    .instant-coin-left, .instant-coin-right {
-                      animation: none;
-                    }
-                    .group:hover .instant-coin-left {
-                      animation: coinSpinLeft 0.8s ease-in-out;
-                    }
-                    .group:hover .instant-coin-right {
-                      animation: coinSpinRight 0.8s ease-in-out;
-                    }
-                  `}</style>
-            <div className="relative h-full flex flex-col justify-between">
-              {/* Coin swap animation area */}
-              <div className="flex-1 flex items-center justify-center">
-                <div className="flex items-center gap-3 md:gap-5">
-                  {/* USDT Coin - Left - Glossy Lime Glass */}
-                  <div
-                    className="instant-coin-left w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center shadow-xl relative"
-                    style={{
-                      perspective: "1000px",
-                      transformStyle: "preserve-3d",
-                      background:
-                        "linear-gradient(135deg, rgba(194,232,33,0.9) 0%, rgba(163,196,16,0.8) 50%, rgba(132,160,10,0.9) 100%)",
-                      boxShadow:
-                        "0 8px 32px rgba(163,196,16,0.3), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1)",
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  >
-                    <div
-                      className="absolute inset-1 rounded-full"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%)",
-                      }}
-                    />
-                    {/* Tether T Symbol */}
-                    <svg
-                      viewBox="0 0 339.43 295.27"
-                      className="relative w-7 h-7 md:w-9 md:h-9"
-                      fill="white"
-                      aria-hidden="true"
-                    >
-                      <path d="M191.19,144.8v0c-1.2.09-7.4,0.46-21.23,0.46-11,0-18.81-.33-21.55-0.46v0c-42.51-1.87-74.24-9.27-74.24-18.13s31.73-16.25,74.24-18.15v28.91c2.78,0.2,10.74.67,21.74,0.67,13.2,0,19.81-.55,21-0.66v-28.9c42.42,1.89,74.08,9.29,74.08,18.13s-31.65,16.24-74.08,18.12h0Zm0-39.25V79.68h59.2V40.23H89.21V79.68h59.19v25.86c-48.11,2.21-84.29,11.74-84.29,23.16s36.18,20.94,84.29,23.16v82.9h42.78v-82.93c48-2.21,84.12-11.73,84.12-23.14s-36.09-20.93-84.12-23.15h0Z" />
-                    </svg>
-                  </div>
-                  {/* Swap arrows */}
-                  <div className="flex flex-col items-center gap-0.5">
-                    <ArrowLeftRight className="w-5 h-5 md:w-7 md:h-7 text-lime-400/70" />
-                  </div>
-                  {/* Bitcoin Coin - Right - Glossy Lime Glass */}
-                  <div
-                    className="instant-coin-right w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center shadow-xl relative"
-                    style={{
-                      perspective: "1000px",
-                      transformStyle: "preserve-3d",
-                      background:
-                        "linear-gradient(135deg, rgba(194,232,33,0.95) 0%, rgba(163,196,16,0.85) 50%, rgba(132,160,10,0.95) 100%)",
-                      boxShadow:
-                        "0 8px 32px rgba(163,196,16,0.3), inset 0 2px 4px rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.1)",
-                      border: "1px solid rgba(255,255,255,0.2)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  >
-                    <div
-                      className="absolute inset-1 rounded-full"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%)",
-                      }}
-                    />
-                    {/* Bitcoin Logo */}
-                    <BitcoinIcon className="relative w-7 h-7 md:w-9 md:h-9 [&_path]:fill-white" />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="text-base md:text-xl font-bold tracking-tight text-foreground">
-                  Instant
-                </div>
-                <div className="text-xs md:text-sm text-muted-foreground leading-relaxed mt-0.5">
-                  Near-instant settlement
-                </div>
               </div>
             </div>
           </div>
