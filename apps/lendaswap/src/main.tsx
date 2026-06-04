@@ -19,6 +19,7 @@ import {
   sonic,
   unichain,
   worldchain,
+  xdc,
 } from "@reown/appkit/networks";
 import { createAppKit } from "@reown/appkit/react";
 import { SolanaAdapter } from "@reown/appkit-adapter-solana";
@@ -56,6 +57,7 @@ const networks = [
   sei,
   hyperEvm,
   monad,
+  xdc,
 ];
 const projectId = "a15c535db177c184c98bdbdc5ff12590";
 const rpcOverrideChainId = import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID;

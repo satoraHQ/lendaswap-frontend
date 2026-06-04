@@ -29,6 +29,7 @@ import {
   encodeDepositForBurn,
   fetchAttestation,
   fetchCctpFee,
+  finalityForChainId,
   getCctpViemChainByName,
   MESSAGE_TRANSMITTER_V2,
   simulateBatchCalls,
@@ -518,10 +519,15 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
         ownerPrivateKey: ownerHex,
       });
 
-      // 3. Fetch the CCTP fee for maxFee on burn.
+      // 3. Fetch the CCTP fee for maxFee on burn. Sources without Fast
+      //    Transfer (e.g. XDC) burn at Standard finality, so query and
+      //    burn at the matching threshold — fast finality there charges
+      //    the wrong tier and never attests at 1000.
+      const minFinalityThreshold = finalityForChainId(sourceChainViem.id);
       const feeEntry = await fetchCctpFee({
         sourceDomain,
         destinationDomain: CCTP_DOMAINS.Arbitrum,
+        finalityThreshold: minFinalityThreshold,
       });
       const cctpFee = computeCctpFastFee(feeEntry, sourceAmountUsdc);
 
@@ -566,6 +572,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
         burnToken: sourceUsdc,
         destinationCaller: addressToBytes32Hex(accountAddress),
         maxFee: cctpFee,
+        minFinalityThreshold,
       });
       const txHash = await walletClient.sendTransaction({
         to: TOKEN_MESSENGER_V2 as `0x${string}`,
