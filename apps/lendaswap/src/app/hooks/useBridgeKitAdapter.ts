@@ -14,6 +14,7 @@ import {
   Sonic,
   Unichain,
   WorldChain,
+  XDC,
 } from "@circle-fin/bridge-kit/chains";
 import { useMemo } from "react";
 import { useConfig } from "wagmi";
@@ -36,6 +37,7 @@ const SUPPORTED_CHAINS = [
   Sei,
   HyperEVM,
   Monad,
+  XDC,
 ];
 
 /**

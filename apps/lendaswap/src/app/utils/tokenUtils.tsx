@@ -30,6 +30,7 @@ import NetworkStable from "@web3icons/react/icons/networks/NetworkStable";
 import NetworkTempo from "@web3icons/react/icons/networks/NetworkTempo";
 import NetworkUnichain from "@web3icons/react/icons/networks/NetworkUnichain";
 import NetworkWorld from "@web3icons/react/icons/networks/NetworkWorld";
+import NetworkXdc from "@web3icons/react/icons/networks/NetworkXdc";
 import NetworkXLayer from "@web3icons/react/icons/networks/NetworkXLayer";
 import type { ReactElement } from "react";
 import {
@@ -147,6 +148,7 @@ export function getTokenNetworkIcon(tokenId: TokenInfo): ReactElement {
     "1329": <NetworkSeiNetwork variant="branded" size={16} />,
     "999": <NetworkHyperEvm variant="branded" size={16} />,
     "143": <NetworkMonad variant="branded" size={16} />,
+    "50": <NetworkXdc variant="branded" size={16} />,
     // USDT0 bridge chains
     "80094": <NetworkBerachain variant="branded" size={16} />,
     "1030": <NetworkConflux variant="branded" size={16} />,
@@ -249,6 +251,7 @@ const BLOCK_EXPLORERS: Record<string, string> = {
   "480": "https://worldscan.org",
   "57073": "https://explorer.inkonchain.com",
   "1329": "https://seitrace.com",
+  "50": "https://xdcscan.com",
   // USDT0 bridge chains
   "80094": "https://berascan.com",
   "1030": "https://evm.confluxscan.io",
