@@ -385,6 +385,20 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
           setUserOpTxHash(receipt.receipt.transactionHash);
         }
 
+        // A UserOp can be included on-chain yet revert during execution —
+        // waitForUserOperationReceipt resolves with success=false rather than
+        // throwing. Without this check a reverted settlement (receiveMessage +
+        // HTLC create) would be marked "done", stranding the bridged USDC with
+        // no retry. The batch is atomic, so a reverted attempt applied nothing
+        // and re-submitting (via "Try again" / resume-on-mount) is safe.
+        if (!receipt.success) {
+          throw new Error(
+            `Settlement UserOp reverted on-chain${
+              receipt.reason ? `: ${receipt.reason}` : ""
+            }`,
+          );
+        }
+
         setPhase("done");
         if (session) {
           await upsertCctpInboundSession({
