@@ -30,6 +30,7 @@ import {
   fetchAttestation,
   fetchCctpFee,
   getCctpViemChainByName,
+  MESSAGE_TRANSMITTER_V2,
   simulateBatchCalls,
   TOKEN_MESSENGER_V2,
   type TokenInfo,
@@ -83,6 +84,29 @@ import {
 import { getBlockexplorerTxLink } from "../../utils/tokenUtils";
 import { useWalletBridge } from "../../WalletBridgeContext";
 import { DepositCard } from "../components";
+
+/** `MessageTransmitterV2.usedNonces(bytes32)` — returns 0 iff unused. */
+const USED_NONCES_ABI = [
+  {
+    type: "function",
+    name: "usedNonces",
+    stateMutability: "view",
+    inputs: [{ name: "nonce", type: "bytes32" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
+
+/**
+ * Extract the 32-byte CCTP nonce from a raw IRIS message. Per CCTPv2's
+ * MessageV2 layout the nonce sits at byte offset 12; hex offsets include the
+ * "0x" prefix and 2 chars/byte, so it lives at chars [26, 90).
+ */
+function extractCctpNonce(message: string): `0x${string}` {
+  return `0x${message.slice(26, 26 + 64)}` as `0x${string}`;
+}
+
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Format a USDC amount in smallest units (6 decimals) for display. */
 function formatUsdc(amount: bigint): string {
@@ -299,17 +323,15 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
         setAttestationProgress("Attestation ready, preparing UserOp…");
         setPhase("submitting");
 
-        // 1. Fetch AA-flavoured calldata from the backend.
+        // Fetch AA-flavoured calldata + derive the smart-account client once;
+        // both are deterministic across retries.
         const server = (await api.getSwapAndLockUseropCalldata(
           swapId,
         )) as UseropCalldataResponse;
-
-        // 2. Derive the smart-account signer from the user's SDK key.
         const { privateKey: ownerKey } = await api.getSwapDepositorKey(swapId);
         const ownerHex = (
           ownerKey.startsWith("0x") ? ownerKey : `0x${ownerKey}`
         ) as `0x${string}`;
-
         const {
           client: aaClient,
           account: smartAccount,
@@ -318,12 +340,8 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
           ownerPrivateKey: ownerHex,
         });
 
-        // 3. Skip receiveMessage if the USDC is already at the smart
-        //    account (Circle's forwarder, a third-party relayer, or an
-        //    earlier retry may already have minted it).
-        //    Uses the Alchemy RPC (same URL as the bundler) - the public
-        //    Arbitrum node strips revert data, which we need for the
-        //    pre-flight per-call simulation below.
+        // Alchemy RPC (same URL as the bundler) — the public Arbitrum node
+        // strips the revert data the per-call pre-flight needs.
         const alchemyUrl = import.meta.env.VITE_AA_BUNDLER_URL as
           | string
           | undefined;
@@ -331,72 +349,124 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
           chain: arbitrum,
           transport: http(alchemyUrl),
         });
-        const usdcBalance = (await arbPublicClient.readContract({
-          address: server.source_token_address as `0x${string}`,
-          abi: erc20Abi,
-          functionName: "balanceOf",
-          args: [accountAddress],
-        })) as bigint;
-        const skipReceiveMessage = usdcBalance >= BigInt(server.source_amount);
 
-        // 4. Compose the smart account's batch. The Permit2 signature
-        //    is produced via the Kernel account's signTypedData so
-        //    Permit2's ERC-1271 check passes once the account is
-        //    deployed by the UserOp's factoryData.
-        const { calls } = await buildCctpInboundBatch({
-          server,
-          smartAccountAddress: accountAddress,
-          signTypedData: (args) => smartAccount.signTypedData(args),
-          cctpMessage: message as `0x${string}`,
-          cctpAttestation: attestation as `0x${string}`,
-          chainId: arbitrum.id,
-          skipReceiveMessage,
-        });
+        // `MessageTransmitter.usedNonces(nonce)` is the authoritative "did this
+        // burn already mint?" signal: receiveMessage is restricted to our smart
+        // account (destinationCaller) and only ever runs inside the atomic
+        // settlement batch, so a consumed nonce means the whole batch (mint +
+        // HTLC create) already committed — even if we failed to observe its
+        // receipt.
+        const nonce = extractCctpNonce(message as string);
+        const isNonceUsed = async (): Promise<boolean> =>
+          ((await arbPublicClient.readContract({
+            address: MESSAGE_TRANSMITTER_V2 as `0x${string}`,
+            abi: USED_NONCES_ABI,
+            functionName: "usedNonces",
+            args: [nonce],
+          })) as bigint) !== 0n;
 
-        // 5. Per-call pre-flight (no account deployment, no mempool).
-        //    Call 3 typically reverts here since Permit2 sees no code
-        //    at the smart account and takes the EOA path. It's
-        //    informational - the authoritative check is step 6.
-        await simulateBatchCalls({
-          calls,
-          smartAccount: accountAddress,
-          publicClient: arbPublicClient,
-        });
-
-        // NOTE on pre-flight: viem's `estimateUserOperationGas`
-        // action calls `prepareUserOperation` without `'gas'` in its
-        // property list, so it skips bundler gas estimation and then
-        // calls `pm_getPaymasterData` with all-zero gas fields.
-        // Alchemy's paymaster rejects that with `Invalid User
-        // Operation`. `sendUserOperation` uses a different property
-        // set that includes `'gas'` and estimates before the real
-        // paymaster call, so it works - we rely on it as the
+        // Bounded auto-retry. Transient bundler / paymaster / RPC failures used
+        // to drop straight to the error screen with no retry, leaving the
+        // bridged USDC stranded mid-flow until the user manually retried. Each
+        // attempt is idempotent — the batch is atomic and receiveMessage is
+        // nonce-gated — so re-submitting is safe; the nonce check converges to
+        // "done" once any attempt actually lands.
+        //
+        // NOTE on pre-flight: viem's `estimateUserOperationGas` calls
+        // `prepareUserOperation` without `'gas'`, so it skips bundler gas
+        // estimation and calls `pm_getPaymasterData` with all-zero gas fields,
+        // which Alchemy's paymaster rejects. `sendUserOperation` includes
+        // `'gas'` and estimates before the paymaster call, so it works — we
+        // rely on it (not the informational per-call pre-flight) as the
         // authoritative submission check.
+        const MAX_ATTEMPTS = 4;
+        for (let attempt = 1; ; attempt++) {
+          // A prior attempt may have landed even though we never saw the
+          // receipt (bundler/RPC timeout). If so, we're already done.
+          if (await isNonceUsed()) break;
+          if (unmountedRef.current) return;
 
-        const userOpHash = await aaClient.sendUserOperation({ calls });
-        if (unmountedRef.current) return;
-        setUserOpTxHash(userOpHash);
+          try {
+            // Skip receiveMessage if the USDC is already at the smart account
+            // (Circle's forwarder, a relayer, or an earlier attempt minted it).
+            const usdcBalance = (await arbPublicClient.readContract({
+              address: server.source_token_address as `0x${string}`,
+              abi: erc20Abi,
+              functionName: "balanceOf",
+              args: [accountAddress],
+            })) as bigint;
+            const skipReceiveMessage =
+              usdcBalance >= BigInt(server.source_amount);
 
-        const receipt = await aaClient.waitForUserOperationReceipt({
-          hash: userOpHash,
-        });
-        if (unmountedRef.current) return;
-        if (receipt.receipt?.transactionHash) {
-          setUserOpTxHash(receipt.receipt.transactionHash);
-        }
+            // Permit2 signature is produced via the Kernel account's
+            // signTypedData so Permit2's ERC-1271 check passes once the account
+            // is deployed by the UserOp's factoryData.
+            const { calls } = await buildCctpInboundBatch({
+              server,
+              smartAccountAddress: accountAddress,
+              signTypedData: (args) => smartAccount.signTypedData(args),
+              cctpMessage: message as `0x${string}`,
+              cctpAttestation: attestation as `0x${string}`,
+              chainId: arbitrum.id,
+              skipReceiveMessage,
+            });
 
-        // A UserOp can be included on-chain yet revert during execution —
-        // waitForUserOperationReceipt resolves with success=false rather than
-        // throwing. Without this check a reverted settlement (receiveMessage +
-        // HTLC create) would be marked "done", stranding the bridged USDC with
-        // no retry. The batch is atomic, so a reverted attempt applied nothing
-        // and re-submitting (via "Try again" / resume-on-mount) is safe.
-        if (!receipt.success) {
-          throw new Error(
-            `Settlement UserOp reverted on-chain${
-              receipt.reason ? `: ${receipt.reason}` : ""
-            }`,
-          );
+            // Informational per-call pre-flight; call 3 typically reverts here
+            // (Permit2 sees no code at the not-yet-deployed account). The
+            // bundler's full simulation at sendUserOperation is authoritative.
+            await simulateBatchCalls({
+              calls,
+              smartAccount: accountAddress,
+              publicClient: arbPublicClient,
+            });
+
+            const userOpHash = await aaClient.sendUserOperation({ calls });
+            if (unmountedRef.current) return;
+            setUserOpTxHash(userOpHash);
+
+            const receipt = await aaClient.waitForUserOperationReceipt({
+              hash: userOpHash,
+            });
+            if (unmountedRef.current) return;
+            if (receipt.receipt?.transactionHash) {
+              setUserOpTxHash(receipt.receipt.transactionHash);
+            }
+
+            // A UserOp can be included on-chain yet revert during execution —
+            // waitForUserOperationReceipt resolves with success=false rather
+            // than throwing. The batch is atomic, so a reverted attempt applied
+            // nothing; route it through the retry path below.
+            if (!receipt.success) {
+              throw new Error(
+                `Settlement UserOp reverted on-chain${
+                  receipt.reason ? `: ${receipt.reason}` : ""
+                }`,
+              );
+            }
+
+            break; // settled
+          } catch (submitErr) {
+            if (unmountedRef.current) return;
+            // The UserOp may have landed despite the error we observed. If the
+            // nonce is now consumed, the settlement committed — we're done.
+            if (await isNonceUsed()) break;
+            if (attempt >= MAX_ATTEMPTS) throw submitErr;
+
+            const backoffMs = 3_000 * 2 ** (attempt - 1);
+            console.warn(
+              `CCTP settlement attempt ${attempt}/${MAX_ATTEMPTS} failed; retrying in ${
+                backoffMs / 1000
+              }s`,
+              submitErr,
+            );
+            setAttestationProgress(
+              `Settlement attempt ${attempt} failed — retrying in ${
+                backoffMs / 1000
+              }s…`,
+            );
+            await sleep(backoffMs);
+            if (unmountedRef.current) return;
+          }
         }
 
         setPhase("done");
