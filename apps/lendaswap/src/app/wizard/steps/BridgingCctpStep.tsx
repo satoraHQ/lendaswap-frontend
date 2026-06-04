@@ -387,17 +387,14 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
           if (unmountedRef.current) return;
 
           try {
-            // Skip receiveMessage if the USDC is already at the smart account
-            // (Circle's forwarder, a relayer, or an earlier attempt minted it).
-            const usdcBalance = (await arbPublicClient.readContract({
-              address: server.source_token_address as `0x${string}`,
-              abi: erc20Abi,
-              functionName: "balanceOf",
-              args: [accountAddress],
-            })) as bigint;
-            const skipReceiveMessage =
-              usdcBalance >= BigInt(server.source_amount);
-
+            // The nonce guard above guarantees the mint hasn't landed yet, so
+            // always include receiveMessage. (The previous heuristic — skip when
+            // smart-account USDC balance ≥ amount — was unsafe, mirroring a bug
+            // the SDK already fixed: residual/dust USDC at the account, or a
+            // stale RPC read, could wrongly skip the mint and strand this burn
+            // while the HTLC was funded from the residual. usedNonces is the
+            // authoritative signal.)
+            //
             // Permit2 signature is produced via the Kernel account's
             // signTypedData so Permit2's ERC-1271 check passes once the account
             // is deployed by the UserOp's factoryData.
@@ -408,7 +405,7 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
               cctpMessage: message as `0x${string}`,
               cctpAttestation: attestation as `0x${string}`,
               chainId: arbitrum.id,
-              skipReceiveMessage,
+              skipReceiveMessage: false,
             });
 
             // Informational per-call pre-flight; call 3 typically reverts here
