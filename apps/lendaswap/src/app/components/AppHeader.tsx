@@ -86,7 +86,7 @@ export function AppHeader({
 
             {/* X/Twitter Link */}
             <a
-              href="https://x.com/lendasat"
+              href="https://x.com/satora_io"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"

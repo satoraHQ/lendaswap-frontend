@@ -719,24 +719,6 @@ export function LandingSection() {
               for up to 2 weeks before you can claim them back.
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="opensource" className="border-border/50">
-            <AccordionTrigger className="text-left">
-              Is Satora open source?
-            </AccordionTrigger>
-            <AccordionContent className="text-muted-foreground">
-              Yes! Satora is fully open source. You can review our code,
-              contribute, or run your own instance. Check out our GitHub at{" "}
-              <a
-                href="https://github.com/satoraHQ/lendaswap-sdk"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-foreground"
-              >
-                github.com/lendasat/lendaswap
-              </a>
-              .
-            </AccordionContent>
-          </AccordionItem>
         </Accordion>
       </div>
     </>
