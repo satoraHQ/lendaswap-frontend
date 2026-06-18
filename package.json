@@ -29,7 +29,8 @@
     "overrides": {
       "react": "19.0.0",
       "react-dom": "19.0.0",
-      "viem": "2.46.3",
+      "viem": "2.52.2",
+      "ws": "^8.21.0",
       "@reown/appkit": "1.8.18",
       "@reown/appkit-common": "1.8.18",
       "@reown/appkit-controllers": "1.8.18",
