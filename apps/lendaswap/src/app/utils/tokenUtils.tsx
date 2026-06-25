@@ -45,6 +45,7 @@ import { ReactComponent as BitcoinIcon } from "../../assets/bitcoin.svg";
 import { ReactComponent as BitcoinLightningIcon } from "../../assets/bitcoin_lightning.svg";
 import { ReactComponent as Ethereum } from "../../assets/eth.svg";
 import { ReactComponent as Eurc } from "../../assets/eurc.svg";
+import { ReactComponent as Eure } from "../../assets/eure.svg";
 import { ReactComponent as Polygon } from "../../assets/polygon.svg";
 import { ReactComponent as Tbtc } from "../../assets/tbtc.svg";
 import { ReactComponent as Usat } from "../../assets/usat.svg";
@@ -81,6 +82,9 @@ export function getTokenIcon(
   }
   if (tokenId.symbol.toLowerCase() === "eurc") {
     return <Eurc width={64} height={64} />;
+  }
+  if (tokenId.symbol.toLowerCase() === "eure") {
+    return <Eure width={64} height={64} />;
   }
   if (tokenId.symbol.toLowerCase() === "usdt0") {
     return <Usdt0 width={64} height={64} />;

@@ -32,6 +32,7 @@ import { Input } from "#/components/ui/input";
 import { ReactComponent as ArbitrumIcon } from "../../assets/arbitrum.svg";
 import { ReactComponent as BitcoinIcon } from "../../assets/bitcoin.svg";
 import { ReactComponent as EthereumIcon } from "../../assets/eth.svg";
+import { ReactComponent as EurIcon } from "../../assets/eure.svg";
 import { ReactComponent as PolygonIcon } from "../../assets/polygon.svg";
 import { ReactComponent as UsdcIcon } from "../../assets/usdc.svg";
 import { ReactComponent as UsdtIcon } from "../../assets/usdt.svg";
@@ -56,6 +57,7 @@ type NetworkTabId =
   | "all"
   | "usdc"
   | "usdt"
+  | "eur"
   | "bitcoin"
   | "ethereum"
   | "arbitrum"
@@ -83,6 +85,12 @@ const networkTabs: {
     label: "USDT",
     icon: <UsdtIcon width={14} height={14} />,
     filter: (a) => a.symbol === "USDT" || a.symbol === "USDT0",
+  },
+  {
+    id: "eur",
+    label: "EUR",
+    icon: <EurIcon width={14} height={14} />,
+    filter: (a) => a.symbol === "EURe" || a.symbol === "EURC",
   },
   {
     id: "bitcoin",
