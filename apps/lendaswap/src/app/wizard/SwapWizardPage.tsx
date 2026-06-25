@@ -121,9 +121,12 @@ function determineStepFromStatus(
     case "serverfunded":
       return isRefundTimelockExpired ? "refundable" : "server-depositing";
     case "serverredeemed":
-    case "clientredeeming":
     case "clientredeemed":
       return "success";
+    case "clientredeeming":
+      // TODO: Model claim finalization explicitly in the frontend instead of
+      // reusing the server-depositing step.
+      return "server-depositing";
     case "expired":
       return "expired";
     case "clientfundedserverrefunded":
