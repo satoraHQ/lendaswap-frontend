@@ -134,6 +134,12 @@ const REF_CODE = import.meta.env.VITE_REF_CODE || "";
 
 const REQUEST_SOURCE = import.meta.env.VITE_REQUEST_SOURCE?.trim() || "";
 
+// Account-abstraction (Alchemy bundler + Gas Manager) config. Required for
+// client-side sponsored-UserOp claims (e.g. EURe and other Arbitrum DEX
+// targets the server can't settle on the legacy path).
+const AA_BUNDLER_URL = import.meta.env.VITE_AA_BUNDLER_URL?.trim() || "";
+const AA_POLICY_ID = import.meta.env.VITE_AA_POLICY_ID?.trim() || "";
+
 // Lazy-initialized SDK client.
 let sdkClient: SdkClient | null = null;
 
@@ -153,6 +159,13 @@ async function getClients(): Promise<SdkClient> {
   if (REQUEST_SOURCE) {
     builder = builder.withDefaultHeaders({
       "X-Request-Source": REQUEST_SOURCE,
+    });
+  }
+
+  if (AA_BUNDLER_URL && AA_POLICY_ID) {
+    builder = builder.withAa({
+      bundlerUrl: AA_BUNDLER_URL,
+      paymasterPolicyId: AA_POLICY_ID,
     });
   }
 
