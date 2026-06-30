@@ -6,3 +6,12 @@ packages:
   # client-sdk TypeScript SDK
   - "../client-sdk/ts-pure-sdk"
   - "!**/dist/**"
+
+# pnpm 10 only runs native build scripts for allowlisted packages, and the
+# allowlist must live at the workspace root (not in a member package, where it
+# is silently ignored). better-sqlite3 needs this to compile its binding.
+onlyBuiltDependencies:
+  - better-sqlite3
+  - bufferutil
+  - esbuild
+  - utf-8-validate
