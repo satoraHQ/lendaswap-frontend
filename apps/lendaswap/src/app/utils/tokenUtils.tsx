@@ -1,4 +1,5 @@
 import {
+  type BridgeTokenInfo,
   type Chain,
   isSolanaToken,
   type TokenInfo,
@@ -66,7 +67,7 @@ export function getTokenDisplayName(tokenId: TokenInfo): string {
  * Get the icon component for a token
  */
 export function getTokenIcon(
-  tokenId: TokenInfo,
+  tokenId: BridgeTokenInfo,
   width?: number,
   height?: number,
 ): ReactElement {
@@ -114,7 +115,7 @@ export function getTokenIcon(
 /**
  * Get the icon component for a token's network
  */
-export function getTokenNetworkIcon(tokenId: TokenInfo): ReactElement {
+export function getTokenNetworkIcon(tokenId: BridgeTokenInfo): ReactElement {
   if (tokenId.chain === "Lightning") {
     return <BitcoinLightningIcon width={8} height={8} />;
   }
