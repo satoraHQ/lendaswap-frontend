@@ -216,9 +216,13 @@ export function HomePage() {
     const btc = maybeAvailableTokens?.btc_tokens || [];
     const evm = maybeAvailableTokens?.evm_tokens || [];
     // Add USDC on all CCTP bridge destination chains (Base, Optimism, etc.)
-    const cctpBridgeTokens = getCctpBridgeTokens();
-    // Add USDT0 on all LayerZero OFT bridge destination chains
-    const usdt0BridgeTokens = getUsdt0BridgeTokens();
+    // and USDT0 on the LayerZero OFT chains. These builders return
+    // `BridgeTokenInfo` (wide `chain`, incl. Solana/bridge chains); the dropdown
+    // and target-asset plumbing here are still typed on the narrow `TokenInfo`,
+    // so narrow at this one boundary — the runtime values are unchanged.
+    // TODO: widen the frontend token types to `BridgeTokenInfo`.
+    const cctpBridgeTokens = getCctpBridgeTokens() as TokenInfo[];
+    const usdt0BridgeTokens = getUsdt0BridgeTokens() as TokenInfo[];
     return [...btc, ...evm, ...cctpBridgeTokens, ...usdt0BridgeTokens];
   }, [maybeAvailableTokens]);
 
