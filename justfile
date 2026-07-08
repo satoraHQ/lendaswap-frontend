@@ -6,7 +6,6 @@ default: start
 
 start:
     #!/usr/bin/env bash
-    export VITE_APP_GIT_TAG=$(git tag --sort=-creatordate | head -n 1 || echo "unknown")
     export VITE_APP_GIT_COMMIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
     cd apps/lendaswap && pnpm run dev
 
@@ -52,11 +51,12 @@ release env sdk_version="":
     just build
     pnpm exec wrangler pages deploy apps/lendaswap/dist/ --project-name="$proj" --branch={{ branch }}
 
-# Build the frontend with git tag/commit baked into the bundle
+# Build the frontend with the git commit baked into the bundle. The frontend
+# version comes from apps/lendaswap/package.json (via vite.config) — this repo's
+# git tags are per-component, so `git tag` would surface a backend tag instead.
 build:
     #!/usr/bin/env bash
     set -euo pipefail
-    export VITE_APP_GIT_TAG=$(git tag --sort=-creatordate | head -n 1 || echo "unknown")
     export VITE_APP_GIT_COMMIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
     pnpm run build
 

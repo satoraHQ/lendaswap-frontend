@@ -1,3 +1,4 @@
+import { SDK_COMMIT_HASH, SDK_VERSION } from "@lendasat/lendaswap-sdk-pure";
 import { useEffect, useState } from "react";
 import { api, type Version } from "../api";
 
@@ -12,7 +13,7 @@ interface VersionInfo {
 export function VersionFooter() {
   const [versionInfo, setVersionInfo] = useState<VersionInfo>({
     frontend: {
-      tag: import.meta.env.VITE_APP_GIT_TAG || "unknown",
+      tag: import.meta.env.VITE_APP_VERSION || "unknown",
       commitHash: import.meta.env.VITE_APP_GIT_COMMIT_HASH || "unknown",
     },
     backend: null,
@@ -42,12 +43,19 @@ export function VersionFooter() {
     return hash.substring(0, 7);
   };
 
+  // Set on non-prod deploys (e.g. "staging", "mutinynet") to flag the env.
+  const appEnv = import.meta.env.VITE_APP_ENV;
+
   return (
     <div className="flex flex-col gap-2 text-xs text-muted-foreground">
       <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center">
         <span>
           Frontend: {versionInfo.frontend.tag} (
           {formatCommitHash(versionInfo.frontend.commitHash)})
+        </span>
+        {appEnv ? <span>Env: {appEnv}</span> : null}
+        <span>
+          SDK: {SDK_VERSION} ({formatCommitHash(SDK_COMMIT_HASH)})
         </span>
         {isLoading ? (
           <span>Backend: Loading...</span>
