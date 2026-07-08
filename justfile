@@ -31,6 +31,23 @@ use-sdk version:
     ( cd apps/lendaswap && npm pkg set "dependencies.@lendasat/lendaswap-sdk-pure=$spec" )
     echo "→ @lendasat/lendaswap-sdk-pure = $spec"
     pnpm install
+    # The SDK is a workspace member (pnpm-workspace.yaml), and pnpm links the
+    # local copy whenever its version matches the pinned range — so pinning a
+    # published version that equals the checked-out SDK silently builds against
+    # local, uncommitted output (SDK_COMMIT_HASH=unknown) instead of the npm
+    # artifact. Fail loudly rather than deploy the wrong thing.
+    if [ "{{ version }}" != "workspace" ]; then
+      resolved=$(cd apps/lendaswap && node -e 'console.log(require.resolve("@lendasat/lendaswap-sdk-pure"))')
+      case "$resolved" in
+        *client-sdk/ts-pure-sdk*)
+          echo "error: pinned {{ version }} but pnpm linked the local workspace SDK — its" >&2
+          echo "       version matches the pin, so the published npm artifact was NOT installed." >&2
+          echo "       Deploy from a checkout whose client-sdk/ts-pure-sdk version differs from" >&2
+          echo "       {{ version }} (e.g. before bumping, or a released tag)." >&2
+          exit 1 ;;
+      esac
+      echo "✓ using published artifact: $resolved"
+    fi
     pnpm run check-types
 
 # Build + deploy to an environment, optionally pinning a published SDK version.
