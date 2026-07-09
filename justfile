@@ -49,7 +49,9 @@ use-sdk version:
     PY
     ( cd apps/lendaswap && npm pkg set "dependencies.@lendasat/lendaswap-sdk-pure=$spec" )
     echo "→ @lendasat/lendaswap-sdk-pure = $spec"
-    pnpm install
+    # Changing the SDK spec makes the lockfile stale on purpose; allow updating it
+    # (CI defaults pnpm to --frozen-lockfile, which would reject this).
+    pnpm install --no-frozen-lockfile
     # Sanity: a pinned version must resolve to the npm artifact, not the workspace.
     if [ "$keep" = "0" ]; then
       resolved=$(cd apps/lendaswap && node -e 'console.log(require.resolve("@lendasat/lendaswap-sdk-pure"))')
