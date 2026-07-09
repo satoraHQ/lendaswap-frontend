@@ -1,3 +1,4 @@
+import { useAppKit } from "@reown/appkit/react";
 import {
   type EvmToArkadeSwapResponse,
   type EvmToBitcoinSwapResponse,
@@ -6,7 +7,6 @@ import {
   isEvmToken,
   toChainName,
 } from "@satora/swap";
-import { useAppKit } from "@reown/appkit/react";
 import { ArrowRight, ChevronDown, Clock, Loader2, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type {

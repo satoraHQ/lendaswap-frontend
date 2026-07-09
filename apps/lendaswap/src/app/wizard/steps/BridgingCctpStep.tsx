@@ -20,6 +20,7 @@
  *                       fired so status ≥ clientfundingseen).
  */
 
+import { useAppKit } from "@reown/appkit/react";
 import {
   CCTP_DOMAINS,
   computeCctpFastFee,
@@ -37,7 +38,6 @@ import {
   type TokenInfo,
   USDC_ADDRESSES,
 } from "@satora/swap";
-import { useAppKit } from "@reown/appkit/react";
 import {
   AlertCircle,
   Check,

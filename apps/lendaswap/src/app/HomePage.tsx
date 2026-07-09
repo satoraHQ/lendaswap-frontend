@@ -1,3 +1,4 @@
+import { useAppKit } from "@reown/appkit/react";
 import {
   type Asset,
   CCTP_DOMAINS,
@@ -15,7 +16,6 @@ import {
   type TokenInfo,
   toChainName,
 } from "@satora/swap";
-import { useAppKit } from "@reown/appkit/react";
 import { ArrowDown, ChevronDown, Loader } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";

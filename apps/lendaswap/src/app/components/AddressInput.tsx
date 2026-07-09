@@ -1,4 +1,5 @@
 import { decode } from "@gandlaf21/bolt11-decode";
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import {
   isArkade,
   isBtcOnchain,
@@ -8,7 +9,6 @@ import {
   isValidSolanaAddress,
   type TokenInfo,
 } from "@satora/swap";
-import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { validate as validateBtcAddress } from "bitcoin-address-validation";
 import { isAddress } from "ethers";
 import { Loader2, Wallet, Zap } from "lucide-react";

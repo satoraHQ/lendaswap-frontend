@@ -1,8 +1,4 @@
-import {
-  type StoredSwap,
-  type SwapStatus,
-  toChain,
-} from "@satora/swap";
+import { type StoredSwap, type SwapStatus, toChain } from "@satora/swap";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import {
   Check,

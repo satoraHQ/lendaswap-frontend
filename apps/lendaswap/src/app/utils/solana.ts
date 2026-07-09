@@ -15,10 +15,7 @@
  * bundle for the EVM-only path.
  */
 
-import {
-  isValidSolanaAddress,
-  USDC_ADDRESSES,
-} from "@satora/swap";
+import { isValidSolanaAddress, USDC_ADDRESSES } from "@satora/swap";
 
 /** SPL Token Program ID (canonical mainnet/devnet constant). */
 const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";

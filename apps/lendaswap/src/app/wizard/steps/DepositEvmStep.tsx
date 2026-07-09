@@ -1,3 +1,4 @@
+import { useAppKit } from "@reown/appkit/react";
 import {
   type EvmToArkadeSwapResponse,
   type EvmToBitcoinSwapResponse,
@@ -7,7 +8,6 @@ import {
   isUserRejection,
   toChainName,
 } from "@satora/swap";
-import { useAppKit } from "@reown/appkit/react";
 import {
   AlertCircle,
   Check,

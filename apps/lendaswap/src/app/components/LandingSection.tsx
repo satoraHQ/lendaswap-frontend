@@ -419,8 +419,7 @@ export function LandingSection() {
                       <span className="text-[#7a8a0e] dark:text-lime-400">
                         $
                       </span>{" "}
-                      <span className="text-zinc-500">npm i</span>{" "}
-                      @satora/swap
+                      <span className="text-zinc-500">npm i</span> @satora/swap
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-2 mt-1.5 text-zinc-600 dark:text-zinc-400">
                       <span className="text-[#7a8a0e] dark:text-lime-400">

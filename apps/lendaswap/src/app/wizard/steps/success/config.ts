@@ -1,8 +1,4 @@
-import {
-  toChainName,
-  USDC_ADDRESSES,
-  USDT0_ADDRESSES,
-} from "@satora/swap";
+import { toChainName, USDC_ADDRESSES, USDT0_ADDRESSES } from "@satora/swap";
 import type { GetSwapResponse } from "../../../api";
 import { getTargetChainDisplayName } from "../../../utils/tokenUtils";
 

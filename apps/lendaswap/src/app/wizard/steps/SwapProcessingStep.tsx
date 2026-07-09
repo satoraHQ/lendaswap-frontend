@@ -1,5 +1,5 @@
-import type { GetSwapResponse } from "@satora/swap";
 import { useAppKit } from "@reown/appkit/react";
+import type { GetSwapResponse } from "@satora/swap";
 import {
   Check,
   CheckCheck,

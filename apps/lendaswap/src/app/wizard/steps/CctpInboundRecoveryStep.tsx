@@ -12,12 +12,12 @@
  * the bridging step already uses.
  */
 
+import { useAppKit } from "@reown/appkit/react";
 import {
   type CctpChainName,
   type RecoveryProgress,
   recoverCctpInbound,
 } from "@satora/swap";
-import { useAppKit } from "@reown/appkit/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { AlertCircle, Check, ExternalLink, Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
