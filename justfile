@@ -18,32 +18,45 @@ deploy-cf:
         --project-name={{ project }} \
         --branch={{ branch }}
 
-# Pin @lendasat/lendaswap-sdk-pure to a published npm version (e.g. `0.3.0-rc.0`),
-# or `workspace` to restore the monorepo link. Reinstalls and typechecks, so a
-# breaking SDK change fails here instead of in the deployed app.
+# Pin @lendasat/lendaswap-sdk-pure to a published npm version (e.g. `0.3.0`),
+# or `workspace` to restore the local monorepo link.
 #
-#   just use-sdk 0.3.0-rc.0
+# Pinning a published version also drops client-sdk from pnpm-workspace.yaml, so
+# pnpm installs the npm artifact (with its baked-in SDK_COMMIT_HASH) rather than
+# linking the local copy — which pnpm does whenever the workspace version matches
+# the pin, and which turbo would then rebuild with SDK_COMMIT_HASH=unknown.
+# `workspace` re-adds it. Reinstalls + typechecks so a breaking SDK change fails
+# here, not in the deployed app.
+#
+#   just use-sdk 0.3.0
 #   just use-sdk workspace
 use-sdk version:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ "{{ version }}" = "workspace" ]; then spec="workspace:*"; else spec="{{ version }}"; fi
+    if [ "{{ version }}" = "workspace" ]; then keep=1; spec="workspace:*"; else keep=0; spec="{{ version }}"; fi
+    # Toggle the client-sdk workspace member in pnpm-workspace.yaml.
+    python3 - "$keep" <<'PY'
+    import sys
+    keep = sys.argv[1] == "1"
+    p = "pnpm-workspace.yaml"
+    member = '  - "../client-sdk/ts-pure-sdk"'
+    excluded = '  #- "../client-sdk/ts-pure-sdk"  # excluded: pinned to a published SDK'
+    out = []
+    for ln in open(p).read().splitlines():
+        core = ln.lstrip().lstrip("#").strip()
+        out.append((member if keep else excluded) if core.startswith('- "../client-sdk/ts-pure-sdk"') else ln)
+    open(p, "w").write("\n".join(out) + "\n")
+    PY
     ( cd apps/lendaswap && npm pkg set "dependencies.@lendasat/lendaswap-sdk-pure=$spec" )
     echo "→ @lendasat/lendaswap-sdk-pure = $spec"
     pnpm install
-    # The SDK is a workspace member (pnpm-workspace.yaml), and pnpm links the
-    # local copy whenever its version matches the pinned range — so pinning a
-    # published version that equals the checked-out SDK silently builds against
-    # local, uncommitted output (SDK_COMMIT_HASH=unknown) instead of the npm
-    # artifact. Fail loudly rather than deploy the wrong thing.
-    if [ "{{ version }}" != "workspace" ]; then
+    # Sanity: a pinned version must resolve to the npm artifact, not the workspace.
+    if [ "$keep" = "0" ]; then
       resolved=$(cd apps/lendaswap && node -e 'console.log(require.resolve("@lendasat/lendaswap-sdk-pure"))')
       case "$resolved" in
         *client-sdk/ts-pure-sdk*)
-          echo "error: pinned {{ version }} but pnpm linked the local workspace SDK — its" >&2
-          echo "       version matches the pin, so the published npm artifact was NOT installed." >&2
-          echo "       Deploy from a checkout whose client-sdk/ts-pure-sdk version differs from" >&2
-          echo "       {{ version }} (e.g. before bumping, or a released tag)." >&2
+          echo "error: pinned {{ version }} still resolved to the local workspace SDK ($resolved)." >&2
+          echo "       Expected the published npm artifact — check the pnpm-workspace.yaml exclusion." >&2
           exit 1 ;;
       esac
       echo "✓ using published artifact: $resolved"
