@@ -6,7 +6,7 @@ import {
   isBtcOnchain,
   isLightning,
   toChainName,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { AlertCircle, Check, Clock, Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";

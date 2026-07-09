@@ -390,7 +390,7 @@ export function LandingSection() {
                       onClick={(e) => {
                         e.stopPropagation();
                         const code = [
-                          "import { Client, IdbSwapStorage } from '@lendasat/lendaswap-sdk-pure'",
+                          "import { Client, IdbSwapStorage } from '@satora/swap'",
                           "",
                           "const client = await Client.builder()",
                           "  .withSwapStorage(new IdbSwapStorage()).build()",
@@ -420,7 +420,7 @@ export function LandingSection() {
                         $
                       </span>{" "}
                       <span className="text-zinc-500">npm i</span>{" "}
-                      @lendasat/lendaswap-sdk-pure
+                      @satora/swap
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-2 mt-1.5 text-zinc-600 dark:text-zinc-400">
                       <span className="text-[#7a8a0e] dark:text-lime-400">
@@ -439,7 +439,7 @@ export function LandingSection() {
                         from
                       </span>{" "}
                       <span className="text-[#7a8a0e] dark:text-lime-300">
-                        '@lendasat/lendaswap-sdk-pure'
+                        '@satora/swap'
                       </span>
                     </div>
                     <div className="docs-terminal-line docs-terminal-line-3 mt-1 text-zinc-600 dark:text-zinc-400">

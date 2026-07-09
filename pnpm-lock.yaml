@@ -111,6 +111,22 @@ importers:
         specifier: ^12.11.1
         version: 12.11.1
 
+  ../client-sdk/ts-sdk/packages/swap:
+    dependencies:
+      '@lendasat/lendaswap-sdk-pure':
+        specifier: ^0.3.0
+        version: link:../../../ts-pure-sdk
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 2.3.15
+        version: 2.3.15
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.6)(typescript@5.7.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.7.3
+
   apps/lendaswap:
     dependencies:
       '@circle-fin/adapter-viem-v2':
@@ -134,9 +150,6 @@ importers:
       '@lendasat/lendasat-wallet-bridge':
         specifier: ^0.0.90
         version: 0.0.90
-      '@lendasat/lendaswap-sdk-pure':
-        specifier: workspace:*
-        version: link:../../../client-sdk/ts-pure-sdk
       '@noble/secp256k1':
         specifier: ^3.0.0
         version: 3.0.0
@@ -155,6 +168,9 @@ importers:
       '@reown/appkit-adapter-wagmi':
         specifier: 1.8.18
         version: 1.8.18(aedac994f7600933c22c7752a9f307d2)
+      '@satora/swap':
+        specifier: workspace:*
+        version: link:../../../client-sdk/ts-sdk/packages/swap
       '@solana/web3.js':
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)

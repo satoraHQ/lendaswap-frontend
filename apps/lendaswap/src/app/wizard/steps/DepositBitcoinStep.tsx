@@ -2,7 +2,7 @@ import {
   type BitcoinToEvmSwapResponse,
   isArkade,
   isEvmToken,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { Clock } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";

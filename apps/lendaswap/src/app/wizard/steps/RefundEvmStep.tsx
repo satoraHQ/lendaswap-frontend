@@ -5,7 +5,7 @@ import {
   isBtcPegged,
   isEvmToken,
   toChainName,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useAppKit } from "@reown/appkit/react";
 import { ArrowRight, ChevronDown, Clock, Loader2, Zap } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";

@@ -3,7 +3,7 @@ import {
   type LayerZeroMessageStatus,
   toChain,
   trackLzMessage,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";

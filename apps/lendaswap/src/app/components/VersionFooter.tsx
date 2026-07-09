@@ -1,4 +1,4 @@
-import { SDK_COMMIT_HASH, SDK_VERSION } from "@lendasat/lendaswap-sdk-pure";
+import { SDK_COMMIT_HASH, SDK_VERSION } from "@satora/swap";
 import { useEffect, useState } from "react";
 import { api, type Version } from "../api";
 

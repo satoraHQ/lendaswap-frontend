@@ -9,7 +9,7 @@
  * wallet-derived `EvmSigner` directly.
  */
 
-import { createSwapSmartAccountClient as sdkCreateSwapSmartAccountClient } from "@lendasat/lendaswap-sdk-pure";
+import { createSwapSmartAccountClient as sdkCreateSwapSmartAccountClient } from "@satora/swap";
 import { useMemo } from "react";
 import { createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";

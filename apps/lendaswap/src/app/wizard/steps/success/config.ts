@@ -2,7 +2,7 @@ import {
   toChainName,
   USDC_ADDRESSES,
   USDT0_ADDRESSES,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import type { GetSwapResponse } from "../../../api";
 import { getTargetChainDisplayName } from "../../../utils/tokenUtils";
 

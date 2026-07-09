@@ -5,7 +5,7 @@ import {
   type TokenInfo,
   toChain,
   toChainName,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { TokenBTC } from "@web3icons/react";
 import { NetworkIcon, TokenIcon } from "@web3icons/react/dynamic";
 import NetworkAvalanche from "@web3icons/react/icons/networks/NetworkAvalanche";
@@ -217,7 +217,7 @@ export {
   isEthereumToken,
   isEvmToken,
   isPolygonToken,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 
 /**
  * Get the display chain name for a swap's target token.

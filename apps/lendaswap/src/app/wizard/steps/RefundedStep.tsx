@@ -1,4 +1,4 @@
-import { toChainName } from "@lendasat/lendaswap-sdk-pure";
+import { toChainName } from "@satora/swap";
 import {
   ArrowRight,
   CheckCheck,

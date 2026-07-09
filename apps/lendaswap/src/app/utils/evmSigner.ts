@@ -1,4 +1,4 @@
-import type { EvmSigner } from "@lendasat/lendaswap-sdk-pure";
+import type { EvmSigner } from "@satora/swap";
 import {
   type Account,
   type Chain,

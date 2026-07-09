@@ -9,7 +9,7 @@ import {
   toChainName,
   trackCctpMessage,
   trackLzMessage,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import {
   AlertCircle,
   ArrowRight,

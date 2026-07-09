@@ -18,45 +18,51 @@ deploy-cf:
         --project-name={{ project }} \
         --branch={{ branch }}
 
-# Pin @lendasat/lendaswap-sdk-pure to a published npm version (e.g. `0.3.0`),
-# or `workspace` to restore the local monorepo link.
+# Pin @satora/swap to a published npm version (e.g. `0.1.0`), or `workspace` to
+# restore the local monorepo link.
 #
-# Pinning a published version also drops client-sdk from pnpm-workspace.yaml, so
-# pnpm installs the npm artifact (with its baked-in SDK_COMMIT_HASH) rather than
-# linking the local copy — which pnpm does whenever the workspace version matches
-# the pin, and which turbo would then rebuild with SDK_COMMIT_HASH=unknown.
-# `workspace` re-adds it. Reinstalls + typechecks so a breaking SDK change fails
-# here, not in the deployed app.
+# The app consumes @satora/swap, which wraps @lendasat/lendaswap-sdk-pure. In
+# workspace mode BOTH live as workspace members, so edits to either flow through
+# and the SDK's SDK_COMMIT_HASH is baked from the local build. Pinning a
+# published version drops both from pnpm-workspace.yaml so pnpm installs the npm
+# artifacts (with their baked-in hashes) instead — otherwise pnpm links the
+# local copy whenever the version matches and turbo rebuilds with
+# SDK_COMMIT_HASH=unknown. Reinstalls + typechecks so a breaking SDK change
+# fails here, not in the deployed app.
 #
-#   just use-sdk 0.3.0
+#   just use-sdk 0.1.0
 #   just use-sdk workspace
 use-sdk version:
     #!/usr/bin/env bash
     set -euo pipefail
     if [ "{{ version }}" = "workspace" ]; then keep=1; spec="workspace:*"; else keep=0; spec="{{ version }}"; fi
-    # Toggle the client-sdk workspace member in pnpm-workspace.yaml.
+    # Toggle the client-sdk workspace members in pnpm-workspace.yaml. Both the
+    # legacy SDK and its @satora/swap wrapper are toggled together.
     python3 - "$keep" <<'PY'
     import sys
     keep = sys.argv[1] == "1"
     p = "pnpm-workspace.yaml"
-    member = '  - "../client-sdk/ts-pure-sdk"'
-    excluded = '  #- "../client-sdk/ts-pure-sdk"  # excluded: pinned to a published SDK'
+    members = ["../client-sdk/ts-pure-sdk", "../client-sdk/ts-sdk/packages/swap"]
     out = []
     for ln in open(p).read().splitlines():
         core = ln.lstrip().lstrip("#").strip()
-        out.append((member if keep else excluded) if core.startswith('- "../client-sdk/ts-pure-sdk"') else ln)
+        m = next((m for m in members if core.startswith(f'- "{m}"')), None)
+        if m is not None:
+            out.append(f'  - "{m}"' if keep else f'  #- "{m}"  # excluded: pinned to a published SDK')
+        else:
+            out.append(ln)
     open(p, "w").write("\n".join(out) + "\n")
     PY
-    ( cd apps/lendaswap && npm pkg set "dependencies.@lendasat/lendaswap-sdk-pure=$spec" )
-    echo "→ @lendasat/lendaswap-sdk-pure = $spec"
+    ( cd apps/lendaswap && npm pkg set "dependencies.@satora/swap=$spec" )
+    echo "→ @satora/swap = $spec"
     # Changing the SDK spec makes the lockfile stale on purpose; allow updating it
     # (CI defaults pnpm to --frozen-lockfile, which would reject this).
     pnpm install --no-frozen-lockfile
     # Sanity: a pinned version must resolve to the npm artifact, not the workspace.
     if [ "$keep" = "0" ]; then
-      resolved=$(cd apps/lendaswap && node -e 'console.log(require.resolve("@lendasat/lendaswap-sdk-pure"))')
+      resolved=$(cd apps/lendaswap && node -e 'console.log(require.resolve("@satora/swap"))')
       case "$resolved" in
-        *client-sdk/ts-pure-sdk*)
+        *client-sdk/ts-sdk/packages/swap*)
           echo "error: pinned {{ version }} still resolved to the local workspace SDK ($resolved)." >&2
           echo "       Expected the published npm artifact — check the pnpm-workspace.yaml exclusion." >&2
           exit 1 ;;

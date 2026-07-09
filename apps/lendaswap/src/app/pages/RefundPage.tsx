@@ -5,7 +5,7 @@ import type {
   EvmToArkadeSwapResponse,
   EvmToBitcoinSwapResponse,
   EvmToLightningSwapResponse,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";

@@ -14,7 +14,7 @@ import {
   isValidSolanaAddress,
   type TokenInfo,
   toChainName,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useAppKit } from "@reown/appkit/react";
 import { ArrowDown, ChevronDown, Loader } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

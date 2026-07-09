@@ -6,7 +6,7 @@ import {
   isLightning,
   isUserRejection,
   toChainName,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useAppKit } from "@reown/appkit/react";
 import {
   AlertCircle,

@@ -3,7 +3,7 @@ import {
   type CctpMessageStatus,
   toChain,
   trackCctpMessage,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";

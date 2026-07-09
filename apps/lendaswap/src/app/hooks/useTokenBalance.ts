@@ -1,4 +1,4 @@
-import type { TokenInfo } from "@lendasat/lendaswap-sdk-pure";
+import type { TokenInfo } from "@satora/swap";
 import { erc20Abi } from "viem";
 import { useAccount, useReadContract } from "wagmi";
 import { isEvmToken } from "../utils/tokenUtils";

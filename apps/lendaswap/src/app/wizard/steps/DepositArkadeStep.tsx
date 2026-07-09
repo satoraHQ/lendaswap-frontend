@@ -1,7 +1,7 @@
 import type {
   ArkadeToEvmSwapResponse,
   ArkadeToLightningSwapResponse,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useWalletBridge } from "../../WalletBridgeContext";

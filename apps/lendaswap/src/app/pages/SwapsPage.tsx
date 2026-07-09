@@ -2,7 +2,7 @@ import {
   type StoredSwap,
   type SwapStatus,
   toChain,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import {
   Check,

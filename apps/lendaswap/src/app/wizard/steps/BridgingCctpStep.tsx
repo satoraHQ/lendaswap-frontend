@@ -36,7 +36,7 @@ import {
   TOKEN_MESSENGER_V2,
   type TokenInfo,
   USDC_ADDRESSES,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useAppKit } from "@reown/appkit/react";
 import {
   AlertCircle,

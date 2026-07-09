@@ -9,7 +9,7 @@ import {
   isSolanaToken,
   type TokenInfo,
   toChainName,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import NetworkBase from "@web3icons/react/icons/networks/NetworkBase";
 import NetworkOptimism from "@web3icons/react/icons/networks/NetworkOptimism";
 import NetworkSolana from "@web3icons/react/icons/networks/NetworkSolana";

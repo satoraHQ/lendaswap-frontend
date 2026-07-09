@@ -1,4 +1,4 @@
-import type { Chain } from "@lendasat/lendaswap-sdk-pure";
+import type { Chain } from "@satora/swap";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type QuoteResponse } from "../api";
 

@@ -1,4 +1,4 @@
-import type { GetSwapResponse } from "@lendasat/lendaswap-sdk-pure";
+import type { GetSwapResponse } from "@satora/swap";
 import { useAppKit } from "@reown/appkit/react";
 import {
   Check,

@@ -1,7 +1,7 @@
 import type {
   ArkadeToEvmSwapResponse,
   ArkadeToLightningSwapResponse,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { ArrowRight, Clock, Loader2, Unlock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "#/components/ui/alert";

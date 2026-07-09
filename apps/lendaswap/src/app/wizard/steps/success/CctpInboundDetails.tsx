@@ -7,7 +7,7 @@
  * source-chain explorer) and Circle's bridge contribution.
  */
 
-import { toChain } from "@lendasat/lendaswap-sdk-pure";
+import { toChain } from "@satora/swap";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ExternalLink } from "lucide-react";
 import { useState } from "react";

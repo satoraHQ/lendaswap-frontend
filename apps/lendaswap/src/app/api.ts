@@ -21,7 +21,7 @@ import {
   type TokenInfos,
   type UnsignedPermit2FundingData,
   type VhtlcAmounts,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { getReferralCode } from "./utils/referralCode";
 
 // Re-export SDK types for use throughout the frontend
@@ -405,12 +405,16 @@ export const api = {
     return await client.collabRefundEvmWithSigner(swapId, signer, settlement);
   },
 
-  async buildCollabRefundEvmTypedData(
+  // Return type derived through the SDK client so it names types via
+  // `@satora/swap` (portable) rather than the old SDK's nested, non-portable
+  // declaration paths — otherwise TS2742 on the inferred type.
+  buildCollabRefundEvmTypedData(
     swapId: string,
     settlement: "swap-back" | "direct" = "direct",
-  ) {
-    const client = await getClients();
-    return await client.buildCollabRefundEvmTypedData(swapId, settlement);
+  ): ReturnType<SdkClient["buildCollabRefundEvmTypedData"]> {
+    return getClients().then((client) =>
+      client.buildCollabRefundEvmTypedData(swapId, settlement),
+    );
   },
 
   /** POST a pre-signed collab refund (for wallet-funded swaps where the wallet signs the EIP-712 digest). */

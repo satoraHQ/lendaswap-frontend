@@ -20,7 +20,7 @@ import {
   CHAIN_ID_TO_CCTP_NAME,
   type RecoveryProgress,
   recoverCctpInbound,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useAppKit } from "@reown/appkit/react";
 import { AlertCircle, Check, ExternalLink, Loader } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";

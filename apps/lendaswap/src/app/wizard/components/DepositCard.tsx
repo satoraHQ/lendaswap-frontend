@@ -1,4 +1,4 @@
-import type { TokenInfo } from "@lendasat/lendaswap-sdk-pure";
+import type { TokenInfo } from "@satora/swap";
 import { ArrowRight, CheckCheck, Copy } from "lucide-react";
 import type { ReactNode } from "react";
 import { getTokenIcon, getTokenNetworkIcon } from "../../utils/tokenUtils";

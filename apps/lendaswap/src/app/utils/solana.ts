@@ -18,7 +18,7 @@
 import {
   isValidSolanaAddress,
   USDC_ADDRESSES,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 
 /** SPL Token Program ID (canonical mainnet/devnet constant). */
 const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";

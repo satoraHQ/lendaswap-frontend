@@ -1,7 +1,7 @@
 import type {
   LightningToArkadeSwapResponse,
   LightningToEvmSwapResponse,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { Loader2, Zap } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";

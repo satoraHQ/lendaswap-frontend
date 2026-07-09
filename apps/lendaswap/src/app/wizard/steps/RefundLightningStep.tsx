@@ -1,8 +1,8 @@
 import type {
   LightningToArkadeSwapResponse,
   LightningToEvmSwapResponse,
-} from "@lendasat/lendaswap-sdk-pure";
-import { toChainName } from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
+import { toChainName } from "@satora/swap";
 import { ArrowRight, Info, Zap } from "lucide-react";
 import { getTargetChainDisplayName } from "../../utils/tokenUtils";
 import { DepositCard } from "../components";

@@ -16,7 +16,7 @@ import {
   type CctpChainName,
   type RecoveryProgress,
   recoverCctpInbound,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useAppKit } from "@reown/appkit/react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { AlertCircle, Check, ExternalLink, Loader } from "lucide-react";

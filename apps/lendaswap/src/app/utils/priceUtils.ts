@@ -1,9 +1,9 @@
 /**
  * Re-export price calculation utilities from the SDK.
- * These functions are now maintained in @lendasat/lendaswap-sdk-pure.
+ * These functions are now maintained in @satora/swap.
  */
 export {
   calculateSourceAmount,
   calculateTargetAmount,
   computeExchangeRate,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";

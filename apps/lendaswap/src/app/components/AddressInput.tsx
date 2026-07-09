@@ -7,7 +7,7 @@ import {
   isSolanaToken,
   isValidSolanaAddress,
   type TokenInfo,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { validate as validateBtcAddress } from "bitcoin-address-validation";
 import { isAddress } from "ethers";

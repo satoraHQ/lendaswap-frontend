@@ -10,7 +10,7 @@ import type {
   LightningToArkadeSwapResponse,
   LightningToEvmSwapResponse,
   SwapStatus,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { useLiveQuery } from "dexie-react-hooks";
 import { AlertCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";

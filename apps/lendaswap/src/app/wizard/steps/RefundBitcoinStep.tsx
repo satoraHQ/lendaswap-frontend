@@ -1,7 +1,7 @@
 import {
   type BitcoinToEvmSwapResponse,
   toChainName,
-} from "@lendasat/lendaswap-sdk-pure";
+} from "@satora/swap";
 import { ArrowRight, Clock, ExternalLink, Loader2, Unlock } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
