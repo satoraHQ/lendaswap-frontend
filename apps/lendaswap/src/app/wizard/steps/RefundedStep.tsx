@@ -110,6 +110,10 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
 
   const refundAddress = getRefundAddress();
   const refundTxId = getRefundTxId();
+  const canContinueFromRefund =
+    swapData.direction === "evm_to_arkade" ||
+    swapData.direction === "evm_to_bitcoin" ||
+    swapData.direction === "evm_to_lightning";
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">
@@ -283,13 +287,24 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
             )}
           </div>
 
-          {/* Action Button */}
-          <Button
-            className="h-12 w-full max-w-md text-base font-semibold"
-            onClick={() => navigate("/", { replace: true })}
-          >
-            Start New Swap
-          </Button>
+          {/* Action Buttons */}
+          <div className="w-full max-w-md space-y-2">
+            {canContinueFromRefund && (
+              <Button
+                className="h-12 w-full text-base font-semibold"
+                onClick={() => navigate(`/swap/${swapData.id}/continue`)}
+              >
+                Continue Swap
+              </Button>
+            )}
+            <Button
+              variant={canContinueFromRefund ? "outline" : "default"}
+              className="h-12 w-full text-base font-semibold"
+              onClick={() => navigate("/", { replace: true })}
+            >
+              Start New Swap
+            </Button>
+          </div>
         </div>
       </div>
     </div>

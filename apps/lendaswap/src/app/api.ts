@@ -4,6 +4,8 @@ import {
   type BtcToArkadeSwapResponse,
   type Chain,
   type ClaimResult,
+  type ContinueRefundedEvmSwapInfo,
+  type ContinueRefundedEvmSwapResult,
   type EvmSigner,
   type GetSwapResponse,
   IdbSwapStorage,
@@ -22,6 +24,10 @@ import {
   type UnsignedPermit2FundingData,
   type VhtlcAmounts,
 } from "@satora/swap";
+import { createWalletClient, type Hex, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { arbitrum } from "viem/chains";
+import { buildEvmSigner } from "./utils/evmSigner";
 import { getReferralCode } from "./utils/referralCode";
 
 // Re-export SDK types for use throughout the frontend
@@ -30,6 +36,8 @@ export type {
   GetSwapResponse,
   PureTokenInfo,
   QuoteResponse,
+  ContinueRefundedEvmSwapInfo,
+  ContinueRefundedEvmSwapResult,
   RecoverAllSwapsResult,
   RefundResult,
   StoredSwap,
@@ -510,6 +518,44 @@ export const api = {
   }> {
     const client = await getClients();
     return client.getEvmDepositorKey();
+  },
+
+  async getRefundedEvmSwapContinuation(
+    swapId: string,
+  ): Promise<ContinueRefundedEvmSwapInfo> {
+    const client = await getClients();
+    const { privateKey } = client.getEvmDepositorKey();
+    const account = privateKeyToAccount(
+      (privateKey.startsWith("0x") ? privateKey : `0x${privateKey}`) as Hex,
+    );
+    const walletClient = createWalletClient({
+      account,
+      chain: arbitrum,
+      transport: http(),
+    });
+    const signer = buildEvmSigner(walletClient, arbitrum);
+    return await client.getRefundedEvmSwapContinuation(swapId, signer);
+  },
+
+  async continueRefundedEvmSwap(
+    swapId: string,
+    targetAddress: string,
+  ): Promise<ContinueRefundedEvmSwapResult> {
+    const client = await getClients();
+    const { privateKey } = client.getEvmDepositorKey();
+    const account = privateKeyToAccount(
+      (privateKey.startsWith("0x") ? privateKey : `0x${privateKey}`) as Hex,
+    );
+    const walletClient = createWalletClient({
+      account,
+      chain: arbitrum,
+      transport: http(),
+    });
+    const signer = buildEvmSigner(walletClient, arbitrum);
+    return await client.continueRefundedEvmSwap(swapId, {
+      targetAddress,
+      signer,
+    });
   },
 
   async hasReceivedVtxo(swapId: string): Promise<boolean> {

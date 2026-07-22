@@ -21,6 +21,7 @@ import { VersionFooter } from "./components/VersionFooter";
 import { HomePage } from "./HomePage";
 import {
   CctpRecoveryPage,
+  ContinueRefundedSwapPage,
   RefundPage,
   SwapsPage,
   TermsOfServicePage,
@@ -212,6 +213,10 @@ export default function App() {
                     element={<SwapWizardPage />}
                   />
                   <Route path="/swap/:swapId/refund" element={<RefundPage />} />
+                  <Route
+                    path="/swap/:swapId/continue"
+                    element={<ContinueRefundedSwapPage />}
+                  />
                   <Route path="/recover/cctp" element={<CctpRecoveryPage />} />
                   <Route
                     path="*"
