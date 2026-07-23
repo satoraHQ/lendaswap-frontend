@@ -6,6 +6,7 @@ import {
   isEvmToken,
   isLightning,
   isSolanaToken,
+  isValidArkadeAddress,
   isValidSolanaAddress,
   type TokenInfo,
 } from "@satora/swap";
@@ -191,12 +192,8 @@ export function AddressInput({
         setAddressIsValid(false);
       }
     } else if (isArkade(targetToken)) {
-      // Basic Arkade address validation (starts with ark1)
-      if (
-        !value.toLowerCase().startsWith("ark1") &&
-        !value.toLowerCase().startsWith("tark1")
-      ) {
-        setValidationError("Invalid Arkade address (must start with 'ark1')");
+      if (!isValidArkadeAddress(value)) {
+        setValidationError("Invalid Arkade address");
         setAddressIsValid(false);
       } else {
         setValidationError("");

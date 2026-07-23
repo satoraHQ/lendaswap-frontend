@@ -1,6 +1,7 @@
-import type {
-  ArkadeToEvmSwapResponse,
-  ArkadeToLightningSwapResponse,
+import {
+  type ArkadeToEvmSwapResponse,
+  type ArkadeToLightningSwapResponse,
+  isValidArkadeAddress,
 } from "@satora/swap";
 import { ArrowRight, Clock, Loader2, Unlock } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -72,7 +73,7 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
       return;
     }
 
-    if (!refundAddress.startsWith("tark") && !refundAddress.startsWith("ark")) {
+    if (!isValidArkadeAddress(refundAddress.trim())) {
       setRefundError("Please enter a valid Arkade address");
       return;
     }
