@@ -36,7 +36,7 @@
     "bitcoin-address-validation": "^3.0.0",
     "canvas-confetti": "^1.9.3",
     "date-fns": "^4.1.0",
-    "dexie": "^4.4.2",
+    "dexie": "4.4.4",
     "dexie-react-hooks": "^4.2.0",
     "ethers": "^6.15.0",
     "lucide-react": "^0.483.0",
