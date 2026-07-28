@@ -24,6 +24,15 @@ export default defineConfig({
       // Allow serving files from the client-sdk directory (outside frontend/)
       allow: ["../..", "../../../client-sdk"],
     },
+    proxy: {
+      // Local alto does not emit browser CORS headers. Route browser bundler
+      // calls through Vite in dev so the frontend can submit UserOps locally.
+      "/aa-bundler": {
+        target: "http://127.0.0.1:4337",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/aa-bundler/, ""),
+      },
+    },
   },
 
   preview: {

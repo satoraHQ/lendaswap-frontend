@@ -33,11 +33,11 @@ import { getReferralCode } from "./utils/referralCode";
 // Re-export SDK types for use throughout the frontend
 export type {
   BtcToArkadeSwapResponse,
+  ContinueRefundedEvmSwapInfo,
+  ContinueRefundedEvmSwapResult,
   GetSwapResponse,
   PureTokenInfo,
   QuoteResponse,
-  ContinueRefundedEvmSwapInfo,
-  ContinueRefundedEvmSwapResult,
   RecoverAllSwapsResult,
   RefundResult,
   StoredSwap,
@@ -142,10 +142,15 @@ const REF_CODE = import.meta.env.VITE_REF_CODE || "";
 
 const REQUEST_SOURCE = import.meta.env.VITE_REQUEST_SOURCE?.trim() || "";
 
-// Account-abstraction (Alchemy bundler + Gas Manager) config. Required for
-// client-side sponsored-UserOp claims (e.g. EURe and other Arbitrum DEX
-// targets the server can't settle on the legacy path).
+// Account-abstraction config. Hosted providers may expose chain RPC, bundler,
+// and paymaster on one URL; local E2E splits Anvil RPC from alto bundler.
 const AA_BUNDLER_URL = import.meta.env.VITE_AA_BUNDLER_URL?.trim() || "";
+const AA_RPC_URL =
+  import.meta.env.VITE_AA_RPC_URL?.trim() ||
+  (import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID === "42161"
+    ? import.meta.env.VITE_RPC_OVERRIDE_URL?.trim()
+    : "") ||
+  AA_BUNDLER_URL;
 const AA_POLICY_ID = import.meta.env.VITE_AA_POLICY_ID?.trim() || "";
 
 // Lazy-initialized SDK client.
@@ -170,10 +175,11 @@ async function getClients(): Promise<SdkClient> {
     });
   }
 
-  if (AA_BUNDLER_URL && AA_POLICY_ID) {
+  if (AA_BUNDLER_URL) {
     builder = builder.withAa({
       bundlerUrl: AA_BUNDLER_URL,
-      paymasterPolicyId: AA_POLICY_ID,
+      rpcUrl: AA_RPC_URL,
+      ...(AA_POLICY_ID ? { paymasterPolicyId: AA_POLICY_ID } : {}),
     });
   }
 
@@ -531,7 +537,7 @@ export const api = {
     const walletClient = createWalletClient({
       account,
       chain: arbitrum,
-      transport: http(),
+      transport: http(AA_RPC_URL || undefined),
     });
     const signer = buildEvmSigner(walletClient, arbitrum);
     return await client.getRefundedEvmSwapContinuation(swapId, signer);
@@ -549,7 +555,7 @@ export const api = {
     const walletClient = createWalletClient({
       account,
       chain: arbitrum,
-      transport: http(),
+      transport: http(AA_RPC_URL || undefined),
     });
     const signer = buildEvmSigner(walletClient, arbitrum);
     return await client.continueRefundedEvmSwap(swapId, {
