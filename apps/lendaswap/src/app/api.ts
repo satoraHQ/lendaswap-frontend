@@ -157,12 +157,21 @@ const AA_RPC_URL =
   AA_BUNDLER_URL;
 const AA_POLICY_ID = import.meta.env.VITE_AA_POLICY_ID?.trim() || "";
 
-// Lazy-initialized SDK client.
-let sdkClient: SdkClient | null = null;
+// Lazy-initialized SDK client. Cache the in-flight PROMISE, not the built
+// instance: concurrent first callers (app boot fires several api calls at
+// once) must all get the same client, or state bound to one instance — like
+// started tracking — is invisible through another.
+let sdkClientPromise: Promise<SdkClient> | null = null;
 
-async function getClients(): Promise<SdkClient> {
-  if (sdkClient) return sdkClient;
+function getClients(): Promise<SdkClient> {
+  sdkClientPromise ??= buildClient().catch((err) => {
+    sdkClientPromise = null; // let a later call retry
+    throw err;
+  });
+  return sdkClientPromise;
+}
 
+async function buildClient(): Promise<SdkClient> {
   const walletStorage = new IdbWalletStorage();
 
   let builder = SdkClient.builder()
@@ -201,7 +210,6 @@ async function getClients(): Promise<SdkClient> {
     }
   }
 
-  sdkClient = client;
   return client;
 }
 
