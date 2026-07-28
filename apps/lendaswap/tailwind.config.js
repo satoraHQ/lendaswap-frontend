@@ -3,6 +3,10 @@ export default {
   darkMode: "class",
   content: [
     "./node_modules/@frontend/**/*.{ts,tsx}",
+    // The shadcn package is imported via vite alias (#/…) straight from
+    // source, so scan the real path too — the node_modules glob only sees it
+    // through a pnpm symlink, which is not reliably followed.
+    "../../packages/shadcn/src/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
     "./index.html",
   ],

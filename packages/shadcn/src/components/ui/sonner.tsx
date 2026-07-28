@@ -10,11 +10,21 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
+          // The app defines these tokens as bare HSL triplets (see
+          // tailwind.config.js), so they must be wrapped in hsl() — used
+          // directly they are invalid colors and render transparent.
+          "--normal-bg": "hsl(var(--popover))",
+          "--normal-text": "hsl(var(--popover-foreground))",
+          "--normal-border": "hsl(var(--border))",
         } as React.CSSProperties
       }
+      toastOptions={{
+        classNames: {
+          // Brand-lime call to action (matches the logo dot); !important to
+          // beat sonner's built-in button styles.
+          actionButton: "!bg-lime-400 !text-black hover:!bg-lime-300",
+        },
+      }}
       {...props}
     />
   );
