@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Navigate,
   Route,
@@ -9,6 +9,7 @@ import {
 import "../assets/styles.css";
 import { ArrowLeftRight, Zap } from "lucide-react";
 import { Card } from "#/components/ui/card";
+import { Toaster } from "#/components/ui/sonner";
 import isValidSpeedWalletContext from "../utils/speedWallet";
 import { api } from "./api";
 import { AppHeader } from "./components/AppHeader";
@@ -27,6 +28,7 @@ import {
   TermsOfServicePage,
   TrackPage,
 } from "./pages";
+import { startSwapActionCenter } from "./swapActionCenter";
 import { SwapWizardPage } from "./wizard";
 
 /** Redirect `/` to the default pair, preserving query params like `?ref=`. */
@@ -107,6 +109,11 @@ export default function App() {
   const isHomePage =
     location.pathname === "/" || /^\/[^/]+\/[^/]+$/.test(location.pathname);
 
+  // Watch tracked swaps and toast when one needs the user (claim/refund/…).
+  useEffect(() => {
+    startSwapActionCenter((swapId) => navigate(`/swap/${swapId}/wizard`));
+  }, [navigate]);
+
   const handleDownloadSeedphrase = async () => {
     try {
       const mnemonic = await api.getMnemonic();
@@ -137,6 +144,7 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
+      <Toaster position="bottom-center" />
       {/* Modern Gradient Glows */}
       <div className="pointer-events-none fixed inset-0 z-0">
         {/* Top Left - Lime Gradient */}

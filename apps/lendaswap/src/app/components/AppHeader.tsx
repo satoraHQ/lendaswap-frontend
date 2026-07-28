@@ -24,6 +24,7 @@ import {
 import { ReactComponent as XLogo } from "../../assets/x-com-logo.svg";
 import isValidSpeedWalletContext from "../../utils/speedWallet";
 import { useNwc } from "../NwcContext";
+import { useActionableSwaps } from "../swapActionCenter";
 import { ThemeToggle } from "../utils/theme-toggle";
 import { useWalletBridge } from "../WalletBridgeContext";
 import { NwcConnectDialog } from "./NwcConnectDialog";
@@ -32,6 +33,16 @@ interface AppHeaderProps {
   onBackupOpen: () => void;
   onImportOpen: () => void;
   onDownloadSeedphrase: () => void;
+}
+
+/** Pulsing dot marking that a swap in the history needs the user. */
+function ActionDot({ className }: { className?: string }) {
+  return (
+    <span className={`pointer-events-none flex h-2 w-2 ${className ?? ""}`}>
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-500 opacity-75" />
+      <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-500" />
+    </span>
+  );
 }
 
 export function AppHeader({
@@ -49,6 +60,7 @@ export function AppHeader({
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : undefined;
+  const needsAction = useActionableSwaps().size > 0;
 
   return (
     <header className="border-b">
@@ -112,8 +124,11 @@ export function AppHeader({
             <div className="md:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="relative">
                     <Menu className="h-4 w-4" />
+                    {needsAction && (
+                      <ActionDot className="absolute right-1 top-1" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -123,6 +138,7 @@ export function AppHeader({
                   >
                     <History className="h-4 w-4" />
                     Swaps
+                    {needsAction && <ActionDot className="relative ml-auto" />}
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
@@ -193,10 +209,13 @@ export function AppHeader({
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/swaps")}
-                className="gap-2"
+                className="relative gap-2"
                 title="Swaps"
               >
                 <History className="h-4 w-4" />
+                {needsAction && (
+                  <ActionDot className="absolute right-1 top-1" />
+                )}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

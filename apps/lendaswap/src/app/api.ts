@@ -16,6 +16,8 @@ import {
   type RefundResult,
   Client as SdkClient,
   type StoredSwap,
+  type SwapAction,
+  type SwapActions,
   type SwapStatus,
   type SwapStatusHandler,
   type TokenId,
@@ -41,6 +43,8 @@ export type {
   RecoverAllSwapsResult,
   RefundResult,
   StoredSwap,
+  SwapAction,
+  SwapActions,
   SwapStatus,
   TokenId,
   TokenInfo,
@@ -201,6 +205,19 @@ async function getClients(): Promise<SdkClient> {
   return client;
 }
 
+// Chain tracking (the SDK's derived next-action model). Started once, lazily,
+// by the first action subscriber; a start failure resets so the next
+// subscriber retries — the rest of the app works from server status without it.
+let trackingReady: Promise<void> | null = null;
+
+function ensureTracking(client: SdkClient): Promise<void> {
+  trackingReady ??= client.startTracking().catch((err) => {
+    trackingReady = null;
+    throw err;
+  });
+  return trackingReady;
+}
+
 export const api = {
   async loadMnemonic(mnemonic: string): Promise<void> {
     const client = await getClients();
@@ -321,6 +338,20 @@ export const api = {
   async listAllSwaps(): Promise<StoredSwap[]> {
     const client = await getClients();
     return await client.listAllSwaps();
+  },
+
+  /**
+   * Subscribe to the SDK's chain-derived next actions. Starts tracking on
+   * first use, replays the current action per tracked swap, then fires on
+   * every change. Resolves to an unsubscribe fn; rejects if tracking couldn't
+   * start.
+   */
+  async subscribeToActions(
+    onActions: (swapId: string, actions: SwapActions) => void,
+  ): Promise<() => void> {
+    const client = await getClients();
+    await ensureTracking(client);
+    return client.subscribeToActions(onActions);
   },
 
   async claim(

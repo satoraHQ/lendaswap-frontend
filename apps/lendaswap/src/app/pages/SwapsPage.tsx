@@ -30,6 +30,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
 import { api, getTokenIcon } from "../api";
+import { useActionableSwaps } from "../swapActionCenter";
 import {
   getTargetChainDisplayName,
   getTokenNetworkIcon,
@@ -171,6 +172,7 @@ export function SwapsPage() {
   const [clearAllDialogOpen, setClearAllDialogOpen] = useState(false);
   const [swapToDelete, setSwapToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
+  const actionableSwaps = useActionableSwaps();
 
   useEffect(() => {
     document.title = "My Swaps | Satora";
@@ -381,6 +383,7 @@ export function SwapsPage() {
           <div className="space-y-1.5 sm:space-y-2">
             {sortedFilteredSwaps.map((swap) => {
               const statusInfo = getStatusInfo(swap.response.status);
+              const needsAction = actionableSwaps.has(swap.response.id);
               const amounts = formatSwapAmount(swap);
               const timeAgo = formatDistanceToNow(
                 new Date(swap.response.created_at),
@@ -405,7 +408,16 @@ export function SwapsPage() {
                 >
                   <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 pr-1.5 sm:pr-2">
                     {/* Overlapping Token Icons */}
-                    <div className="relative flex-shrink-0 w-10 h-7 sm:w-12 sm:h-8">
+                    <div
+                      className={`relative flex-shrink-0 w-10 h-7 sm:w-12 sm:h-8 ${needsAction ? "animate-pulse" : ""}`}
+                    >
+                      {/* Pulsing marker: this swap's next action is the user's */}
+                      {needsAction && (
+                        <span className="absolute -left-1 -top-1 z-20 flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-500 opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-500" />
+                        </span>
+                      )}
                       {/* Source token (front) */}
                       <div className="absolute left-0 top-0 z-10">
                         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-background border-2 border-background flex items-center justify-center overflow-hidden shadow-sm">
