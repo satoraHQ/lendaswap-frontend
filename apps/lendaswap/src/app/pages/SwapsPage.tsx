@@ -230,6 +230,20 @@ function getActionInfo(
         showIcon: true,
       };
     }
+    case "none": {
+      // Terminal, straight from chain ("Refunded — your deposit was
+      // returned.", "Swap complete — …") — beats a stale stored status.
+      const outcome = recommended.reason.split(" — ")[0].replace(/\.$/, "");
+      const success = /complete/i.test(outcome);
+      return {
+        label: outcome || "Done",
+        textColor: success
+          ? "text-green-600 dark:text-green-400"
+          : "text-muted-foreground",
+        icon: <Check className="h-3 w-3" />,
+        showIcon: success,
+      };
+    }
     default:
       return undefined;
   }

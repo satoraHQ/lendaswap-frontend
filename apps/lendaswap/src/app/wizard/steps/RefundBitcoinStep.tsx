@@ -7,6 +7,7 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { api, type BtcToArkadeSwapResponse } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
+import { extractRefundAddress } from "../../utils/bip21";
 import { getTargetChainDisplayName } from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
@@ -234,7 +235,12 @@ export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {
                 type="text"
                 placeholder="bc1q..."
                 value={refundAddress}
-                onChange={(e) => setRefundAddress(e.target.value)}
+                onChange={(e) => {
+                  // Accept a pasted BIP21 URI (bitcoin:bc1…?…) and pull out
+                  // the Bitcoin address; plain addresses pass through.
+                  const raw = e.target.value;
+                  setRefundAddress(extractRefundAddress(raw, "bitcoin") ?? raw);
+                }}
                 disabled={isRefunding}
               />
               <p className="text-xs text-muted-foreground">

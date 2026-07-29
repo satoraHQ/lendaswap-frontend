@@ -13,12 +13,13 @@ import type {
 } from "@satora/swap";
 import { useLiveQuery } from "dexie-react-hooks";
 import { AlertCircle } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useAsyncRetry } from "react-use";
-import { api } from "../api";
+import { api, type SwapActions } from "../api";
 import { SupportErrorBanner } from "../components/SupportErrorBanner";
 import { db } from "../db";
+import { useDerivedSwapActions } from "../swapActionCenter";
 import { assertNever } from "../utils/assertNever";
 import {
   CctpInboundRecoveryStep,
@@ -154,6 +155,54 @@ function determineStepFromStatus(
   );
 }
 
+/**
+ * The wizard step from the SDK's chain-derived next action, when the swap is
+ * tracked. Chain observation is the source of truth here — it catches locktime
+ * flips and counterparty moves without waiting on a server status update.
+ * `undefined` (untracked swap, or a terminal `none` whose rendering depends on
+ * HOW it ended) falls back to {@link determineStepFromStatus}.
+ */
+function determineStepFromActions(
+  actions: SwapActions | undefined,
+  status: SwapStatus | undefined,
+): StepId | undefined {
+  const recommended = actions?.actions.find((a) => a.recommended);
+  if (!actions || !recommended || !status) return undefined;
+
+  // Statuses where the swap has FAILED with the deposit stuck: the refund page
+  // is the right surface even while the timelock still runs — it owns the
+  // countdown and, for Arkade legs, the instant collaborative refund the pure
+  // resolver doesn't model yet.
+  const failed =
+    status === "clientfundedserverrefunded" ||
+    status === "clientinvalidfunded" ||
+    status === "clientfundedtoolate" ||
+    status === "serverwontfund";
+
+  switch (recommended.id) {
+    case "fund":
+      return "user-deposit";
+    case "claim":
+      // The processing step performs the claim; the action model makes sure we
+      // only get here while claiming is actually safe.
+      return "server-depositing";
+    case "wait":
+      if (failed) return "refundable";
+      return status === "clientfundingseen"
+        ? "user-deposit-seen"
+        : "server-depositing";
+    case "refund_unilateral":
+    case "refund_collaborative":
+      return "refundable";
+    case "recover_cctp_claim":
+    case "none":
+      // Terminal (or CCTP recovery, which has its own surface): how it ended —
+      // success vs refunded vs expired — is the server status's to say.
+      return undefined;
+  }
+  return undefined;
+}
+
 export function SwapWizardPage() {
   const { swapId } = useParams<{ swapId: string }>();
   const navigate = useNavigate();
@@ -179,7 +228,7 @@ export function SwapWizardPage() {
   const lastStatusRef = useRef<SwapStatus | null>(null);
   const [displaySwapData, setDisplaySwapData] =
     useState<GetSwapResponse | null>(null);
-  const [currentStep, setCurrentStep] = useState<StepId | undefined>();
+  const derivedActions = useDerivedSwapActions().get(swapId ?? "");
 
   const {
     loading: isLoading,
@@ -212,11 +261,20 @@ export function SwapWizardPage() {
       );
       lastStatusRef.current = swapData.response.status;
       setDisplaySwapData(swapData.response);
-      setCurrentStep(determineStepFromStatus(swapData.response));
     }
   }, [swapData, displaySwapData]);
   //
   const swapDirectionValue = displaySwapData?.direction;
+
+  // The step: chain-derived next action first (locktime flips and counterparty
+  // moves surface without a server round-trip), server status as the fallback
+  // for untracked swaps and for terminal rendering.
+  const currentStep = useMemo(
+    () =>
+      determineStepFromActions(derivedActions, displaySwapData?.status) ??
+      determineStepFromStatus(displaySwapData),
+    [derivedActions, displaySwapData],
+  );
 
   // Subscribe to swap status updates via WebSocket (replaces 2s polling).
   useEffect(() => {
@@ -251,12 +309,9 @@ export function SwapWizardPage() {
     api
       .subscribeToSwaps([swapId], (_id, status) => {
         console.log(`ws status update: ${status}`);
-        if (!displaySwapData || status !== displaySwapData.status) {
-          retry();
-          return;
-        }
-        const next = determineStepFromStatus({ ...displaySwapData, status });
-        if (next === "refundable") retry();
+        // Refresh the stored/displayed swap on a status change; the step itself
+        // reacts to the chain-derived action stream independently.
+        if (!displaySwapData || status !== displaySwapData.status) retry();
       })
       .then((unsub) => {
         if (cancelled) unsub();
@@ -271,30 +326,6 @@ export function SwapWizardPage() {
       unsubscribe?.();
     };
   }, [swapId, retry, displaySwapData, swapData]);
-
-  // Locktime-based refundability can flip without a status change, so the
-  // WS subscription above won't catch it.  Re-evaluate the step from local
-  // data every 30s and trigger a refresh when it transitions to refundable.
-  useEffect(() => {
-    if (!displaySwapData) return;
-
-    const terminalStates: SwapStatus[] = [
-      "clientredeemed",
-      "serverredeemed",
-      "expired",
-      "clientrefundedserverfunded",
-      "clientrefundedserverrefunded",
-      "clientrefunded",
-    ];
-    if (terminalStates.includes(displaySwapData.status)) return;
-
-    const id = setInterval(() => {
-      if (determineStepFromStatus(displaySwapData) === "refundable") {
-        retry();
-      }
-    }, 30_000);
-    return () => clearInterval(id);
-  }, [displaySwapData, retry]);
 
   return (
     <>

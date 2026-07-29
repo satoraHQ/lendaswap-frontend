@@ -2,8 +2,9 @@ import {
   type ArkadeToEvmSwapResponse,
   type ArkadeToLightningSwapResponse,
   isValidArkadeAddress,
+  type SwapStatus,
 } from "@satora/swap";
-import { ArrowRight, Clock, Loader2, Unlock } from "lucide-react";
+import { Clock, ExternalLink, Loader2, Unlock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -11,6 +12,11 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { api, type VhtlcAmounts } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
+import { extractRefundAddress } from "../../utils/bip21";
+import {
+  getBlockexplorerAddressLink,
+  getBlockexplorerTxLink,
+} from "../../utils/tokenUtils";
 import { useWalletBridge } from "../../WalletBridgeContext";
 import { DepositCard } from "../components";
 
@@ -18,11 +24,34 @@ interface RefundArkadeStepProps {
   swapData: ArkadeToEvmSwapResponse | ArkadeToLightningSwapResponse;
 }
 
+/**
+ * Failed states where the server co-signs a COLLABORATIVE refund immediately —
+ * no timelock wait. In any other state only the unilateral (timelocked) path
+ * exists, so the refund unlocks at `vhtlc_refund_locktime`.
+ */
+const COLLAB_REFUND_STATUSES: SwapStatus[] = [
+  "serverwontfund",
+  "clientinvalidfunded",
+  "clientfundedserverrefunded",
+  "clientfundedtoolate",
+];
+
+function formatCountdown(ms: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
   const [refundAddress, setRefundAddress] = useState("");
   const [isRefunding, setIsRefunding] = useState(false);
   const [refundError, setRefundError] = useState<string | null>(null);
-  const [refundSuccess, setRefundSuccess] = useState<string | null>(null);
+  /** Txid of a successful refund, rendered as an explorer link. */
+  const [refundTxid, setRefundTxid] = useState<string | null>(null);
   const [amounts, setAmounts] = useState<VhtlcAmounts | null>(null);
   const [isLoadingAmounts, setIsLoadingAmounts] = useState(false);
   const { arkAddress } = useWalletBridge();
@@ -56,16 +85,28 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
     fetchAmounts();
   }, [swapData, amounts]);
 
-  // Calculate if swap can be refunded.
-  // With collaborative refund, no locktime wait is needed - the server cosigns
-  // immediately when the swap is in a safe state. The SDK handles the fallback
-  // to non-collab (locktime-based) refund if the server rejects.
-  const canRefund = (() => {
-    if (!swapData || amounts === null) return false;
-    return amounts.spendable > 0 || amounts.recoverable > 0;
-  })();
+  // Which refund mode applies: in a failed state the server co-signs a collab
+  // refund instantly; otherwise only the unilateral path exists and it unlocks
+  // at the VHTLC refund locktime. (The SDK still falls back from collab to
+  // unilateral if the server unexpectedly rejects.)
+  const collabAvailable = COLLAB_REFUND_STATUSES.includes(swapData.status);
+  const locktimeMs = swapData.vhtlc_refund_locktime * 1000;
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const locktimePassed = nowMs >= locktimeMs;
+  const refundUnlocked = collabAvailable || locktimePassed;
 
-  const refundLocktimeDate = new Date(swapData.vhtlc_refund_locktime * 1000);
+  // Tick only while counting down to the unilateral unlock.
+  useEffect(() => {
+    if (refundUnlocked) return;
+    const id = setInterval(() => setNowMs(Date.now()), 1_000);
+    return () => clearInterval(id);
+  }, [refundUnlocked]);
+
+  const hasFunds =
+    amounts !== null && (amounts.spendable > 0 || amounts.recoverable > 0);
+  const canRefund = hasFunds && refundUnlocked;
+
+  const refundLocktimeDate = new Date(locktimeMs);
 
   const handleRefund = async () => {
     if (!refundAddress.trim()) {
@@ -80,11 +121,11 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
 
     setIsRefunding(true);
     setRefundError(null);
-    setRefundSuccess(null);
+    setRefundTxid(null);
 
     try {
       const txid = await api.refundVhtlc(swapData.id, refundAddress);
-      setRefundSuccess(`Refund successful! Transaction ID: ${txid}`);
+      setRefundTxid(txid);
     } catch (error) {
       console.error("Refund failed:", error);
       setRefundError(
@@ -98,9 +139,6 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
   };
 
   const alreadyRefunded = amounts !== null && amounts.vtxoStatus === "spent";
-
-  const sourceSymbol = swapData.source_token.symbol;
-  const targetSymbol = swapData.target_token.symbol;
 
   return (
     <DepositCard
@@ -134,12 +172,28 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
               </h3>
             </div>
             <p className="text-sm text-green-800 dark:text-green-200">
-              You can refund your Bitcoin from this swap instantly.
+              {collabAvailable
+                ? "The swap failed, so the server co-signs your refund immediately — no need to wait for the timelock."
+                : "The refund timelock has passed — you can reclaim your deposit now."}
+            </p>
+          </div>
+        )}
+        {!alreadyRefunded && hasFunds && !refundUnlocked && (
+          <div className="space-y-3 rounded-lg border border-amber-400 bg-amber-50 p-4 dark:bg-amber-950/20">
+            <div className="flex items-center gap-3">
+              <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                Refund Locked
+              </h3>
+            </div>
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              Your deposit unlocks at {refundLocktimeDate.toLocaleString()} — in{" "}
+              {formatCountdown(locktimeMs - nowMs)}.
             </p>
           </div>
         )}
         {!alreadyRefunded &&
-          !canRefund &&
+          !hasFunds &&
           amounts !== null &&
           amounts.vtxoStatus !== "spent" &&
           amounts.vtxoStatus !== "not_funded" && (
@@ -160,15 +214,6 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
         {/* Swap Details */}
         <div className="space-y-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium">Swap</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium">{sourceSymbol}</span>
-              <ArrowRight className="h-3 w-3 text-muted-foreground" />
-              <span className="text-xs font-medium">{targetSymbol}</span>
-            </div>
-          </div>
-
-          <div className="space-y-1">
             <p className="text-sm font-medium">Swap Status</p>
             <p className="break-all font-mono text-xs text-muted-foreground">
               {swapData.status}
@@ -177,11 +222,23 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
 
           <div className="space-y-1">
             <p className="text-sm font-medium">VHTLC Address</p>
-            <p className="break-all font-mono text-xs text-muted-foreground">
-              {"btc_vhtlc_address" in swapData
-                ? swapData.btc_vhtlc_address
-                : swapData.arkade_vhtlc_address}
-            </p>
+            {(() => {
+              const vhtlcAddress =
+                "btc_vhtlc_address" in swapData
+                  ? swapData.btc_vhtlc_address
+                  : swapData.arkade_vhtlc_address;
+              return (
+                <a
+                  href={getBlockexplorerAddressLink("Arkade", vhtlcAddress)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-start gap-1 break-all font-mono text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  <span className="break-all">{vhtlcAddress}</span>
+                  <ExternalLink className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                </a>
+              );
+            })()}
           </div>
 
           <div className="space-y-1">
@@ -232,15 +289,21 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
           </div>
 
           <div className="space-y-1">
-            <p className="text-sm font-medium">Refund Locktime</p>
+            <p className="text-sm font-medium">
+              {collabAvailable
+                ? "Backup: refund on your own"
+                : "Refund Locktime"}
+            </p>
             <p className="text-xs text-muted-foreground">
-              {refundLocktimeDate.toLocaleString()}
+              {collabAvailable
+                ? `If the instant refund fails, you can refund without the server's help from ${refundLocktimeDate.toLocaleString()}.`
+                : refundLocktimeDate.toLocaleString()}
             </p>
           </div>
         </div>
 
         {/* Refund not available warning */}
-        {!canRefund && amounts !== null && (
+        {!hasFunds && amounts !== null && (
           <Alert>
             <AlertDescription>
               {amounts.vtxoStatus === "spent"
@@ -264,7 +327,12 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
                 type="text"
                 placeholder="ark1..."
                 value={refundAddress}
-                onChange={(e) => setRefundAddress(e.target.value)}
+                onChange={(e) => {
+                  // Accept a pasted BIP21 URI (bitcoin:…?ark=ark1…) and pull
+                  // out the Arkade address; plain addresses pass through.
+                  const raw = e.target.value;
+                  setRefundAddress(extractRefundAddress(raw, "arkade") ?? raw);
+                }}
                 disabled={isRefunding || !!arkAddress}
                 className={arkAddress ? "cursor-not-allowed opacity-60" : ""}
               />
@@ -297,9 +365,22 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
         )}
 
         {/* Success Display */}
-        {refundSuccess && (
+        {refundTxid && (
           <Alert>
-            <AlertDescription>{refundSuccess}</AlertDescription>
+            <AlertDescription>
+              <span>
+                Refund successful!{" "}
+                <a
+                  href={getBlockexplorerTxLink("Arkade", refundTxid)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-start gap-1 break-all font-mono underline-offset-2 hover:underline"
+                >
+                  <span className="break-all">{refundTxid}</span>
+                  <ExternalLink className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                </a>
+              </span>
+            </AlertDescription>
           </Alert>
         )}
       </div>

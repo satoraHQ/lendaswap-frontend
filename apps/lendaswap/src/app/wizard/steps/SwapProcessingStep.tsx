@@ -14,6 +14,7 @@ import { Button } from "#/components/ui/button";
 import { api } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import { getSwapById } from "../../db";
+import { useDerivedSwapActions } from "../../swapActionCenter";
 import {
   deriveSolanaUsdcAta,
   isSolanaTokenAccount,
@@ -79,12 +80,18 @@ export function SwapProcessingStep({
     localStorage.removeItem(claimKey);
   };
 
-  // Auto-claim when server is funded (works for all directions via api.claim)
+  // Claim only when the chain-derived action stream says `claim`: the model
+  // verifies the server leg on-chain (not just the server's word) and encodes
+  // the safety rule — never claim once the server's refund window has opened,
+  // since revealing the preimage then would let the server also take the
+  // deposit. The old trigger (`status === "serverfunded"`) knew none of that.
+  const derivedRecommended = useDerivedSwapActions().get(swapId)?.recommended;
+
   useEffect(() => {
     const autoClaim = async () => {
       // Lightning-to-evm is claimed by the lightning client, skip auto-claim
       if (swapData.direction === "evm_to_lightning") return;
-      if (swapData.status !== "serverfunded") return;
+      if (derivedRecommended !== "claim") return;
 
       const claimKey = `swap_${swapData.id}_claim_attempted`;
       const attemptTimestamp = localStorage.getItem(claimKey);
@@ -236,7 +243,7 @@ export function SwapProcessingStep({
     };
 
     autoClaim();
-  }, [swapData, swapId, isClaiming, retryCount, sleep]);
+  }, [swapData, swapId, isClaiming, retryCount, sleep, derivedRecommended]);
 
   const handleCopyTxId = async (txId: string) => {
     try {

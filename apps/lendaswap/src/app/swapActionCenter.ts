@@ -52,13 +52,26 @@ export function startSwapActionCenter(
   api
     .subscribeToActions((swapId, actions) => {
       const recommended = actions.actions.find((a) => a.recommended);
+      const previousDerived = derived.get(swapId)?.recommended;
 
-      // The full derived view: everything non-terminal, dropped on `none`.
+      // The full derived view. Terminal `none` entries are KEPT: the chain
+      // knew the outcome the moment it happened, while the stored status can
+      // lag behind (a just-refunded swap would otherwise fall back to a stale
+      // "Action Required"). Only an empty derivation drops the entry.
       const nextDerived = new Map(derived);
-      if (recommended === undefined || recommended.id === "none")
-        nextDerived.delete(swapId);
+      if (recommended === undefined) nextDerived.delete(swapId);
       else nextDerived.set(swapId, actions);
       derived = nextDerived;
+
+      // On the transition into terminal, refresh the stored swap from the
+      // server (fire-and-forget): the fallback label and the next session's
+      // settled-status filter then see the final status too.
+      if (
+        recommended?.id === "none" &&
+        previousDerived !== undefined &&
+        previousDerived !== "none"
+      )
+        void api.getSwap(swapId).catch(() => {});
 
       const needsUser =
         recommended !== undefined && ACTIONABLE.has(recommended.id);
