@@ -29,8 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
-import { api, getTokenIcon } from "../api";
-import { useActionableSwaps } from "../swapActionCenter";
+import { api, getTokenIcon, type SwapActions } from "../api";
+import { useActionableSwaps, useDerivedSwapActions } from "../swapActionCenter";
 import {
   getTargetChainDisplayName,
   getTokenNetworkIcon,
@@ -45,19 +45,19 @@ type StatusInfo = {
 
 const STATUS_INFO = {
   pending: {
-    label: "In Progress",
+    label: "Awaiting your deposit",
     textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
   clientfundingseen: {
-    label: "In Progress",
+    label: "Confirming your deposit",
     textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
   clientfunded: {
-    label: "In Progress",
+    label: "Waiting for the server to fund",
     textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
@@ -69,21 +69,21 @@ const STATUS_INFO = {
     showIcon: false,
   },
   serverfunded: {
-    label: "In Progress",
+    label: "Ready to claim",
     textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
   clientredeeming: {
-    label: "In Progress",
+    label: "Completed",
     textColor: "text-lime-600 dark:text-lime-400",
     icon: "loading",
     showIcon: true,
   },
   clientredeemed: {
-    label: "In Progress",
-    textColor: "text-lime-600 dark:text-lime-400",
-    icon: "loading",
+    label: "Completed",
+    textColor: "text-green-600 dark:text-green-400",
+    icon: "check",
     showIcon: true,
   },
   serverredeemed: {
@@ -164,6 +164,77 @@ function getStatusInfo(status: SwapStatus): {
   };
 }
 
+/**
+ * The row label from the SDK's chain-derived next action, when the swap is
+ * tracked: the concrete next step ("Ready to claim", "Refund available", …) or
+ * a note that a refund exists but is still timelocked — instead of the old
+ * generic "In Progress". `undefined` (untracked/terminal) falls back to
+ * {@link getStatusInfo}.
+ */
+function getActionInfo(
+  actions: SwapActions | undefined,
+): ReturnType<typeof getStatusInfo> | undefined {
+  const recommended = actions?.actions.find((a) => a.recommended);
+  if (!actions || !recommended) return undefined;
+
+  const spinner = <Loader2 className="h-3 w-3 animate-spin" />;
+  const attention = "text-amber-600 dark:text-amber-400";
+  const positive = "text-lime-600 dark:text-lime-400";
+
+  switch (recommended.id) {
+    case "claim":
+      return {
+        label: "Ready to claim",
+        textColor: positive,
+        icon: null,
+        showIcon: false,
+      };
+    case "refund_unilateral":
+    case "refund_collaborative":
+      return {
+        label: "Refund available",
+        textColor: attention,
+        icon: null,
+        showIcon: false,
+      };
+    case "recover_cctp_claim":
+      return {
+        label: "Recovery needed",
+        textColor: "text-red-600 dark:text-red-400",
+        icon: null,
+        showIcon: false,
+      };
+    case "fund":
+      return {
+        label: "Awaiting your deposit",
+        textColor: positive,
+        icon: null,
+        showIcon: false,
+      };
+    case "wait": {
+      // A refund is on the table but still timelocked → say so instead of a
+      // generic wait.
+      const blockedRefund = actions.actions.some(
+        (a) =>
+          (a.id === "refund_unilateral" || a.id === "refund_collaborative") &&
+          a.blockedBy !== undefined,
+      );
+      // Otherwise the action's own reason says exactly WHAT is being waited
+      // on ("Waiting for the server to fund the swap", …) — use it, keeping
+      // only the leading clause and dropping the trailing period.
+      const specific = recommended.reason.split(" — ")[0].replace(/\.$/, "");
+      return {
+        label: blockedRefund ? "Waiting for refund" : specific || "Waiting…",
+        textColor: "text-muted-foreground",
+        icon: spinner,
+        showIcon: true,
+      };
+    }
+    default:
+      return undefined;
+  }
+}
+
 export function SwapsPage() {
   const [swaps, setSwaps] = useState<StoredSwap[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -173,6 +244,7 @@ export function SwapsPage() {
   const [swapToDelete, setSwapToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
   const actionableSwaps = useActionableSwaps();
+  const derivedActions = useDerivedSwapActions();
 
   useEffect(() => {
     document.title = "My Swaps | Satora";
@@ -382,7 +454,11 @@ export function SwapsPage() {
         ) : (
           <div className="space-y-1.5 sm:space-y-2">
             {sortedFilteredSwaps.map((swap) => {
-              const statusInfo = getStatusInfo(swap.response.status);
+              // Prefer the chain-derived next action; server-status label as
+              // fallback for untracked/terminal swaps.
+              const statusInfo =
+                getActionInfo(derivedActions.get(swap.response.id)) ??
+                getStatusInfo(swap.response.status);
               const needsAction = actionableSwaps.has(swap.response.id);
               const amounts = formatSwapAmount(swap);
               const timeAgo = formatDistanceToNow(

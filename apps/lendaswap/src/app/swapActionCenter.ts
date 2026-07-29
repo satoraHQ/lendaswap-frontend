@@ -1,12 +1,13 @@
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { api, type SwapAction } from "./api";
+import { api, type SwapAction, type SwapActions } from "./api";
 
 /**
  * Swap action center: subscribes once to the SDK's chain-derived next actions
- * and keeps the set of swaps that need the user (anything beyond wait/none).
- * Surfaces new ones as a sonner toast; components read the live set via
- * {@link useActionableSwaps} to highlight affected swaps.
+ * and keeps two live views — the full derived actions per non-terminal swap
+ * ({@link useDerivedSwapActions}, e.g. the swaps page labels) and the subset
+ * that needs the user ({@link useActionableSwaps}, the pulsing indicators).
+ * A swap newly needing the user is surfaced as a sonner toast.
  */
 
 /**
@@ -30,11 +31,11 @@ const ACTION_COPY: Partial<Record<SwapAction["id"], string>> = {
 };
 
 let actionable: ReadonlyMap<string, SwapAction> = new Map();
+let derived: ReadonlyMap<string, SwapActions> = new Map();
 const listeners = new Set<() => void>();
 let started = false;
 
-function emit(next: Map<string, SwapAction>): void {
-  actionable = next;
+function notify(): void {
   for (const listener of listeners) listener();
 }
 
@@ -51,21 +52,35 @@ export function startSwapActionCenter(
   api
     .subscribeToActions((swapId, actions) => {
       const recommended = actions.actions.find((a) => a.recommended);
+
+      // The full derived view: everything non-terminal, dropped on `none`.
+      const nextDerived = new Map(derived);
+      if (recommended === undefined || recommended.id === "none")
+        nextDerived.delete(swapId);
+      else nextDerived.set(swapId, actions);
+      derived = nextDerived;
+
       const needsUser =
         recommended !== undefined && ACTIONABLE.has(recommended.id);
       const previous = actionable.get(swapId);
 
       if (!needsUser) {
-        if (!previous) return;
-        const next = new Map(actionable);
-        next.delete(swapId);
-        emit(next);
-        toast.dismiss(`swap-action-${swapId}`);
+        if (previous) {
+          const next = new Map(actionable);
+          next.delete(swapId);
+          actionable = next;
+          toast.dismiss(`swap-action-${swapId}`);
+        }
+        notify();
         return;
       }
-      if (previous?.id === recommended.id) return;
+      if (previous?.id === recommended.id) {
+        notify();
+        return;
+      }
 
-      emit(new Map(actionable).set(swapId, recommended));
+      actionable = new Map(actionable).set(swapId, recommended);
+      notify();
 
       // Don't toast about the swap the user is already looking at. One toast
       // id per swap, so a changed action replaces instead of stacking.
@@ -94,11 +109,16 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-function getSnapshot(): ReadonlyMap<string, SwapAction> {
-  return actionable;
-}
-
 /** Live map of swapId → recommended action for swaps that need the user. */
 export function useActionableSwaps(): ReadonlyMap<string, SwapAction> {
-  return useSyncExternalStore(subscribe, getSnapshot);
+  return useSyncExternalStore(subscribe, () => actionable);
+}
+
+/**
+ * Live map of swapId → full derived actions for every tracked, non-terminal
+ * swap — including waits and blocked (timelocked) refunds, so a list view can
+ * show the real next step instead of a generic "in progress".
+ */
+export function useDerivedSwapActions(): ReadonlyMap<string, SwapActions> {
+  return useSyncExternalStore(subscribe, () => derived);
 }
