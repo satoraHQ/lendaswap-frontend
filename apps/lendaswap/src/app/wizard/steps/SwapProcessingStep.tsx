@@ -85,7 +85,11 @@ export function SwapProcessingStep({
   // the safety rule — never claim once the server's refund window has opened,
   // since revealing the preimage then would let the server also take the
   // deposit. The old trigger (`status === "serverfunded"`) knew none of that.
-  const derivedRecommended = useDerivedSwapActions().get(swapId)?.recommended;
+  const derivedActions = useDerivedSwapActions().get(swapId);
+  const derivedRecommended = derivedActions?.recommended;
+  /** Raw chain observations — live even when the server is stale/unreachable. */
+  const clientObs = derivedActions?.observations?.clientHtlc;
+  const serverObs = derivedActions?.observations?.serverHtlc;
 
   useEffect(() => {
     const autoClaim = async () => {
@@ -418,14 +422,28 @@ export function SwapProcessingStep({
   const config = getConfig();
 
   // Check if client funding is still being confirmed (seen but not confirmed)
-  const isClientFundingSeen = swapData.status === "clientfundingseen";
+  const isClientFundingSeen =
+    clientObs === "mempool" ||
+    (clientObs === undefined && swapData.status === "clientfundingseen");
+
+  // Chain facts, merged with the server's recorded txids via OR: chain truth
+  // advances the display when the server copy is stale (or unreachable) but
+  // never regresses it — and the txid links still render whenever the server
+  // did record them. A spent server leg was necessarily funded first, so a
+  // spend also completes the funded step.
+  const step2Done =
+    !!config.step2TxId ||
+    serverObs === "confirmed" ||
+    serverObs === "spent_claim";
+  const step3Done = !!config.step3TxId || serverObs === "spent_claim";
+  const step4Done = !!config.step4TxId || clientObs === "spent_claim";
 
   // Determine which step is currently active (the first incomplete step)
   const getCurrentStep = () => {
     if (isClientFundingSeen) return 1; // Client funding seen, awaiting confirmation
-    if (!config.step2TxId) return 2; // Server funding
-    if (!config.step3TxId) return 3; // Client redeeming
-    if (!config.step4TxId) return 4; // Server redeeming
+    if (!step2Done) return 2; // Server funding
+    if (!step3Done) return 3; // Client redeeming
+    if (!step4Done) return 4; // Server redeeming
     return 5; // All complete
   };
 
@@ -534,10 +552,10 @@ export function SwapProcessingStep({
           <div className="flex items-start gap-3">
             <div
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                config.step2TxId ? "bg-primary" : "bg-muted"
+                step2Done ? "bg-primary" : "bg-muted"
               }`}
             >
-              {config.step2TxId ? (
+              {step2Done ? (
                 <Check className="h-4 w-4 text-primary-foreground" />
               ) : currentStep === 2 ? (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -547,7 +565,7 @@ export function SwapProcessingStep({
             </div>
             <div className="flex-1 space-y-1">
               <p className="font-medium">
-                {config.step2TxId
+                {step2Done
                   ? config.step2LabelComplete
                   : config.step2LabelActive}
               </p>
@@ -586,10 +604,10 @@ export function SwapProcessingStep({
           <div className="flex items-start gap-3">
             <div
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                config.step3TxId ? "bg-primary" : "bg-muted"
+                step3Done ? "bg-primary" : "bg-muted"
               }`}
             >
-              {config.step3TxId ? (
+              {step3Done ? (
                 <Check className="h-4 w-4 text-primary-foreground" />
               ) : currentStep === 3 ? (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -628,7 +646,11 @@ export function SwapProcessingStep({
                 </div>
               )}
               {/* Show claiming status inline when server is funded */}
-              {swapData.status === "serverfunded" && !isLightning && (
+              {(derivedRecommended === "claim" ||
+                isClaiming ||
+                (serverObs === undefined &&
+                  swapData.status === "serverfunded")) &&
+                !isLightning && (
                 <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
                   <p className="text-sm font-medium">
                     {isClaiming
@@ -689,10 +711,10 @@ export function SwapProcessingStep({
           <div className="flex items-start gap-3">
             <div
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                config.step4TxId ? "bg-primary" : "bg-muted"
+                step4Done ? "bg-primary" : "bg-muted"
               }`}
             >
-              {config.step4TxId ? (
+              {step4Done ? (
                 <Check className="h-4 w-4 text-primary-foreground" />
               ) : currentStep === 4 ? (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
