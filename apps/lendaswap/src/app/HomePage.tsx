@@ -670,7 +670,18 @@ export function HomePage() {
       // is handled automatically by the SDK's createSwap method.
       // For Solana destinations, forward the ATA-existence hint we
       // resolved at quote time so the bridge fee committed at creation
-      // matches what calldata-fetch will rebuild later.
+      // matches what calldata-fetch will rebuild later — and pin the claim
+      // recipient (the destination USDC ATA) on the stored swap, so a bare
+      // claim (e.g. the SDK's background auto-claim) can route the burn.
+      let bridgeRecipient: string | undefined;
+      let bridgeRecipientWallet: string | undefined;
+      if (isSolanaTarget && isValidSolanaAddress(targetAddress)) {
+        const { deriveSolanaUsdcAta } = await import("./utils/solana");
+        bridgeRecipient = await deriveSolanaUsdcAta(targetAddress);
+        bridgeRecipientWallet = bridgeRecipientSetup
+          ? targetAddress
+          : undefined;
+      }
       const swap = await api.createSwap({
         sourceAsset,
         targetAsset,
@@ -680,6 +691,8 @@ export function HomePage() {
         userAddress: connectedAddress,
         gasless: gaslessEnabled,
         bridgeRecipientSetup,
+        bridgeRecipient,
+        bridgeRecipientWallet,
       });
       // Pin the create-time ATA-existence answer locally so the claim
       // path uses the same hookData / maxFee variant we just funded for.

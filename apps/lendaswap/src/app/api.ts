@@ -180,7 +180,16 @@ async function buildClient(): Promise<SdkClient> {
     .withSignerStorage(walletStorage)
     .withArkadeServerUrl(ARK_SERVER_URL)
     .withSwapStorage(new IdbSwapStorage())
-    .withReferralCode(REF_CODE);
+    .withReferralCode(REF_CODE)
+    // Background auto-claim: the SDK worker claims a swap the moment the chain
+    // confirms it's claimable — even when the user isn't on the processing
+    // page. The page's own claim effect stays for one swap class: BTC→USDC on
+    // Solana via CCTP, where the (Arbitrum) claim must carry the user's Solana
+    // USDC ATA as `bridgeRecipient` — resolved by the page from state pinned
+    // at create time. The worker's bare claim can't supply it, and the SDK
+    // throws on such a claim without a recipient, so the worker fails loudly
+    // there instead of burning toward an unknown destination.
+    .withAutoClaim();
 
   if (REQUEST_SOURCE) {
     builder = builder.withDefaultHeaders({
@@ -272,6 +281,8 @@ export const api = {
     userAddress?: string;
     gasless?: boolean;
     bridgeRecipientSetup?: boolean;
+    bridgeRecipient?: string;
+    bridgeRecipientWallet?: string;
   }): Promise<GetSwapResponse> {
     const referralCode = getReferralCode();
     const client = await getClients();
@@ -287,6 +298,8 @@ export const api = {
       referralCode: referralCode || undefined,
       gasless: request.gasless,
       bridgeRecipientSetup: request.bridgeRecipientSetup,
+      bridgeRecipient: request.bridgeRecipient,
+      bridgeRecipientWallet: request.bridgeRecipientWallet,
     });
     return result.response as GetSwapResponse;
   },
