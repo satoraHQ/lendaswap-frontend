@@ -50,6 +50,12 @@ interface ConfirmingDepositStepProps {
   swapId: string;
 }
 
+/**
+ * How long the page's claim backstop waits for the SDK's background
+ * auto-claim worker to land the claim before attempting it itself.
+ */
+const WORKER_CLAIM_GRACE_MS = 15_000;
+
 export function SwapProcessingStep({
   swapData,
   swapId,
@@ -90,6 +96,10 @@ export function SwapProcessingStep({
   /** Raw chain observations — live even when the server is stale/unreachable. */
   const clientObs = derivedActions?.observations?.clientHtlc;
   const serverObs = derivedActions?.observations?.serverHtlc;
+  // Live view of the recommendation for re-checks after async gaps (the
+  // effect closure would otherwise see a stale value after sleeping).
+  const derivedRecommendedRef = useRef(derivedRecommended);
+  derivedRecommendedRef.current = derivedRecommended;
 
   useEffect(() => {
     const autoClaim = async () => {
@@ -113,6 +123,27 @@ export function SwapProcessingStep({
       setClaimError(null);
 
       try {
+        // The SDK's background auto-claim worker fires on the same derivation
+        // and usually claims within seconds — give it first shot, so the page
+        // and the worker don't race two concurrent claims. If the claim is
+        // still recommended after the grace (worker failed or exhausted its
+        // retries), this page is the backstop with its full error/retry UI.
+        // No grace for Solana-bridge destinations: the worker's bare claim
+        // refuses those unless a recipient was pinned at create, so the page
+        // keeps first shot there.
+        const graceApplies =
+          (swapData as { bridge_target_chain?: string }).bridge_target_chain !==
+            "Solana" && retryCount === 0;
+        if (graceApplies) {
+          await sleep(WORKER_CLAIM_GRACE_MS);
+          if (derivedRecommendedRef.current !== "claim") {
+            // The worker (or the chain) resolved it while we waited — release
+            // the lock and stand down.
+            hasClaimedRef.current = false;
+            return;
+          }
+        }
+
         // Exponential backoff: wait before retry (0s, 2s, 4s, 8s)
         if (retryCount > 0) {
           const backoffMs = 2 ** retryCount * 1000;
