@@ -158,9 +158,11 @@ function determineStepFromStatus(
 /**
  * The wizard step from the SDK's chain-derived next action, when the swap is
  * tracked. Chain observation is the source of truth here — it catches locktime
- * flips and counterparty moves without waiting on a server status update.
- * `undefined` (untracked swap, or a terminal `none` whose rendering depends on
- * HOW it ended) falls back to {@link determineStepFromStatus}.
+ * flips and counterparty moves without waiting on a server status update. The
+ * action's typed fields (`waitingOn`, `outcome`) carry the step almost 1:1;
+ * the server `status` refines only what the chain cannot see (whether a
+ * Lightning invoice was paid). `undefined` (untracked swap, CCTP recovery)
+ * falls back to {@link determineStepFromStatus}.
  */
 function determineStepFromActions(
   actions: SwapActions | undefined,
@@ -188,16 +190,39 @@ function determineStepFromActions(
       return "server-depositing";
     case "wait":
       if (failed) return "refundable";
-      return status === "clientfundingseen"
-        ? "user-deposit-seen"
-        : "server-depositing";
+      switch (recommended.waitingOn) {
+        case "client_payment":
+          // The chain can't see whether the Lightning invoice was paid — the
+          // server status is the only witness for that split: unpaid means
+          // show the invoice, paid means processing.
+          return status === "pending" ? "user-deposit" : "server-depositing";
+        case "client_funding_confirmation":
+          return "user-deposit-seen";
+        case "server_funding":
+        case "claim_confirmation":
+          return "server-depositing";
+        case "refund_timelock":
+          // Nothing will progress until the refund unlocks — the refund page
+          // owns the countdown; a processing spinner would be a lie.
+          return "refundable";
+      }
+      return "server-depositing";
     case "refund_unilateral":
     case "refund_collaborative":
       return "refundable";
     case "recover_cctp_claim":
+      // CCTP recovery has its own surface — the status fallback routes there.
+      return undefined;
     case "none":
-      // Terminal (or CCTP recovery, which has its own surface): how it ended —
-      // success vs refunded vs expired — is the server status's to say.
+      // Terminal: the resolver says how it ended.
+      switch (recommended.outcome) {
+        case "completed":
+          return "success";
+        case "refunded":
+          return "refunded";
+        case "expired":
+          return "expired";
+      }
       return undefined;
   }
   return undefined;
