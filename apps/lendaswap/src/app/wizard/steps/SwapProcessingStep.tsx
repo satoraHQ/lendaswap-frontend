@@ -651,59 +651,59 @@ export function SwapProcessingStep({
                 (serverObs === undefined &&
                   swapData.status === "serverfunded")) &&
                 !isLightning && (
-                <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
-                  <p className="text-sm font-medium">
-                    {isClaiming
-                      ? isEvmToBtc
-                        ? "Redeeming your sats..."
-                        : "Claiming your tokens..."
-                      : isEvmToBtc
-                        ? "VHTLC Funded"
-                        : "HTLC Funded"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {isClaiming
-                      ? isEvmToBtc
-                        ? "Claiming the Bitcoin VHTLC and publishing the transaction..."
-                        : isEthereumToken(swapData.target_token.chain)
-                          ? "Claiming tokens via your Ethereum wallet (you pay gas)..."
-                          : "Submitting claim request..."
-                      : isEvmToBtc
-                        ? "The VHTLC has been funded. Preparing to claim your sats..."
-                        : "The HTLC has been funded. Preparing to claim your tokens..."}
-                  </p>
-                  {retryCount > 0 && retryCount < maxRetries && (
-                    <p className="text-xs text-muted-foreground">
-                      Retry attempt {retryCount}/{maxRetries}...
+                  <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
+                    <p className="text-sm font-medium">
+                      {isClaiming
+                        ? isEvmToBtc
+                          ? "Redeeming your sats..."
+                          : "Claiming your tokens..."
+                        : isEvmToBtc
+                          ? "VHTLC Funded"
+                          : "HTLC Funded"}
                     </p>
-                  )}
-                  {isBtcToEvm &&
-                    !isClaiming &&
-                    !claimError &&
-                    isEthereumToken(swapData.target_token.chain) &&
-                    !address && (
-                      <div className="space-y-2">
-                        <p className="text-xs text-muted-foreground">
-                          Connect your Ethereum wallet to claim your tokens.
-                        </p>
-                        <Button
-                          onClick={() => open().catch(console.error)}
-                          size="sm"
-                          className="w-full"
-                        >
-                          Connect Wallet
-                        </Button>
-                      </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isClaiming
+                        ? isEvmToBtc
+                          ? "Claiming the Bitcoin VHTLC and publishing the transaction..."
+                          : isEthereumToken(swapData.target_token.chain)
+                            ? "Claiming tokens via your Ethereum wallet (you pay gas)..."
+                            : "Submitting claim request..."
+                        : isEvmToBtc
+                          ? "The VHTLC has been funded. Preparing to claim your sats..."
+                          : "The HTLC has been funded. Preparing to claim your tokens..."}
+                    </p>
+                    {retryCount > 0 && retryCount < maxRetries && (
+                      <p className="text-xs text-muted-foreground">
+                        Retry attempt {retryCount}/{maxRetries}...
+                      </p>
                     )}
-                  {isBtcToEvm && !isClaiming && !claimError && address && (
-                    <p className="text-xs text-muted-foreground">
-                      {isEthereumToken(swapData.target_token.chain)
-                        ? "You will need ETH in your wallet to pay for gas fees to claim your tokens."
-                        : "Gas fees fully sponsored"}
-                    </p>
-                  )}
-                </div>
-              )}
+                    {isBtcToEvm &&
+                      !isClaiming &&
+                      !claimError &&
+                      isEthereumToken(swapData.target_token.chain) &&
+                      !address && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">
+                            Connect your Ethereum wallet to claim your tokens.
+                          </p>
+                          <Button
+                            onClick={() => open().catch(console.error)}
+                            size="sm"
+                            className="w-full"
+                          >
+                            Connect Wallet
+                          </Button>
+                        </div>
+                      )}
+                    {isBtcToEvm && !isClaiming && !claimError && address && (
+                      <p className="text-xs text-muted-foreground">
+                        {isEthereumToken(swapData.target_token.chain)
+                          ? "You will need ETH in your wallet to pay for gas fees to claim your tokens."
+                          : "Gas fees fully sponsored"}
+                      </p>
+                    )}
+                  </div>
+                )}
             </div>
           </div>
 

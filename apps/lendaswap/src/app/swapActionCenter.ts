@@ -52,7 +52,6 @@ export function startSwapActionCenter(
   api
     .subscribeToActions((swapId, actions) => {
       const recommended = actions.actions.find((a) => a.recommended);
-      const previousDerived = derived.get(swapId)?.recommended;
 
       // The full derived view. Terminal `none` entries are KEPT: the chain
       // knew the outcome the moment it happened, while the stored status can
@@ -63,15 +62,9 @@ export function startSwapActionCenter(
       else nextDerived.set(swapId, actions);
       derived = nextDerived;
 
-      // On the transition into terminal, refresh the stored swap from the
-      // server (fire-and-forget): the fallback label and the next session's
-      // settled-status filter then see the final status too.
-      if (
-        recommended?.id === "none" &&
-        previousDerived !== undefined &&
-        previousDerived !== "none"
-      )
-        void api.getSwap(swapId).catch(() => {});
+      // (Stored-status refresh on terminal derivations is handled inside the
+      // SDK now — it re-fetches with updateStorage so the next session's
+      // settled filter sees the final status.)
 
       const needsUser =
         recommended !== undefined && ACTIONABLE.has(recommended.id);
