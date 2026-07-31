@@ -333,6 +333,16 @@ export const api = {
   },
 
   /**
+   * Local-only read of a stored swap — no server round-trip. Used where a
+   * label/lookup must not block on (or fail with) the network, e.g. the
+   * action-center toasts. `undefined` if this wallet doesn't know the swap.
+   */
+  async getStoredSwapLocal(id: string): Promise<StoredSwap | undefined> {
+    const client = await getClients();
+    return (await client.getStoredSwap(id)) ?? undefined;
+  },
+
+  /**
    * Fetch the server's view of any swap by ID.
    *
    * Hits `GET /swap/{id}` directly and returns the raw `GetSwapResponse`
