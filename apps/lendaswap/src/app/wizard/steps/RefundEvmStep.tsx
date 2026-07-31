@@ -160,7 +160,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
         txHash = result.txHash;
       }
 
-      const label = settlement === "swap-back" ? sourceSymbol : "WBTC";
+      const label = settlement === "swap-back" ? sourceSymbol : htlcTokenSymbol;
       setRefundSuccess(`Refund as ${label} successful! Transaction: ${txHash}`);
     } catch (err) {
       console.error("Collaborative refund error:", err);
@@ -284,7 +284,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
                       Processing...
                     </>
                   ) : (
-                    "Refund as WBTC"
+                    `Refund as ${htlcTokenSymbol}`
                   )}
                 </Button>
               </>
@@ -305,7 +305,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
                     Processing...
                   </>
                 ) : (
-                  "Refund as WBTC"
+                  `Refund as ${htlcTokenSymbol}`
                 )}
               </Button>
             )}
@@ -406,7 +406,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
                 size="sm"
                 className="w-full"
               >
-                Manual Refund as WBTC
+                Manual Refund as {htlcTokenSymbol}
               </Button>
             </CollapsibleContent>
           </Collapsible>
