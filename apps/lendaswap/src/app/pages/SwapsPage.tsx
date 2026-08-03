@@ -212,31 +212,32 @@ function getActionInfo(
         showIcon: false,
       };
     case "wait": {
-      // A refund is on the table but still timelocked → say so instead of a
-      // generic wait.
-      const blockedRefund = actions.actions.some(
-        (a) =>
-          (a.id === "refund_unilateral" || a.id === "refund_collaborative") &&
-          a.blockedBy !== undefined,
-      );
-      // Otherwise the action's own reason says exactly WHAT is being waited
-      // on ("Waiting for the server to fund the swap", …) — use it, keeping
-      // only the leading clause and dropping the trailing period.
-      const specific = recommended.reason.split(" — ")[0].replace(/\.$/, "");
+      // `waitingOn` says exactly WHAT is being waited on — including a refund
+      // that exists but is still timelocked.
+      const labels: Record<typeof recommended.waitingOn, string> = {
+        client_payment: "Waiting for your payment",
+        client_funding_confirmation: "Confirming your deposit",
+        server_funding: "Waiting for the server to fund",
+        claim_confirmation: "Redeeming your funds",
+        refund_timelock: "Waiting for refund",
+      };
       return {
-        label: blockedRefund ? "Waiting for refund" : specific || "Waiting…",
+        label: labels[recommended.waitingOn],
         textColor: "text-muted-foreground",
         icon: spinner,
         showIcon: true,
       };
     }
     case "none": {
-      // Terminal, straight from chain ("Refunded — your deposit was
-      // returned.", "Swap complete — …") — beats a stale stored status.
-      const outcome = recommended.reason.split(" — ")[0].replace(/\.$/, "");
-      const success = /complete/i.test(outcome);
+      // Terminal, straight from chain — beats a stale stored status.
+      const success = recommended.outcome === "completed";
+      const labels: Record<typeof recommended.outcome, string> = {
+        completed: "Completed",
+        refunded: "Refunded",
+        expired: "Expired",
+      };
       return {
-        label: outcome || "Done",
+        label: labels[recommended.outcome],
         textColor: success
           ? "text-green-600 dark:text-green-400"
           : "text-muted-foreground",
