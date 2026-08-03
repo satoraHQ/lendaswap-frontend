@@ -1,4 +1,3 @@
-import { useAppKit } from "@reown/appkit/react";
 import type { GetSwapResponse } from "@satora/swap";
 import {
   Check,
@@ -9,7 +8,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAccount } from "wagmi";
 import { Button } from "#/components/ui/button";
 import { api } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
@@ -24,7 +22,6 @@ import {
   getBlockexplorerTxLink,
   getTokenIcon,
   getTokenNetworkIcon,
-  isEthereumToken,
 } from "../../utils/tokenUtils";
 
 /** Directions where the user sends BTC and receives EVM tokens (auto-claim applies) */
@@ -66,10 +63,6 @@ export function SwapProcessingStep({
   const hasClaimedRef = useRef(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 10;
-
-  // Wallet client hooks for Ethereum claiming
-  const { address } = useAccount();
-  const { open } = useAppKit();
 
   // Helper function to sleep
   const sleep = useCallback(
@@ -696,9 +689,7 @@ export function SwapProcessingStep({
                       {isClaiming
                         ? isEvmToBtc
                           ? "Claiming the Bitcoin VHTLC and publishing the transaction..."
-                          : isEthereumToken(swapData.target_token.chain)
-                            ? "Claiming tokens via your Ethereum wallet (you pay gas)..."
-                            : "Submitting claim request..."
+                          : "Submitting claim request..."
                         : isEvmToBtc
                           ? "The VHTLC has been funded. Preparing to claim your sats..."
                           : "The HTLC has been funded. Preparing to claim your tokens..."}
@@ -708,29 +699,9 @@ export function SwapProcessingStep({
                         Retry attempt {retryCount}/{maxRetries}...
                       </p>
                     )}
-                    {isBtcToEvm &&
-                      !isClaiming &&
-                      !claimError &&
-                      isEthereumToken(swapData.target_token.chain) &&
-                      !address && (
-                        <div className="space-y-2">
-                          <p className="text-xs text-muted-foreground">
-                            Connect your Ethereum wallet to claim your tokens.
-                          </p>
-                          <Button
-                            onClick={() => open().catch(console.error)}
-                            size="sm"
-                            className="w-full"
-                          >
-                            Connect Wallet
-                          </Button>
-                        </div>
-                      )}
-                    {isBtcToEvm && !isClaiming && !claimError && address && (
+                    {isBtcToEvm && !isClaiming && !claimError && (
                       <p className="text-xs text-muted-foreground">
-                        {isEthereumToken(swapData.target_token.chain)
-                          ? "You will need ETH in your wallet to pay for gas fees to claim your tokens."
-                          : "Gas fees fully sponsored"}
+                        Gas fees fully sponsored
                       </p>
                     )}
                   </div>
