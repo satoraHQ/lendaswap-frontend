@@ -12,6 +12,7 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { api, type VhtlcAmounts } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
+import { useBitcoinChainClock } from "../../hooks/useBitcoinChainClock";
 import { extractRefundAddress } from "../../utils/bip21";
 import {
   getBlockexplorerAddressLink,
@@ -91,16 +92,13 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
   // unilateral if the server unexpectedly rejects.)
   const collabAvailable = COLLAB_REFUND_STATUSES.includes(swapData.status);
   const locktimeMs = swapData.vhtlc_refund_locktime * 1000;
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  const locktimePassed = nowMs >= locktimeMs;
+  // The unilateral unlock is judged by the Bitcoin chain clock (MTP) from the
+  // backend, NOT wall clock — MTP lags it by ~30–90 min, and the VHTLC CLTV is
+  // enforced against MTP. Until the first reading lands we stay "locked" (the
+  // safe direction); the display countdown falls back to wall clock meanwhile.
+  const chainNowMs = useBitcoinChainClock(!collabAvailable);
+  const locktimePassed = chainNowMs !== undefined && chainNowMs >= locktimeMs;
   const refundUnlocked = collabAvailable || locktimePassed;
-
-  // Tick only while counting down to the unilateral unlock.
-  useEffect(() => {
-    if (refundUnlocked) return;
-    const id = setInterval(() => setNowMs(Date.now()), 1_000);
-    return () => clearInterval(id);
-  }, [refundUnlocked]);
 
   const hasFunds =
     amounts !== null && (amounts.spendable > 0 || amounts.recoverable > 0);
@@ -188,7 +186,7 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
             </div>
             <p className="text-sm text-amber-800 dark:text-amber-200">
               Your deposit unlocks at {refundLocktimeDate.toLocaleString()} — in{" "}
-              {formatCountdown(locktimeMs - nowMs)}.
+              {formatCountdown(locktimeMs - (chainNowMs ?? Date.now()))}.
             </p>
           </div>
         )}

@@ -1,12 +1,13 @@
 import { type BitcoinToEvmSwapResponse, toChainName } from "@satora/swap";
 import { ArrowRight, Clock, ExternalLink, Loader2, Unlock } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { api, type BtcToArkadeSwapResponse } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
+import { useBitcoinChainClock } from "../../hooks/useBitcoinChainClock";
 import { extractRefundAddress } from "../../utils/bip21";
 import { getTargetChainDisplayName } from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
@@ -21,20 +22,16 @@ export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {
   const [refundError, setRefundError] = useState<string | null>(null);
   const [refundSuccess, setRefundSuccess] = useState<string | null>(null);
 
-  // Countdown timer state
-  const [now, setNow] = useState(Math.floor(Date.now() / 1000));
-
   const swapId = swapData.id;
 
-  // Update countdown every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(Math.floor(Date.now() / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const isLocktimePassed = now >= swapData.btc_refund_locktime;
+  // The refund unlock is judged by the Bitcoin chain clock (MTP) from the
+  // backend, NOT wall clock — MTP lags it by ~30–90 min, and the HTLC CLTV is
+  // enforced against MTP. Until the first reading lands we stay "locked" (the
+  // safe direction); the display countdown falls back to wall clock meanwhile.
+  const chainNowMs = useBitcoinChainClock();
+  const now = Math.floor((chainNowMs ?? Date.now()) / 1000);
+  const isLocktimePassed =
+    chainNowMs !== undefined && now >= swapData.btc_refund_locktime;
   const refundLocktimeDate = new Date(
     Number(swapData.btc_refund_locktime) * 1000,
   );
@@ -43,7 +40,7 @@ export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {
   const timeRemaining = useMemo(() => {
     if (isLocktimePassed) return null;
 
-    const secondsLeft = Number(swapData.btc_refund_locktime) - now;
+    const secondsLeft = Math.max(0, Number(swapData.btc_refund_locktime) - now);
     const hours = Math.floor(secondsLeft / 3600);
     const minutes = Math.floor((secondsLeft % 3600) / 60);
     const seconds = secondsLeft % 60;

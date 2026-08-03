@@ -398,6 +398,16 @@ export const api = {
     return await client.amountsForSwap(id);
   },
 
+  /**
+   * Current Bitcoin MTP (median time past) in ms — the clock BTC/Arkade HTLC
+   * refund locktimes are enforced against. Lags wall clock by ~30–90 min, so
+   * unlock countdowns must use this, not `Date.now()`.
+   */
+  async getMtpMs(): Promise<number> {
+    const client = await getClients();
+    return (await client.getMtp()).mtp * 1000;
+  },
+
   async refundVhtlc(id: string, refundAddress: string): Promise<string> {
     const client = await getClients();
     const result = await client.refundSwap(id, {
