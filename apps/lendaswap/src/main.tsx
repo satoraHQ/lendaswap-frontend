@@ -30,9 +30,9 @@ import { unstable_connector, WagmiProvider } from "wagmi";
 import { injected } from "wagmi/connectors";
 import App from "./app/App";
 import { NwcProvider } from "./app/NwcContext";
+import { buildTransport } from "./app/utils/evmTransport";
 import { ThemeProvider } from "./app/utils/theme-provider";
 import { WalletBridgeProvider } from "./app/WalletBridgeContext";
-import { buildTransport } from "./app/utils/evmTransport";
 import { getSpeedWalletParams } from "./utils/speedWallet";
 
 // Capture Speed Wallet params IMMEDIATELY before any routing/redirects happen.
