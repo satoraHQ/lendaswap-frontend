@@ -118,16 +118,8 @@ export function SwapProcessingStep({
       try {
         // The SDK's background auto-claim worker fires on the same derivation
         // and usually claims within seconds — give it first shot, so the page
-        // and the worker don't race two concurrent claims. If the claim is
-        // still recommended after the grace (worker failed or exhausted its
-        // retries), this page is the backstop with its full error/retry UI.
-        // No grace for Solana-bridge destinations: the worker's bare claim
-        // refuses those unless a recipient was pinned at create, so the page
-        // keeps first shot there.
-        const graceApplies =
-          (swapData as { bridge_target_chain?: string }).bridge_target_chain !==
-            "Solana" && retryCount === 0;
-        if (graceApplies) {
+        // and the worker don't race two concurrent claims.
+        if (retryCount === 0) {
           await sleep(WORKER_CLAIM_GRACE_MS);
           if (derivedRecommendedRef.current !== "claim") {
             // The worker (or the chain) resolved it while we waited — release
