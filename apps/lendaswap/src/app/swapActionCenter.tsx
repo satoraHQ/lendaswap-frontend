@@ -30,7 +30,8 @@ const ACTIONABLE = new Set<SwapAction["id"]>([
 ]);
 
 const ACTION_COPY: Partial<Record<SwapAction["id"], string>> = {
-  claim: "Ready to claim",
+  // The SDK worker runs claims automatically — progress, not a call to action.
+  claim: "Claiming your funds…",
   refund_collaborative: "Refund available",
   refund_unilateral: "Refund available",
   recover_cctp_claim: "Bridged swap needs recovery",
@@ -174,12 +175,40 @@ export function startSwapActionCenter(
         recommended !== undefined && ACTIONABLE.has(recommended.id);
       const previous = actionable.get(swapId);
 
+      // A claim's confirmation wait is still "claiming" from the user's view —
+      // hold the claim toast through it so the completion toast below can land.
+      if (
+        previous?.id === "claim" &&
+        recommended?.id === "wait" &&
+        recommended.waitingOn === "claim_confirmation"
+      ) {
+        notify();
+        return;
+      }
+
       if (!needsUser) {
         if (previous) {
           const next = new Map(actionable);
           next.delete(swapId);
           actionable = next;
-          toast.dismiss(`swap-action-${swapId}`);
+          // The claim we showed progress for landed — say so instead of
+          // silently dismissing the toast.
+          if (
+            previous.id === "claim" &&
+            recommended?.id === "none" &&
+            recommended.outcome === "completed"
+          ) {
+            toast.success(
+              `Swap complete — funds received (${swapId.slice(0, 8)})`,
+              {
+                id: `swap-action-${swapId}`,
+                duration: 10_000,
+                closeButton: true,
+              },
+            );
+          } else {
+            toast.dismiss(`swap-action-${swapId}`);
+          }
         }
         notify();
         return;
