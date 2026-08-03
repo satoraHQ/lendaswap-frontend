@@ -86,17 +86,21 @@ release env sdk_version="":
       *) echo "error: env must be 'production' or 'beta' (got '{{ env }}')" >&2; exit 1 ;;
     esac
     if [ -n "{{ sdk_version }}" ]; then just use-sdk "{{ sdk_version }}"; fi
-    just build
+    # --force: turbo's cache key can't see the repo-root .env* files Vite bakes
+    # into the bundle (they're outside the turbo root), so a cached build can
+    # silently ship stale env — e.g. a localhost API URL. Releases build clean.
+    just build --force
     pnpm exec wrangler pages deploy apps/lendaswap/dist/ --project-name="$proj" --branch={{ branch }}
 
 # Build the frontend with the git commit baked into the bundle. The frontend
 # version comes from apps/lendaswap/package.json (via vite.config) — this repo's
 # git tags are per-component, so `git tag` would surface a backend tag instead.
-build:
+# Extra flags go to turbo (e.g. `just build --force`).
+build *flags:
     #!/usr/bin/env bash
     set -euo pipefail
     export VITE_APP_GIT_COMMIT_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-    pnpm run build
+    pnpm exec turbo run build {{ flags }}
 
 fmt:
     #!/usr/bin/env bash

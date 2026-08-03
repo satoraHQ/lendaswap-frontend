@@ -25,12 +25,14 @@ import { createAppKit } from "@reown/appkit/react";
 import { SolanaAdapter } from "@reown/appkit-adapter-solana";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { http } from "viem";
-import { WagmiProvider } from "wagmi";
+import { fallback, http, type Transport } from "viem";
+import { unstable_connector, WagmiProvider } from "wagmi";
+import { injected } from "wagmi/connectors";
 import App from "./app/App";
 import { NwcProvider } from "./app/NwcContext";
 import { ThemeProvider } from "./app/utils/theme-provider";
 import { WalletBridgeProvider } from "./app/WalletBridgeContext";
+import { buildTransport } from "./app/utils/evmTransport";
 import { getSpeedWalletParams } from "./utils/speedWallet";
 
 // Capture Speed Wallet params IMMEDIATELY before any routing/redirects happen.
@@ -63,7 +65,20 @@ const projectId = "a15c535db177c184c98bdbdc5ff12590";
 const rpcOverrideChainId = import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID;
 const rpcOverrideUrl = import.meta.env.VITE_RPC_OVERRIDE_URL;
 
-const transports: Record<number, ReturnType<typeof http>> = {};
+const transports: Record<number, Transport> = {};
+// Wallet-first reads: when an injected wallet is connected and on the chain,
+// requests ride ITS provider (MetaMask's Infura etc.) — an RPC allowance the
+// user already has, immune to our public endpoints rate-limiting us (e.g.
+// publicnode 403s). Anything the connector can't serve — no wallet, WalletConnect
+// mobile, wallet on another chain — falls through to the public-RPC list
+// (buildTransport; chains without a curated list use the network's default).
+// The env override below still wins outright for its chain (local anvil).
+for (const chain of networks) {
+  transports[Number(chain.id)] = fallback([
+    unstable_connector(injected),
+    buildTransport(chain),
+  ]);
+}
 if (rpcOverrideChainId && rpcOverrideUrl) {
   transports[Number(rpcOverrideChainId)] = http(rpcOverrideUrl);
 }
