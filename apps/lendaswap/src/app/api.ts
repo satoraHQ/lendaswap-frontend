@@ -3,6 +3,7 @@ import {
   type Asset,
   type BtcToArkadeSwapResponse,
   type Chain,
+  CLIENT_AGENT,
   type ClaimResult,
   type ContinueRefundedEvmSwapInfo,
   type ContinueRefundedEvmSwapResult,
@@ -14,6 +15,7 @@ import {
   type QuoteResponse,
   type RecoverAllSwapsResult,
   type RefundResult,
+  SATORA_SERVER_VERSION,
   Client as SdkClient,
   type StoredSwap,
   type SwapAction,
@@ -146,6 +148,14 @@ const REF_CODE = import.meta.env.VITE_REF_CODE || "";
 
 const REQUEST_SOURCE = import.meta.env.VITE_REQUEST_SOURCE?.trim() || "";
 
+function apiHeaders(extra?: HeadersInit): HeadersInit {
+  const headers = new Headers(extra);
+  headers.set("X-Lendaswap-Client", CLIENT_AGENT);
+  headers.set("x-satora-server-version", SATORA_SERVER_VERSION);
+  if (REQUEST_SOURCE) headers.set("X-Request-Source", REQUEST_SOURCE);
+  return headers;
+}
+
 // Account-abstraction config. Hosted providers may expose chain RPC, bundler,
 // and paymaster on one URL; local E2E splits Anvil RPC from alto bundler.
 const AA_BUNDLER_URL = import.meta.env.VITE_AA_BUNDLER_URL?.trim() || "";
@@ -247,7 +257,9 @@ export const api = {
   },
 
   async getEvmTokens(): Promise<EvmTokensResponse> {
-    const response = await fetch(`${API_BASE_URL}/evm-tokens`);
+    const response = await fetch(`${API_BASE_URL}/evm-tokens`, {
+      headers: apiHeaders(),
+    });
     if (!response.ok)
       throw new Error(`Failed to fetch EVM tokens: ${response.status}`);
     return response.json();
@@ -574,6 +586,7 @@ export const api = {
   }> {
     const resp = await fetch(
       `${API_BASE_URL}/swap/${swapId}/swap-and-lock-calldata-userop`,
+      { headers: apiHeaders() },
     );
     if (!resp.ok) {
       throw new Error(
