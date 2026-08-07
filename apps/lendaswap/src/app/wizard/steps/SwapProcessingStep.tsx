@@ -474,6 +474,15 @@ export function SwapProcessingStep({
    */
   const btcContractLabel =
     swapData.direction === "evm_to_arkade" ? "VHTLC" : "HTLC";
+  /**
+   * The chain whose explorer shows the server's funding tx, when there is one
+   * to open. Step 2 is the server funding its side of the swap, so on
+   * EVM→Bitcoin that is an ordinary on-chain transaction.
+   */
+  const step2ExplorerChain =
+    config.step2IsEvm || swapData.direction === "evm_to_bitcoin"
+      ? swapData.target_token.chain
+      : undefined;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">
@@ -607,9 +616,9 @@ export function SwapProcessingStep({
                       <Copy className="h-3 w-3" />
                     )}
                   </button>
-                  {config.step2IsEvm && (
+                  {step2ExplorerChain && (
                     <a
-                      href={`${getBlockexplorerTxLink(swapData.target_token.chain, config.step2TxId)}`}
+                      href={`${getBlockexplorerTxLink(step2ExplorerChain, config.step2TxId)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-foreground"
