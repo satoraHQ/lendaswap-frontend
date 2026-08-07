@@ -468,6 +468,12 @@ export function SwapProcessingStep({
   const isBtcToEvm = isBtcToEvmDirection(swapData.direction);
   const isEvmToBtc = isEvmToBtcDirection(swapData.direction);
   const isLightning = swapData.direction === "evm_to_lightning";
+  /**
+   * What to call the contract holding the user's sats. Only Arkade's is
+   * virtual; an on-chain Bitcoin swap locks an ordinary HTLC.
+   */
+  const btcContractLabel =
+    swapData.direction === "evm_to_arkade" ? "VHTLC" : "HTLC";
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">
@@ -674,16 +680,16 @@ export function SwapProcessingStep({
                           ? "Redeeming your sats..."
                           : "Claiming your tokens..."
                         : isEvmToBtc
-                          ? "VHTLC Funded"
+                          ? `${btcContractLabel} Funded`
                           : "HTLC Funded"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {isClaiming
                         ? isEvmToBtc
-                          ? "Claiming the Bitcoin VHTLC and publishing the transaction..."
+                          ? `Claiming the Bitcoin ${btcContractLabel} and publishing the transaction...`
                           : "Submitting claim request..."
                         : isEvmToBtc
-                          ? "The VHTLC has been funded. Preparing to claim your sats..."
+                          ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
                           : "The HTLC has been funded. Preparing to claim your tokens..."}
                     </p>
                     {retryCount > 0 && retryCount < maxRetries && (
