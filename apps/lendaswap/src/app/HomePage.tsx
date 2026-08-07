@@ -975,8 +975,7 @@ export function HomePage() {
           data-no-press
           onClick={() => {
             if (!sourceAsset || !targetAsset) return;
-            // btc_onchain can only be in sell position, not buy position
-            if (isBtcOnchain(sourceAsset)) return;
+            if (!isValidPair(targetAsset, sourceAsset)) return;
 
             // Swap source and target tokens + amounts
             setSourceAmountState(targetAmount);
@@ -990,7 +989,7 @@ export function HomePage() {
               "",
             );
           }}
-          className={`group/swap absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 ${!sourceAsset || isBtcOnchain(sourceAsset) ? "cursor-not-allowed opacity-50" : ""}`}
+          className={`group/swap absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 ${!sourceAsset || !targetAsset || !isValidPair(targetAsset, sourceAsset) ? "cursor-not-allowed opacity-50" : ""}`}
         >
           <div className="rounded-xl bg-background p-1 transition-transform duration-200 ease-out group-hover/swap:scale-110 group-active/swap:scale-125">
             <div className="rounded-lg bg-muted p-1.5 transition-colors group-hover/swap:bg-muted/80">
