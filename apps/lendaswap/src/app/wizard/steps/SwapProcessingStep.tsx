@@ -94,6 +94,27 @@ export function SwapProcessingStep({
   const derivedRecommendedRef = useRef(derivedRecommended);
   derivedRecommendedRef.current = derivedRecommended;
 
+  // Why the claim has or hasn't fired. The card below renders on `serverfunded`
+  // alone, so it reads "preparing to claim" whether the claim is in flight or
+  // the derivation never asked for one. `waitingOn` names the precondition that
+  // is missing — `server_funding` means the server's HTLC has not been observed
+  // on chain, which is a different fault from a claim that failed to broadcast —
+  // and the observations are the chain facts it was derived from.
+  useEffect(() => {
+    if (!derivedActions) return;
+    const waiting = derivedActions.actions.find(
+      (action) => action.id === "wait",
+    );
+    console.log("[swap] next action", {
+      swapId,
+      status: swapData.status,
+      recommended: derivedActions.recommended,
+      waitingOn: waiting?.id === "wait" ? waiting.waitingOn : undefined,
+      clientHtlc: clientObs,
+      serverHtlc: serverObs,
+    });
+  }, [derivedActions, swapId, swapData.status, clientObs, serverObs]);
+
   useEffect(() => {
     const autoClaim = async () => {
       // Lightning-to-evm is claimed by the lightning client, skip auto-claim
