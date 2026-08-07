@@ -62,6 +62,56 @@ function buildQueryParams(
 const DEFAULT_USDC_POLYGON = "polygon:USDC";
 const DEFAULT_BTC_LIGHTNING = "lightning:BTC";
 
+/** Find a token in the list by its URL form ("lightning:BTC", "polygon:USDC"). */
+function findToken(tokens: TokenInfo[], url: string): TokenInfo | undefined {
+  const parsed = parseUrlToken(url);
+  if (!parsed) return undefined;
+  return tokens.find(
+    (t) =>
+      t.chain.toLowerCase() === parsed.chain.toLowerCase() &&
+      t.symbol.toLowerCase() === parsed.symbol.toLowerCase(),
+  );
+}
+
+// The canonical defaults (Lightning source, Polygon USDC target) can be
+// disabled server-side, so fall back to whatever the server actually offers,
+// preferring a pair that is valid with the other side when known.
+
+function pickFallbackSource(
+  tokens: TokenInfo[],
+  target?: TokenInfo,
+): TokenInfo | undefined {
+  const candidates = [
+    tokens.find((t) => isLightning(t)),
+    tokens.find((t) => isBtcOnchain(t)),
+    tokens.find((t) => isArkade(t)),
+    ...tokens.filter((t) => isEvmToken(t.chain) && !isBridgeOnlyChain(t.chain)),
+  ].filter((t): t is TokenInfo => t !== undefined);
+  if (target) {
+    const valid = candidates.find((c) => isValidPair(c, target));
+    if (valid) return valid;
+  }
+  return candidates[0];
+}
+
+function pickFallbackTarget(
+  tokens: TokenInfo[],
+  source?: TokenInfo,
+): TokenInfo | undefined {
+  const nonBridge = tokens.filter((t) => !isBridgeOnlyChain(t.chain));
+  const candidates = [
+    findToken(nonBridge, DEFAULT_USDC_POLYGON),
+    ...nonBridge.filter((t) => isEvmToken(t.chain)),
+    nonBridge.find((t) => isLightning(t)),
+    nonBridge.find((t) => isArkade(t)),
+  ].filter((t): t is TokenInfo => t !== undefined);
+  if (source) {
+    const valid = candidates.find((c) => isValidPair(source, c));
+    if (valid) return valid;
+  }
+  return candidates[0];
+}
+
 /** Check if a source→target pair is a valid swap direction */
 function isValidPair(source: TokenInfo, target: TokenInfo): boolean {
   // EVM → EVM: not allowed
@@ -236,6 +286,39 @@ export function HomePage() {
       t.chain.toLowerCase() === urlTargetToken?.chain.toLowerCase() &&
       t.symbol.toLowerCase() === urlTargetToken?.symbol.toLowerCase(),
   );
+
+  // The URL (including the hardcoded "/" redirect) may name a token the
+  // server has disabled (e.g. Lightning). Once tokens have loaded, replace
+  // any side that doesn't resolve with an available fallback.
+  const urlSourceParam = params.sourceToken;
+  const urlTargetParam = params.targetToken;
+  useEffect(() => {
+    if (tokensLoading || allAvailableTokens.length === 0) return;
+    if (!urlSourceParam || !urlTargetParam) return;
+    if (sourceAsset && targetAsset) return;
+
+    const fallbackSource =
+      sourceAsset ?? pickFallbackSource(allAvailableTokens, targetAsset);
+    const fallbackTarget =
+      targetAsset &&
+      (!fallbackSource || isValidPair(fallbackSource, targetAsset))
+        ? targetAsset
+        : pickFallbackTarget(allAvailableTokens, fallbackSource);
+    if (!fallbackSource || !fallbackTarget) return;
+
+    const src = formatTokenUrl(fallbackSource);
+    const tgt = formatTokenUrl(fallbackTarget);
+    if (src === urlSourceParam && tgt === urlTargetParam) return;
+    navigate(`/${src}/${tgt}`, { replace: true });
+  }, [
+    tokensLoading,
+    allAvailableTokens,
+    urlSourceParam,
+    urlTargetParam,
+    sourceAsset,
+    targetAsset,
+    navigate,
+  ]);
 
   // ── Target address auto-fill / clear ─────────────────────────────────
   // When the target token type changes (EVM ↔ BTC), clear the address so
@@ -860,9 +943,15 @@ export function HomePage() {
                     navigateToTokens(asset, targetAsset);
                   } else {
                     // Invalid pair or no target - pick a sensible default
-                    const defaultTarget = isBtc(asset)
-                      ? DEFAULT_USDC_POLYGON
-                      : DEFAULT_BTC_LIGHTNING;
+                    const fallback = pickFallbackTarget(
+                      allAvailableTokens,
+                      asset,
+                    );
+                    const defaultTarget = fallback
+                      ? formatTokenUrl(fallback)
+                      : isBtc(asset)
+                        ? DEFAULT_USDC_POLYGON
+                        : DEFAULT_BTC_LIGHTNING;
                     navigate(`/${src}/${defaultTarget}`, { replace: true });
                   }
                 }}
@@ -935,9 +1024,15 @@ export function HomePage() {
                     navigateToTokens(sourceAsset, asset);
                   } else {
                     // Invalid pair or no source - pick a sensible default
-                    const defaultSource = isBtc(asset)
-                      ? DEFAULT_USDC_POLYGON
-                      : DEFAULT_BTC_LIGHTNING;
+                    const fallback = pickFallbackSource(
+                      allAvailableTokens,
+                      asset,
+                    );
+                    const defaultSource = fallback
+                      ? formatTokenUrl(fallback)
+                      : isBtc(asset)
+                        ? DEFAULT_USDC_POLYGON
+                        : DEFAULT_BTC_LIGHTNING;
                     navigate(`/${defaultSource}/${tgt}`, { replace: true });
                   }
                 }}
