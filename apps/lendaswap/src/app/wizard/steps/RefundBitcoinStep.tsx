@@ -54,8 +54,11 @@ export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {
     }
   }, [now, swapData.btc_refund_locktime, isLocktimePassed]);
 
-  // Check if swap can be refunded
-  const canRefund = isLocktimePassed && swapData.btc_fund_txid !== null;
+  // The locktime alone gates the refund. `btc_fund_txid` must NOT: the server
+  // only records it for fundings seen before expiry, so a late-funded swap
+  // (clientfundedtoolate) has none — yet its UTXO sits at the HTLC address,
+  // and the SDK's refund builder locates it by address when no txid is given.
+  const canRefund = isLocktimePassed;
 
   const handleRefund = async () => {
     if (!swapId || !refundAddress.trim()) {
@@ -210,12 +213,16 @@ export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {
           </div>
         </div>
 
-        {/* Refund not possible warning */}
-        {!canRefund && isLocktimePassed && !swapData.btc_fund_txid && (
+        {/* The server records the funding txid only when it saw the funding in
+            time, so a late-funded swap has none — inform, but keep the form:
+            the refund locates the UTXO on-chain by address. */}
+        {isLocktimePassed && !swapData.btc_fund_txid && (
           <Alert>
             <AlertDescription>
-              No on-chain funding transaction found. This swap may not have been
-              funded yet.
+              The server has no funding transaction on record for this swap. If
+              you sent Bitcoin to the HTLC address, the refund below will locate
+              it on-chain; if the address was never funded, the refund will
+              report that no funds were found.
             </AlertDescription>
           </Alert>
         )}
