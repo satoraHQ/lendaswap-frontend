@@ -144,6 +144,11 @@ const ARK_SERVER_URL =
 const ESPLORA_URL =
   import.meta.env.VITE_ESPLORA_URL || "https://mempool.space/api";
 
+// Electrum-over-WebSocket endpoint (our Fulcrum). When set, the SDK prefers
+// it for Bitcoin lookups/broadcasts and gets push-driven funding detection;
+// Esplora stays as fallback. Unset = pure Esplora behavior.
+const ELECTRUM_WS_URL = import.meta.env.VITE_ELECTRUM_WS_URL?.trim() || "";
+
 const REF_CODE = import.meta.env.VITE_REF_CODE || "";
 
 const REQUEST_SOURCE = import.meta.env.VITE_REQUEST_SOURCE?.trim() || "";
@@ -200,6 +205,10 @@ async function buildClient(): Promise<SdkClient> {
     // throws on such a claim without a recipient, so the worker fails loudly
     // there instead of burning toward an unknown destination.
     .withAutoClaim();
+
+  if (ELECTRUM_WS_URL) {
+    builder = builder.withElectrumWsUrl(ELECTRUM_WS_URL);
+  }
 
   if (REQUEST_SOURCE) {
     builder = builder.withDefaultHeaders({
