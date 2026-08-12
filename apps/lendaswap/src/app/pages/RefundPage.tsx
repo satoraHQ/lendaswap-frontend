@@ -4,7 +4,6 @@ import type {
   BtcToArkadeSwapResponse,
   EvmToArkadeSwapResponse,
   EvmToBitcoinSwapResponse,
-  EvmToLightningSwapResponse,
 } from "@satora/swap";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -68,9 +67,7 @@ export function RefundPage() {
   const isBitcoinSwap =
     swapDirection === "bitcoin_to_evm" || swapDirection === "btc_to_arkade";
   const isEvmSwap =
-    swapDirection === "evm_to_arkade" ||
-    swapDirection === "evm_to_bitcoin" ||
-    swapDirection === "evm_to_lightning";
+    swapDirection === "evm_to_arkade" || swapDirection === "evm_to_bitcoin";
 
   if (isLoading) {
     return (
@@ -134,10 +131,7 @@ export function RefundPage() {
       {isEvmSwap && (
         <RefundEvmStep
           swapData={
-            swapData as
-              | EvmToArkadeSwapResponse
-              | EvmToBitcoinSwapResponse
-              | EvmToLightningSwapResponse
+            swapData as EvmToArkadeSwapResponse | EvmToBitcoinSwapResponse
           }
         />
       )}

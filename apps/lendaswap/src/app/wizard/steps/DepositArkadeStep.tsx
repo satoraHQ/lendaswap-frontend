@@ -1,7 +1,4 @@
-import type {
-  ArkadeToEvmSwapResponse,
-  ArkadeToLightningSwapResponse,
-} from "@satora/swap";
+import type { ArkadeToEvmSwapResponse } from "@satora/swap";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useWalletBridge } from "../../WalletBridgeContext";
@@ -15,7 +12,7 @@ import {
 } from "../components";
 
 interface DepositArkadeStepProps {
-  swapData: ArkadeToEvmSwapResponse | ArkadeToLightningSwapResponse;
+  swapData: ArkadeToEvmSwapResponse;
 }
 
 export function DepositArkadeStep({ swapData }: DepositArkadeStepProps) {
@@ -24,10 +21,7 @@ export function DepositArkadeStep({ swapData }: DepositArkadeStepProps) {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
-  const arkadeAddress =
-    "btc_vhtlc_address" in swapData
-      ? swapData.btc_vhtlc_address
-      : swapData.arkade_vhtlc_address;
+  const arkadeAddress = swapData.btc_vhtlc_address;
   const tokenSymbol = swapData.target_token.symbol;
   const tokenAmount = (
     Number(swapData.target_amount) /

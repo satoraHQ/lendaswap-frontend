@@ -2,7 +2,6 @@ import { useAppKit } from "@reown/appkit/react";
 import {
   type EvmToArkadeSwapResponse,
   type EvmToBitcoinSwapResponse,
-  type EvmToLightningSwapResponse,
   isBtcPegged,
   isEvmToken,
   toChainName,
@@ -30,10 +29,7 @@ import { getViemChain } from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
 interface RefundEvmStepProps {
-  swapData:
-    | EvmToBitcoinSwapResponse
-    | EvmToArkadeSwapResponse
-    | EvmToLightningSwapResponse;
+  swapData: EvmToBitcoinSwapResponse | EvmToArkadeSwapResponse;
 }
 
 type RefundMode = "swap-back" | "direct";

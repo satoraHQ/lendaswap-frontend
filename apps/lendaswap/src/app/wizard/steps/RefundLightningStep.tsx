@@ -1,14 +1,11 @@
-import type {
-  LightningToArkadeSwapResponse,
-  LightningToEvmSwapResponse,
-} from "@satora/swap";
+import type { LightningToArkadeSwapResponse } from "@satora/swap";
 import { toChainName } from "@satora/swap";
 import { ArrowRight, Info, Zap } from "lucide-react";
 import { getTargetChainDisplayName } from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
 interface RefundLightningStepProps {
-  swapData: LightningToEvmSwapResponse | LightningToArkadeSwapResponse;
+  swapData: LightningToArkadeSwapResponse;
 }
 
 export function RefundLightningStep({ swapData }: RefundLightningStepProps) {

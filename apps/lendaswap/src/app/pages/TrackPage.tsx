@@ -275,31 +275,6 @@ function extractTxs(swap: GetSwapResponse): TxItem[] {
             txid: swap.evm_claim_txid,
           },
         ];
-      case "lightning_to_evm":
-        // Lightning-side "lock" is off-chain (invoice payment).
-        return [
-          {
-            stepNumber: 2,
-            actor: "server",
-            action: "locked",
-            chain: evmChainId,
-            txid: swap.evm_fund_txid,
-          },
-          {
-            stepNumber: 3,
-            actor: "user",
-            action: "claimed",
-            chain: evmChainId,
-            txid: swap.evm_claim_txid,
-          },
-          {
-            stepNumber: 4,
-            actor: "server",
-            action: "claimed",
-            chain: "Bitcoin",
-            txid: swap.btc_claim_txid,
-          },
-        ];
       case "lightning_to_arkade":
         return [
           {
@@ -316,48 +291,7 @@ function extractTxs(swap: GetSwapResponse): TxItem[] {
             chain: targetChain,
             txid: swap.arkade_claim_txid,
           },
-          {
-            stepNumber: 4,
-            actor: "server",
-            action: "claimed",
-            chain: "Bitcoin",
-            txid: swap.btc_claim_txid,
-          },
-        ];
-      case "evm_to_lightning":
-        // Target is a Lightning invoice — no on-chain tx for steps 2/3.
-        return [
-          {
-            stepNumber: 1,
-            actor: "user",
-            action: "locked",
-            chain: evmChainId,
-            txid: swap.evm_fund_txid,
-          },
-          {
-            stepNumber: 4,
-            actor: "server",
-            action: "claimed",
-            chain: evmChainId,
-            txid: swap.evm_claim_txid,
-          },
-        ];
-      case "arkade_to_lightning":
-        return [
-          {
-            stepNumber: 1,
-            actor: "user",
-            action: "locked",
-            chain: sourceChain,
-            txid: swap.arkade_fund_txid,
-          },
-          {
-            stepNumber: 4,
-            actor: "server",
-            action: "claimed",
-            chain: sourceChain,
-            txid: swap.arkade_claim_txid,
-          },
+          // Step 4 (server settles the hold invoice) is off-chain — no txid.
         ];
     }
   })();

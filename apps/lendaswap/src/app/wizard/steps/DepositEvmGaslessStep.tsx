@@ -1,7 +1,6 @@
 import {
   type EvmToArkadeSwapResponse,
   type EvmToBitcoinSwapResponse,
-  type EvmToLightningSwapResponse,
   isArkade,
   isBtcOnchain,
   isLightning,
@@ -29,10 +28,7 @@ import {
 } from "../components";
 
 interface EvmDepositGaslessStepProps {
-  swapData:
-    | EvmToArkadeSwapResponse
-    | EvmToBitcoinSwapResponse
-    | EvmToLightningSwapResponse;
+  swapData: EvmToArkadeSwapResponse | EvmToBitcoinSwapResponse;
   swapId: string;
 }
 
@@ -91,8 +87,7 @@ export function DepositEvmGaslessStep({
   // ── Expiry countdown ──────────────────────────────────────────────────
   const refundLocktime = isBtcOnchain(swapData.target_token)
     ? ((swapData as EvmToBitcoinSwapResponse).btc_refund_locktime ?? 0)
-    : ((swapData as EvmToArkadeSwapResponse | EvmToLightningSwapResponse)
-        .vhtlc_refund_locktime ?? 0);
+    : ((swapData as EvmToArkadeSwapResponse).vhtlc_refund_locktime ?? 0);
   const [now, setNow] = useState(Math.floor(Date.now() / 1000));
   useEffect(() => {
     if (!refundLocktime) return;

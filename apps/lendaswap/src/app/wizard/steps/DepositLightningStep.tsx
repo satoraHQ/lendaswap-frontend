@@ -1,7 +1,4 @@
-import type {
-  LightningToArkadeSwapResponse,
-  LightningToEvmSwapResponse,
-} from "@satora/swap";
+import type { LightningToArkadeSwapResponse } from "@satora/swap";
 import { Loader2, Zap } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -23,7 +20,7 @@ import {
 } from "../components";
 
 interface SendLightningStepProps {
-  swapData: LightningToEvmSwapResponse | LightningToArkadeSwapResponse;
+  swapData: LightningToArkadeSwapResponse;
 }
 
 export function DepositLightningStep({ swapData }: SendLightningStepProps) {

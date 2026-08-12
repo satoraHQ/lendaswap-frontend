@@ -1,14 +1,11 @@
 import type {
   ArkadeToEvmSwapResponse,
-  ArkadeToLightningSwapResponse,
   BitcoinToEvmSwapResponse,
   BtcToArkadeSwapResponse,
   EvmToArkadeSwapResponse,
   EvmToBitcoinSwapResponse,
-  EvmToLightningSwapResponse,
   GetSwapResponse,
   LightningToArkadeSwapResponse,
-  LightningToEvmSwapResponse,
   SwapStatus,
 } from "@satora/swap";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -78,13 +75,7 @@ function determineStepFromStatus(
         return swapData.evm_refund_locktime;
       case "evm_to_bitcoin":
         return swapData.evm_refund_locktime;
-      case "lightning_to_evm":
-        return swapData.vhtlc_refund_locktime;
       case "lightning_to_arkade":
-        return swapData.vhtlc_refund_locktime;
-      case "evm_to_lightning":
-        return swapData.evm_refund_locktime;
-      case "arkade_to_lightning":
         return swapData.vhtlc_refund_locktime;
     }
   };
@@ -96,7 +87,7 @@ function determineStepFromStatus(
   const isRefundTimelockExpired =
     refundLocktimeDate !== undefined && refundLocktimeDate < new Date();
 
-  // Arkade-to-EVM and Arkade-to-Lightning swaps support collaborative refund (instant, no locktime
+  // Arkade-to-EVM swaps support collaborative refund (instant, no locktime
   // wait) but only in statuses where the swap has clearly failed - NOT in `clientfunded` which is
   // the normal progression (server hasn't funded yet).
   //
@@ -107,9 +98,7 @@ function determineStepFromStatus(
   // the server truly fails the swap will transition to `clientfundedtoolate` / `expired` and collab
   // refund kicks in then.
 
-  const supportsInstantRefund =
-    swapData.direction === "arkade_to_evm" ||
-    swapData.direction === "arkade_to_lightning";
+  const supportsInstantRefund = swapData.direction === "arkade_to_evm";
 
   switch (swapData.status) {
     case "pending":
@@ -437,30 +426,19 @@ export function SwapWizardPage() {
                 displaySwapData as
                   | EvmToArkadeSwapResponse
                   | EvmToBitcoinSwapResponse
-                  | EvmToLightningSwapResponse
               }
             />
           )}
           {currentStep === "user-deposit" && !hasActiveCctpSession && (
             <>
-              {(swapDirectionValue === "arkade_to_evm" ||
-                swapDirectionValue === "arkade_to_lightning") && (
+              {swapDirectionValue === "arkade_to_evm" && (
                 <DepositArkadeStep
-                  swapData={
-                    displaySwapData as
-                      | ArkadeToEvmSwapResponse
-                      | ArkadeToLightningSwapResponse
-                  }
+                  swapData={displaySwapData as ArkadeToEvmSwapResponse}
                 />
               )}
-              {(swapDirectionValue === "lightning_to_evm" ||
-                swapDirectionValue === "lightning_to_arkade") && (
+              {swapDirectionValue === "lightning_to_arkade" && (
                 <DepositLightningStep
-                  swapData={
-                    displaySwapData as
-                      | LightningToEvmSwapResponse
-                      | LightningToArkadeSwapResponse
-                  }
+                  swapData={displaySwapData as LightningToArkadeSwapResponse}
                 />
               )}
               {(swapDirectionValue === "bitcoin_to_evm" ||
@@ -475,20 +453,17 @@ export function SwapWizardPage() {
                 />
               )}
               {(swapDirectionValue === "evm_to_arkade" ||
-                swapDirectionValue === "evm_to_bitcoin" ||
-                swapDirectionValue === "evm_to_lightning") &&
+                swapDirectionValue === "evm_to_bitcoin") &&
                 ((
                   displaySwapData as
                     | EvmToArkadeSwapResponse
                     | EvmToBitcoinSwapResponse
-                    | EvmToLightningSwapResponse
                 ).gasless ? (
                   <DepositEvmGaslessStep
                     swapData={
                       displaySwapData as
                         | EvmToArkadeSwapResponse
                         | EvmToBitcoinSwapResponse
-                        | EvmToLightningSwapResponse
                     }
                     swapId={displaySwapData.id}
                   />
@@ -498,7 +473,6 @@ export function SwapWizardPage() {
                       displaySwapData as
                         | EvmToArkadeSwapResponse
                         | EvmToBitcoinSwapResponse
-                        | EvmToLightningSwapResponse
                     }
                     swapId={displaySwapData.id}
                   />
@@ -575,38 +549,26 @@ export function SwapWizardPage() {
 
           {currentStep === "refundable" && (
             <>
-              {(swapDirectionValue === "arkade_to_evm" ||
-                swapDirectionValue === "arkade_to_lightning") && (
+              {swapDirectionValue === "arkade_to_evm" && (
                 <RefundArkadeStep
-                  swapData={
-                    displaySwapData as
-                      | ArkadeToEvmSwapResponse
-                      | ArkadeToLightningSwapResponse
-                  }
+                  swapData={displaySwapData as ArkadeToEvmSwapResponse}
                 />
               )}
 
               {(swapDirectionValue === "evm_to_bitcoin" ||
-                swapDirectionValue === "evm_to_arkade" ||
-                swapDirectionValue === "evm_to_lightning") && (
+                swapDirectionValue === "evm_to_arkade") && (
                 <RefundEvmStep
                   swapData={
                     displaySwapData as
                       | EvmToBitcoinSwapResponse
                       | EvmToArkadeSwapResponse
-                      | EvmToLightningSwapResponse
                   }
                 />
               )}
 
-              {(swapDirectionValue === "lightning_to_evm" ||
-                swapDirectionValue === "lightning_to_arkade") && (
+              {swapDirectionValue === "lightning_to_arkade" && (
                 <RefundLightningStep
-                  swapData={
-                    displaySwapData as
-                      | LightningToEvmSwapResponse
-                      | LightningToArkadeSwapResponse
-                  }
+                  swapData={displaySwapData as LightningToArkadeSwapResponse}
                 />
               )}
 

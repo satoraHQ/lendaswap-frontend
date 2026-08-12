@@ -26,7 +26,6 @@ import {
   computeCctpFastFee,
   type EvmToArkadeSwapResponse,
   type EvmToBitcoinSwapResponse,
-  type EvmToLightningSwapResponse,
   encodeDepositForBurn,
   fetchAttestation,
   fetchCctpFee,
@@ -134,10 +133,7 @@ interface StepState {
 
 interface BridgingCctpStepProps {
   swapId: string;
-  swapData:
-    | EvmToArkadeSwapResponse
-    | EvmToBitcoinSwapResponse
-    | EvmToLightningSwapResponse;
+  swapData: EvmToArkadeSwapResponse | EvmToBitcoinSwapResponse;
 }
 
 export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {

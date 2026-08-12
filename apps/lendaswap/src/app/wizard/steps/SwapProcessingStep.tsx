@@ -26,20 +26,12 @@ import {
 
 /** Directions where the user sends BTC and receives EVM tokens (auto-claim applies) */
 function isBtcToEvmDirection(direction: GetSwapResponse["direction"]): boolean {
-  return (
-    direction === "bitcoin_to_evm" ||
-    direction === "arkade_to_evm" ||
-    direction === "lightning_to_evm"
-  );
+  return direction === "bitcoin_to_evm" || direction === "arkade_to_evm";
 }
 
 /** Directions where the user sends EVM and receives BTC */
 function isEvmToBtcDirection(direction: GetSwapResponse["direction"]): boolean {
-  return (
-    direction === "evm_to_arkade" ||
-    direction === "evm_to_bitcoin" ||
-    direction === "evm_to_lightning"
-  );
+  return direction === "evm_to_arkade" || direction === "evm_to_bitcoin";
 }
 
 interface ConfirmingDepositStepProps {
@@ -117,8 +109,6 @@ export function SwapProcessingStep({
 
   useEffect(() => {
     const autoClaim = async () => {
-      // Lightning-to-evm is claimed by the lightning client, skip auto-claim
-      if (swapData.direction === "evm_to_lightning") return;
       if (derivedRecommended !== "claim") return;
 
       const claimKey = `swap_${swapData.id}_claim_attempted`;
@@ -383,26 +373,11 @@ export function SwapProcessingStep({
           step4TxId: swapData.evm_claim_txid,
           step4IsEvm: true,
         };
-      case "lightning_to_evm":
-        return {
-          step1Label: "User Funded",
-          step1TxId: swapData.btc_claim_txid,
-          step1IsEvm: false,
-          step2LabelActive: "Server Funding",
-          step2LabelComplete: "Server Funded",
-          step2TxId: swapData.evm_fund_txid,
-          step2IsEvm: true,
-          step3Label: "Client Redeeming",
-          step3TxId: swapData.evm_claim_txid,
-          step3IsEvm: true,
-          step4Label: "Server Redeemed",
-          step4TxId: null,
-          step4IsEvm: false,
-        };
       case "lightning_to_arkade":
         return {
           step1Label: "User Funded",
-          step1TxId: swapData.btc_claim_txid,
+          // The user funds via Lightning — there is no on-chain txid to link.
+          step1TxId: null,
           step1IsEvm: false,
           step2LabelActive: "Server Funding",
           step2LabelComplete: "Server Funded",
@@ -413,44 +388,6 @@ export function SwapProcessingStep({
           step3IsEvm: false,
           step4Label: "Server Redeemed",
           step4TxId: null,
-          step4IsEvm: false,
-        };
-      case "evm_to_lightning":
-        return {
-          step1Label: "User Funded",
-          step1TxId: swapData.evm_fund_txid,
-          step1IsEvm: true,
-          step2LabelActive: "Server Funding",
-          step2LabelComplete: "Server Funded",
-          step2TxId: swapData.lightning_paid
-            ? swapData.client_lightning_invoice
-            : null,
-          step2IsEvm: false,
-          step3Label: "Lightning Payment",
-          step3TxId: swapData.lightning_paid
-            ? swapData.client_lightning_invoice
-            : null,
-          step3IsEvm: false,
-          step4Label: "Complete",
-          step4TxId: swapData.lightning_paid
-            ? swapData.client_lightning_invoice
-            : null,
-          step4IsEvm: true,
-        };
-      case "arkade_to_lightning":
-        return {
-          step1Label: "User Funded",
-          step1TxId: swapData.arkade_fund_txid,
-          step1IsEvm: false,
-          step2LabelActive: "Paying Invoice",
-          step2LabelComplete: "Invoice Paid",
-          step2TxId: swapData.arkade_claim_txid,
-          step2IsEvm: false,
-          step3Label: "Completing",
-          step3TxId: swapData.status === "serverredeemed" ? "complete" : null,
-          step3IsEvm: false,
-          step4Label: "Complete",
-          step4TxId: swapData.status === "serverredeemed" ? "complete" : null,
           step4IsEvm: false,
         };
     }
@@ -488,7 +425,6 @@ export function SwapProcessingStep({
 
   const isBtcToEvm = isBtcToEvmDirection(swapData.direction);
   const isEvmToBtc = isEvmToBtcDirection(swapData.direction);
-  const isLightning = swapData.direction === "evm_to_lightning";
   /**
    * Directions where the user's payout sits in an Arkade VHTLC waiting for
    * their claim.
@@ -708,37 +644,36 @@ export function SwapProcessingStep({
               {(derivedRecommended === "claim" ||
                 isClaiming ||
                 (serverObs === undefined &&
-                  swapData.status === "serverfunded")) &&
-                !isLightning && (
-                  <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
-                    <p className="text-sm font-medium">
-                      {isClaiming
-                        ? isEvmToBtc || receivesSatsOnArkade
-                          ? "Redeeming your sats..."
-                          : "Claiming your tokens..."
-                        : `${btcContractLabel} Funded`}
-                    </p>
+                  swapData.status === "serverfunded")) && (
+                <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
+                  <p className="text-sm font-medium">
+                    {isClaiming
+                      ? isEvmToBtc || receivesSatsOnArkade
+                        ? "Redeeming your sats..."
+                        : "Claiming your tokens..."
+                      : `${btcContractLabel} Funded`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {isClaiming
+                      ? isEvmToBtc || receivesSatsOnArkade
+                        ? `Claiming the Bitcoin ${btcContractLabel} and publishing the transaction...`
+                        : "Submitting claim request..."
+                      : isEvmToBtc || receivesSatsOnArkade
+                        ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
+                        : "The HTLC has been funded. Preparing to claim your tokens..."}
+                  </p>
+                  {retryCount > 0 && retryCount < maxRetries && (
                     <p className="text-xs text-muted-foreground">
-                      {isClaiming
-                        ? isEvmToBtc || receivesSatsOnArkade
-                          ? `Claiming the Bitcoin ${btcContractLabel} and publishing the transaction...`
-                          : "Submitting claim request..."
-                        : isEvmToBtc || receivesSatsOnArkade
-                          ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
-                          : "The HTLC has been funded. Preparing to claim your tokens..."}
+                      Retry attempt {retryCount}/{maxRetries}...
                     </p>
-                    {retryCount > 0 && retryCount < maxRetries && (
-                      <p className="text-xs text-muted-foreground">
-                        Retry attempt {retryCount}/{maxRetries}...
-                      </p>
-                    )}
-                    {isBtcToEvm && !isClaiming && !claimError && (
-                      <p className="text-xs text-muted-foreground">
-                        Gas fees fully sponsored
-                      </p>
-                    )}
-                  </div>
-                )}
+                  )}
+                  {isBtcToEvm && !isClaiming && !claimError && (
+                    <p className="text-xs text-muted-foreground">
+                      Gas fees fully sponsored
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

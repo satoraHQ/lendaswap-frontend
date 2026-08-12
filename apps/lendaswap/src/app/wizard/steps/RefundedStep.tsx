@@ -62,16 +62,12 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
         return swapData.btc_vhtlc_address ?? null;
       case "evm_to_arkade":
       case "evm_to_bitcoin":
-      case "evm_to_lightning":
         return swapData.evm_htlc_address ?? null;
       case "btc_to_arkade":
       case "bitcoin_to_evm":
         return swapData.btc_htlc_address ?? null;
-      case "lightning_to_evm":
       case "lightning_to_arkade":
         return null; // Lightning refunds go back via the LN channel
-      case "arkade_to_lightning":
-        return swapData.arkade_vhtlc_address ?? null;
     }
 
     return assertNever(
@@ -89,16 +85,11 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
         return swapData.btc_claim_txid ?? null;
       case "evm_to_arkade":
       case "evm_to_bitcoin":
-      case "evm_to_lightning":
         return swapData.evm_claim_txid ?? null;
       case "btc_to_arkade":
       case "bitcoin_to_evm":
         return swapData.btc_claim_txid ?? null;
       case "lightning_to_arkade":
-        return swapData.arkade_claim_txid ?? null;
-      case "lightning_to_evm":
-        return null;
-      case "arkade_to_lightning":
         return swapData.arkade_claim_txid ?? null;
     }
 
@@ -112,8 +103,7 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
   const refundTxId = getRefundTxId();
   const canContinueFromRefund =
     swapData.direction === "evm_to_arkade" ||
-    swapData.direction === "evm_to_bitcoin" ||
-    swapData.direction === "evm_to_lightning";
+    swapData.direction === "evm_to_bitcoin";
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">

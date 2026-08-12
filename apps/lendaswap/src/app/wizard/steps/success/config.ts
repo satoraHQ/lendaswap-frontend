@@ -95,34 +95,6 @@ export function getDirectionConfig(swapData: GetSwapResponse): DirectionConfig {
         swapTxId: swapData.btc_claim_txid,
         tweetText: makeTweet(sent, received),
       };
-    case "lightning_to_evm": {
-      const s = formatAmount(
-        swapData.source_amount,
-        swapData.source_token.decimals,
-      );
-      const r = formatAmount(
-        swapData.target_amount,
-        swapData.target_token.decimals,
-      );
-      return {
-        sourceAmount: s,
-        targetAmount: r,
-        targetAddress:
-          swapData.target_evm_address ?? swapData.client_evm_address,
-        isLightning: false,
-        swapTxId: swapData.evm_claim_txid,
-        tweetText: makeTweet(s, r),
-      };
-    }
-    case "evm_to_lightning":
-      return {
-        sourceAmount: sent,
-        targetAmount: received,
-        targetAddress: swapData.client_lightning_invoice,
-        isLightning: true,
-        swapTxId: swapData.evm_claim_txid,
-        tweetText: makeTweet(sent, received),
-      };
     case "lightning_to_arkade":
       return {
         sourceAmount: sent,
@@ -132,16 +104,6 @@ export function getDirectionConfig(swapData: GetSwapResponse): DirectionConfig {
         swapTxId: swapData.arkade_claim_txid,
         tweetText: makeTweet(sent, received),
       };
-    case "arkade_to_lightning":
-      return {
-        sourceAmount: sent,
-        targetAmount: received,
-        targetAddress: swapData.client_lightning_invoice,
-        isLightning: true,
-        noAddressLink: true,
-        swapTxId: swapData.arkade_fund_txid,
-        tweetText: makeTweet(sent, received),
-      };
   }
 }
 
@@ -149,7 +111,6 @@ export function getBridgeInfo(swapData: GetSwapResponse) {
   switch (swapData.direction) {
     case "arkade_to_evm":
     case "bitcoin_to_evm":
-    case "lightning_to_evm":
       return {
         bridgeTargetChain: swapData.bridge_target_chain,
         claimTxHash: swapData.evm_claim_txid,
