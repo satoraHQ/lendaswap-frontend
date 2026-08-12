@@ -490,11 +490,18 @@ export function SwapProcessingStep({
   const isEvmToBtc = isEvmToBtcDirection(swapData.direction);
   const isLightning = swapData.direction === "evm_to_lightning";
   /**
+   * Directions where the user's payout sits in an Arkade VHTLC waiting for
+   * their claim.
+   */
+  const receivesSatsOnArkade =
+    swapData.direction === "evm_to_arkade" ||
+    swapData.direction === "lightning_to_arkade" ||
+    swapData.direction === "btc_to_arkade";
+  /**
    * What to call the contract holding the user's sats. Only Arkade's is
    * virtual; an on-chain Bitcoin swap locks an ordinary HTLC.
    */
-  const btcContractLabel =
-    swapData.direction === "evm_to_arkade" ? "VHTLC" : "HTLC";
+  const btcContractLabel = receivesSatsOnArkade ? "VHTLC" : "HTLC";
   /**
    * The chain whose explorer shows the server's funding tx, when there is one
    * to open. Step 2 is the server funding its side of the swap, so on
@@ -706,19 +713,17 @@ export function SwapProcessingStep({
                   <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
                     <p className="text-sm font-medium">
                       {isClaiming
-                        ? isEvmToBtc
+                        ? isEvmToBtc || receivesSatsOnArkade
                           ? "Redeeming your sats..."
                           : "Claiming your tokens..."
-                        : isEvmToBtc
-                          ? `${btcContractLabel} Funded`
-                          : "HTLC Funded"}
+                        : `${btcContractLabel} Funded`}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {isClaiming
-                        ? isEvmToBtc
+                        ? isEvmToBtc || receivesSatsOnArkade
                           ? `Claiming the Bitcoin ${btcContractLabel} and publishing the transaction...`
                           : "Submitting claim request..."
-                        : isEvmToBtc
+                        : isEvmToBtc || receivesSatsOnArkade
                           ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
                           : "The HTLC has been funded. Preparing to claim your tokens..."}
                     </p>
