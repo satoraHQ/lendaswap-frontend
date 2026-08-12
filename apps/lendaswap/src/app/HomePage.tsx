@@ -730,8 +730,10 @@ export function HomePage() {
 
       // BTC → Arkade backend requires targetAmount (sats_receive).
       // The quote already computed it, so always pass it through.
+      // Lightning → Arkade is NOT included: it takes exactly one of
+      // source/target, so it sends whichever side the user pinned.
       if (
-        (isBtcOnchain(sourceAsset) || isLightning(sourceAsset)) &&
+        isBtcOnchain(sourceAsset) &&
         isArkade(targetAsset) &&
         selectedTargetAmount == null
       ) {
