@@ -74,6 +74,8 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
     switch (direction) {
       case "arkade_to_evm":
         return swapData.btc_vhtlc_address ?? null;
+      case "arkade_to_lightning":
+        return swapData.arkade_vhtlc_address ?? null;
       case "evm_to_arkade":
       case "evm_to_bitcoin":
         return swapData.evm_htlc_address ?? null;
@@ -97,6 +99,8 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
     switch (direction) {
       case "arkade_to_evm":
         return swapData.btc_claim_txid ?? null;
+      case "arkade_to_lightning":
+        return swapData.arkade_claim_txid ?? null;
       case "evm_to_arkade":
       case "evm_to_bitcoin":
         return swapData.evm_claim_txid ?? null;

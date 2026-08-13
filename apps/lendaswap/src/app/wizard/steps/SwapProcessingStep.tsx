@@ -390,6 +390,24 @@ export function SwapProcessingStep({
           step4TxId: null,
           step4IsEvm: false,
         };
+      case "arkade_to_lightning":
+        return {
+          step1Label: "User Funded",
+          step1TxId: swapData.arkade_fund_txid,
+          step1IsEvm: false,
+          step2LabelActive: "Paying Invoice",
+          step2LabelComplete: "Invoice Paid",
+          // The server pays via Lightning — no on-chain txid; step2Done
+          // falls back to the swap status below.
+          step2TxId: null,
+          step2IsEvm: false,
+          step3Label: "Server Claiming",
+          step3TxId: swapData.arkade_claim_txid,
+          step3IsEvm: false,
+          step4Label: "Complete",
+          step4TxId: null,
+          step4IsEvm: false,
+        };
     }
   };
 
@@ -405,12 +423,25 @@ export function SwapProcessingStep({
   // never regresses it — and the txid links still render whenever the server
   // did record them. A spent server leg was necessarily funded first, so a
   // spend also completes the funded step.
+  // Arkade→Lightning's server leg is an off-chain Lightning payment — no
+  // txid and no chain observation — so its steps complete on the swap
+  // status instead.
+  const a2lInvoicePaid =
+    swapData.direction === "arkade_to_lightning" &&
+    (swapData.status === "serverfunded" ||
+      swapData.status === "serverredeemed");
+  const a2lComplete =
+    swapData.direction === "arkade_to_lightning" &&
+    swapData.status === "serverredeemed";
   const step2Done =
     !!config.step2TxId ||
     serverObs === "confirmed" ||
-    serverObs === "spent_claim";
-  const step3Done = !!config.step3TxId || serverObs === "spent_claim";
-  const step4Done = !!config.step4TxId || clientObs === "spent_claim";
+    serverObs === "spent_claim" ||
+    a2lInvoicePaid;
+  const step3Done =
+    !!config.step3TxId || serverObs === "spent_claim" || a2lComplete;
+  const step4Done =
+    !!config.step4TxId || clientObs === "spent_claim" || a2lComplete;
 
   // Determine which step is currently active (the first incomplete step)
   const getCurrentStep = () => {
