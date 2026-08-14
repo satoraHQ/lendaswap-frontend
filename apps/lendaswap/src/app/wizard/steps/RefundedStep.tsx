@@ -48,10 +48,24 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
     });
   };
 
-  const sourceAmount = formatAmount(
+  // EVM-source refunds return the BTC-pegged token locked in the HTLC
+  // (WBTC on Polygon, tBTC elsewhere), not the originally deposited asset.
+  let refundedSymbol = sourceSymbol;
+  let refundedAmount = formatAmount(
     swapData.source_amount,
     swapData.source_token.decimals,
   );
+  if (
+    swapData.direction === "evm_to_arkade" ||
+    swapData.direction === "evm_to_bitcoin"
+  ) {
+    const isPolygon = swapData.source_token.chain === "137";
+    refundedSymbol = isPolygon ? "WBTC" : "tBTC";
+    refundedAmount = formatAmount(
+      swapData.evm_expected_sats,
+      isPolygon ? 8 : 18,
+    );
+  }
 
   // Get the refund-relevant address (where the user funded from / where refund goes)
   const getRefundAddress = (): string | null => {
@@ -161,7 +175,7 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
           <div className="space-y-2 text-center">
             <h3 className="text-2xl font-semibold">Swap Refunded</h3>
             <p className="text-sm text-muted-foreground">
-              Your {sourceSymbol} has been refunded
+              Your {refundedSymbol} has been refunded
             </p>
           </div>
 
@@ -170,7 +184,7 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Amount Refunded</span>
               <span className="font-medium">
-                {sourceAmount} {sourceSymbol}
+                {refundedAmount} {refundedSymbol}
                 {" on "}
                 {sourceNetwork}
               </span>
