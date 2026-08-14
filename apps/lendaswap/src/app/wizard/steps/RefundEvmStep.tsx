@@ -31,6 +31,10 @@ interface RefundEvmStepProps {
   swapData: EvmToBitcoinSwapResponse | EvmToArkadeSwapResponse;
 }
 
+// Kill switch for the signature-based collaborative refund (refundBySig on-chain).
+// While disabled, only the manual timelock refund path is offered.
+const COLLAB_REFUND_ENABLED = false;
+
 const COLLAB_REFUND_STATUSES = new Set([
   "pending",
   "clientfundedserverrefunded",
@@ -75,7 +79,8 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
     htlcTokenDecimals,
   );
 
-  const collabAvailable = COLLAB_REFUND_STATUSES.has(swapData.status);
+  const collabAvailable =
+    COLLAB_REFUND_ENABLED && COLLAB_REFUND_STATUSES.has(swapData.status);
 
   // Countdown timer
   const [now, setNow] = useState(Math.floor(Date.now() / 1000));

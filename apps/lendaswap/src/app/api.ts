@@ -522,12 +522,7 @@ export const api = {
   /** POST a pre-signed collab refund (for wallet-funded swaps where the wallet signs the EIP-712 digest). */
   async submitCollabRefundEvm(
     swapId: string,
-    body: {
-      v: number;
-      r: string;
-      s: string;
-      depositor_address: string;
-    },
+    body: Parameters<SdkClient["submitCollabRefundEvm"]>[1],
   ): Promise<{ id: string; txHash: string; message: string }> {
     const client = await getClients();
     return await client.submitCollabRefundEvm(swapId, body);
