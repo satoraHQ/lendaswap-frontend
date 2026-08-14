@@ -27,7 +27,7 @@ export function TermsOfServicePage() {
           Terms of Service
         </h1>
         <p className="text-muted-foreground mt-2 mb-12">
-          Last updated: January 2026
+          Last updated: August 2026
         </p>
 
         <div className="space-y-10 text-[15px] md:text-base leading-7 text-muted-foreground">
@@ -70,12 +70,16 @@ export function TermsOfServicePage() {
             </h2>
             <p>
               In the event that a swap cannot be completed or requires a refund,
-              users will receive their initial deposited asset back to their
-              original address. For swaps initiated from Ethereum, Polygon, or
-              other EVM-compatible networks to BTC, please note that:
+              users will receive the funds locked in the swap contract back to
+              their original address. For swaps initiated from Ethereum,
+              Polygon, or other EVM-compatible networks, please note that:
             </p>
             <ul className="list-disc pl-6 mt-3 space-y-1.5">
-              <li>Refunds will be processed in the original asset deposited</li>
+              <li>
+                Refunds will be processed in the BTC-pegged token held in the
+                swap contract (e.g. tBTC on Ethereum and Arbitrum, wBTC on
+                Polygon), not in the original asset deposited
+              </li>
               <li>Refunds will be sent to the original source address</li>
               <li>
                 Users may be subject to exchange rate fluctuations between the

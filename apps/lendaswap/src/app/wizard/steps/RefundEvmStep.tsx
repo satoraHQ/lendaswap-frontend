@@ -2,7 +2,6 @@ import { useAppKit } from "@reown/appkit/react";
 import {
   type EvmToArkadeSwapResponse,
   type EvmToBitcoinSwapResponse,
-  isBtcPegged,
   isEvmToken,
   toChainName,
 } from "@satora/swap";
@@ -31,8 +30,6 @@ import { DepositCard } from "../components";
 interface RefundEvmStepProps {
   swapData: EvmToBitcoinSwapResponse | EvmToArkadeSwapResponse;
 }
-
-type RefundMode = "swap-back" | "direct";
 
 const COLLAB_REFUND_STATUSES = new Set([
   "pending",
@@ -66,8 +63,6 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
   const sourceAmount = formatAmount(swapData.source_amount, sourceDecimals);
 
   const targetSymbol = swapData.target_token.symbol;
-
-  const isWbtcSource = isBtcPegged(swapData.source_token);
 
   // Determine the BTC-pegged token used in the HTLC (WBTC on Polygon, tBTC on Ethereum/Arbitrum)
   const evmChain = isEvmToken(swapData.source_token.chain)
@@ -119,14 +114,14 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
   // Collab refund for wallet-funded swaps needs a wallet connection (for signing, not gas)
   const collabNeedsWallet = collabAvailable && !swapData.gasless;
 
-  const handleRefund = async (mode: RefundMode) => {
+  const handleRefund = async () => {
     if (collabAvailable) {
-      return handleCollabRefund(mode);
+      return handleCollabRefund();
     }
-    return handleManualRefund(mode);
+    return handleManualRefund();
   };
 
-  async function handleCollabRefund(settlement: RefundMode) {
+  async function handleCollabRefund() {
     setIsRefunding(true);
     setRefundError(null);
     setRefundSuccess(null);
@@ -136,7 +131,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
 
       if (swapData.gasless) {
         // Gasless swap - SDK's embedded key is the depositor
-        const result = await api.collabRefundEvmSwap(swapId, settlement);
+        const result = await api.collabRefundEvmSwap(swapId);
         txHash = result.txHash;
       } else {
         // Wallet-funded swap - sign via external wallet
@@ -148,16 +143,13 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
           walletClient as WalletClient<Transport, ViemChain, Account>,
           chain,
         );
-        const result = await api.collabRefundEvmWithSigner(
-          swapId,
-          signer,
-          settlement,
-        );
+        const result = await api.collabRefundEvmWithSigner(swapId, signer);
         txHash = result.txHash;
       }
 
-      const label = settlement === "swap-back" ? sourceSymbol : htlcTokenSymbol;
-      setRefundSuccess(`Refund as ${label} successful! Transaction: ${txHash}`);
+      setRefundSuccess(
+        `Refund as ${htlcTokenSymbol} successful! Transaction: ${txHash}`,
+      );
     } catch (err) {
       console.error("Collaborative refund error:", err);
       setRefundError(
@@ -170,7 +162,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
     }
   }
 
-  async function handleManualRefund(mode: RefundMode) {
+  async function handleManualRefund() {
     if (!address || !walletClient || !chain) {
       open().catch(console.error);
       return;
@@ -197,7 +189,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
         walletClient as WalletClient<Transport, ViemChain, Account>,
         chain,
       );
-      const { txHash } = await api.refundEvmWithSigner(swapId, signer, mode);
+      const { txHash } = await api.refundEvmWithSigner(swapId, signer);
 
       setRefundSuccess(`Refund successful! Transaction: ${txHash}`);
     } catch (err) {
@@ -243,75 +235,26 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
           </div>
         )}
 
-        {/* Primary refund buttons */}
+        {/* Primary refund button */}
         {!refundSuccess && canRefund && (
           <div className="flex flex-col gap-2">
-            {!isWbtcSource && (
-              <>
-                <Button
-                  onClick={() => handleRefund("swap-back")}
-                  disabled={
-                    isRefunding ||
-                    ((collabNeedsWallet || !collabAvailable) && !address)
-                  }
-                  className="h-12 w-full text-base font-semibold"
-                >
-                  {isRefunding ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    `Refund as ${sourceSymbol}`
-                  )}
-                </Button>
-                <Button
-                  onClick={() => handleRefund("direct")}
-                  disabled={
-                    isRefunding ||
-                    ((collabNeedsWallet || !collabAvailable) && !address)
-                  }
-                  variant="outline"
-                  className="h-12 w-full text-base font-semibold"
-                >
-                  {isRefunding ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    `Refund as ${htlcTokenSymbol}`
-                  )}
-                </Button>
-              </>
-            )}
-
-            {isWbtcSource && (
-              <Button
-                onClick={() => handleRefund("direct")}
-                disabled={
-                  isRefunding ||
-                  ((collabNeedsWallet || !collabAvailable) && !address)
-                }
-                className="h-12 w-full text-base font-semibold"
-              >
-                {isRefunding ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  `Refund as ${htlcTokenSymbol}`
-                )}
-              </Button>
-            )}
-
-            {!isWbtcSource && (
-              <p className="text-xs text-muted-foreground">
-                Refunding as {sourceSymbol} swaps {htlcTokenSymbol} back via a
-                DEX - amount may vary slightly due to exchange rate.
-              </p>
-            )}
+            <Button
+              onClick={() => handleRefund()}
+              disabled={
+                isRefunding ||
+                ((collabNeedsWallet || !collabAvailable) && !address)
+              }
+              className="h-12 w-full text-base font-semibold"
+            >
+              {isRefunding ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                `Refund as ${htlcTokenSymbol}`
+              )}
+            </Button>
           </div>
         )}
 
@@ -384,19 +327,8 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
                 </Alert>
               )}
 
-              {!isWbtcSource && (
-                <Button
-                  onClick={() => handleManualRefund("swap-back")}
-                  disabled={isRefunding || !address}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  Manual Refund as {sourceSymbol}
-                </Button>
-              )}
               <Button
-                onClick={() => handleManualRefund("direct")}
+                onClick={() => handleManualRefund()}
                 disabled={isRefunding || !address}
                 variant="outline"
                 size="sm"

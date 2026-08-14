@@ -474,10 +474,9 @@ export const api = {
 
   async refundEvmSwap(
     swapId: string,
-    mode: "swap-back" | "direct" = "swap-back",
   ): Promise<NonNullable<RefundResult["evmRefundData"]>> {
     const client = await getClients();
-    const result = await client.refundSwap(swapId, { mode });
+    const result = await client.refundSwap(swapId, { mode: "direct" });
     if (result.evmRefundData) {
       return result.evmRefundData;
     }
@@ -489,27 +488,24 @@ export const api = {
   async refundEvmWithSigner(
     swapId: string,
     signer: EvmSigner,
-    mode: "swap-back" | "direct" = "swap-back",
   ): Promise<{ txHash: string }> {
     const client = await getClients();
-    return await client.refundEvmWithSigner(swapId, signer, mode);
+    return await client.refundEvmWithSigner(swapId, signer, "direct");
   },
 
   async collabRefundEvmSwap(
     swapId: string,
-    settlement: "swap-back" | "direct" = "direct",
   ): Promise<{ id: string; txHash: string; message: string }> {
     const client = await getClients();
-    return await client.collabRefundEvmSwap(swapId, settlement);
+    return await client.collabRefundEvmSwap(swapId, "direct");
   },
 
   async collabRefundEvmWithSigner(
     swapId: string,
     signer: EvmSigner,
-    settlement: "swap-back" | "direct" = "direct",
   ): Promise<{ txHash: string }> {
     const client = await getClients();
-    return await client.collabRefundEvmWithSigner(swapId, signer, settlement);
+    return await client.collabRefundEvmWithSigner(swapId, signer, "direct");
   },
 
   // Return type derived through the SDK client so it names types via
@@ -517,10 +513,9 @@ export const api = {
   // declaration paths — otherwise TS2742 on the inferred type.
   buildCollabRefundEvmTypedData(
     swapId: string,
-    settlement: "swap-back" | "direct" = "direct",
   ): ReturnType<SdkClient["buildCollabRefundEvmTypedData"]> {
     return getClients().then((client) =>
-      client.buildCollabRefundEvmTypedData(swapId, settlement),
+      client.buildCollabRefundEvmTypedData(swapId, "direct"),
     );
   },
 
@@ -532,7 +527,7 @@ export const api = {
       r: string;
       s: string;
       depositor_address: string;
-      mode: "direct" | "swap-back";
+      mode: "direct";
       sweep_token?: string;
       min_amount_out: string;
     },
