@@ -476,7 +476,7 @@ export const api = {
     swapId: string,
   ): Promise<NonNullable<RefundResult["evmRefundData"]>> {
     const client = await getClients();
-    const result = await client.refundSwap(swapId, { mode: "direct" });
+    const result = await client.refundSwap(swapId, {});
     if (result.evmRefundData) {
       return result.evmRefundData;
     }
@@ -490,14 +490,14 @@ export const api = {
     signer: EvmSigner,
   ): Promise<{ txHash: string }> {
     const client = await getClients();
-    return await client.refundEvmWithSigner(swapId, signer, "direct");
+    return await client.refundEvmWithSigner(swapId, signer);
   },
 
   async collabRefundEvmSwap(
     swapId: string,
   ): Promise<{ id: string; txHash: string; message: string }> {
     const client = await getClients();
-    return await client.collabRefundEvmSwap(swapId, "direct");
+    return await client.collabRefundEvmSwap(swapId);
   },
 
   async collabRefundEvmWithSigner(
@@ -505,7 +505,7 @@ export const api = {
     signer: EvmSigner,
   ): Promise<{ txHash: string }> {
     const client = await getClients();
-    return await client.collabRefundEvmWithSigner(swapId, signer, "direct");
+    return await client.collabRefundEvmWithSigner(swapId, signer);
   },
 
   // Return type derived through the SDK client so it names types via
@@ -515,7 +515,7 @@ export const api = {
     swapId: string,
   ): ReturnType<SdkClient["buildCollabRefundEvmTypedData"]> {
     return getClients().then((client) =>
-      client.buildCollabRefundEvmTypedData(swapId, "direct"),
+      client.buildCollabRefundEvmTypedData(swapId),
     );
   },
 
@@ -527,9 +527,6 @@ export const api = {
       r: string;
       s: string;
       depositor_address: string;
-      mode: "direct";
-      sweep_token?: string;
-      min_amount_out: string;
     },
   ): Promise<{ id: string; txHash: string; message: string }> {
     const client = await getClients();
