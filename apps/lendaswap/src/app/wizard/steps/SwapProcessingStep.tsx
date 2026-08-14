@@ -426,22 +426,26 @@ export function SwapProcessingStep({
   // Arkade→Lightning's server leg is an off-chain Lightning payment — no
   // txid and no chain observation — so its steps complete on the swap
   // status instead.
-  const a2lInvoicePaid =
+  const arkadeToLightningInvoicePaid =
     swapData.direction === "arkade_to_lightning" &&
     (swapData.status === "serverfunded" ||
       swapData.status === "serverredeemed");
-  const a2lComplete =
+  const arkadeToLightningComplete =
     swapData.direction === "arkade_to_lightning" &&
     swapData.status === "serverredeemed";
   const step2Done =
     !!config.step2TxId ||
     serverObs === "confirmed" ||
     serverObs === "spent_claim" ||
-    a2lInvoicePaid;
+    arkadeToLightningInvoicePaid;
   const step3Done =
-    !!config.step3TxId || serverObs === "spent_claim" || a2lComplete;
+    !!config.step3TxId ||
+    serverObs === "spent_claim" ||
+    arkadeToLightningComplete;
   const step4Done =
-    !!config.step4TxId || clientObs === "spent_claim" || a2lComplete;
+    !!config.step4TxId ||
+    clientObs === "spent_claim" ||
+    arkadeToLightningComplete;
 
   // Determine which step is currently active (the first incomplete step)
   const getCurrentStep = () => {
