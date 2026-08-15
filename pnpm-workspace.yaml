@@ -4,9 +4,9 @@ packages:
   # all packages in direct subdirs of packages/
   - "packages/*"
   # client-sdk TypeScript SDK (legacy, wrapped by @satora/swap)
-  - "../client-sdk/ts-pure-sdk"
+  #- "../client-sdk/ts-pure-sdk"  # excluded: pinned to a published SDK
   # Satora swap client — the drop-in the app consumes; wraps ts-pure-sdk
-  - "../client-sdk/ts-sdk/packages/swap"
+  #- "../client-sdk/ts-sdk/packages/swap"  # excluded: pinned to a published SDK
   - "!**/dist/**"
 
 # pnpm 10 only runs native build scripts for allowlisted packages, and the
