@@ -1,5 +1,6 @@
 import {
   type ArkadeToEvmSwapResponse,
+  type ArkadeToLightningSwapResponse,
   isValidArkadeAddress,
   type SwapStatus,
 } from "@satora/swap";
@@ -21,7 +22,7 @@ import { useWalletBridge } from "../../WalletBridgeContext";
 import { DepositCard } from "../components";
 
 interface RefundArkadeStepProps {
-  swapData: ArkadeToEvmSwapResponse;
+  swapData: ArkadeToEvmSwapResponse | ArkadeToLightningSwapResponse;
 }
 
 /**
@@ -220,7 +221,10 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
           <div className="space-y-1">
             <p className="text-sm font-medium">VHTLC Address</p>
             {(() => {
-              const vhtlcAddress = swapData.btc_vhtlc_address;
+              const vhtlcAddress =
+                "btc_vhtlc_address" in swapData
+                  ? swapData.btc_vhtlc_address
+                  : swapData.arkade_vhtlc_address;
               return (
                 <a
                   href={getBlockexplorerAddressLink("Arkade", vhtlcAddress)}
