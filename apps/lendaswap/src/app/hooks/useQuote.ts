@@ -15,6 +15,13 @@ export interface UseQuoteParams {
    * dedupe key so the fee re-renders.
    */
   bridgeRecipientSetup: boolean;
+  /**
+   * Lightning destination (invoice / address / LNURL) for
+   * Arkade → Lightning pairs. When set, the SDK serves the quote from
+   * `/quote/lightning-send` with the provider's exact send fee; the
+   * dedupe key includes it so edits re-fetch.
+   */
+  lightningDestination?: string;
 }
 
 export interface RefreshArgs {
@@ -45,6 +52,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
     targetChain,
     targetToken,
     bridgeRecipientSetup,
+    lightningDestination,
   } = params;
   const [quote, setQuote] = useState<QuoteResponse | undefined>();
   const [isLoading, setIsLoading] = useState(false);
@@ -90,7 +98,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
       // callers re-invoking after a cancelled in-flight request still
       // get the response back and can run their follow-up side-effects
       // (e.g. syncing the opposite amount into UI state).
-      const key = `${sourceChain}|${sourceToken}|${targetChain}|${targetToken}|s=${args.sourceAmount ?? ""}|t=${args.targetAmount ?? ""}|setup=${bridgeRecipientSetup}`;
+      const key = `${sourceChain}|${sourceToken}|${targetChain}|${targetToken}|s=${args.sourceAmount ?? ""}|t=${args.targetAmount ?? ""}|setup=${bridgeRecipientSetup}|ln=${lightningDestination ?? ""}`;
       if (lastRequestKeyRef.current === key) {
         return quoteRef.current;
       }
@@ -103,6 +111,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
 
       try {
         const q = await api.getQuote({
+          lightningDestination,
           sourceChain,
           sourceToken,
           targetChain,
@@ -131,7 +140,14 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
         }
       }
     },
-    [sourceChain, sourceToken, targetChain, targetToken, bridgeRecipientSetup],
+    [
+      sourceChain,
+      sourceToken,
+      targetChain,
+      targetToken,
+      bridgeRecipientSetup,
+      lightningDestination,
+    ],
   );
 
   return { quote, isLoading, refresh };

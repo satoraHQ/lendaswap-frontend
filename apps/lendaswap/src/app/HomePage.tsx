@@ -24,7 +24,11 @@ import { useAccount, useSwitchChain } from "wagmi";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
 import { Switch } from "#/components/ui/switch";
-import { isLightningAddress, isLnurl } from "../utils/lightningAddress";
+import {
+  isBolt11Invoice,
+  isLightningAddress,
+  isLnurl,
+} from "../utils/lightningAddress";
 import { api } from "./api";
 import { AddressInput } from "./components/AddressInput";
 import { AmountInput } from "./components/AmountInput";
@@ -450,6 +454,25 @@ export function HomePage() {
     };
   }, [isSolanaTarget, targetAddress]);
 
+  // Arkade → Lightning with a concrete destination: the SDK serves the
+  // quote from /quote/lightning-send (provider's real send fee) instead
+  // of the flat estimate. Single quote path, so the amount sync below
+  // renders the exact lock amount with no estimate/exact race.
+  const isArkadeToLightning =
+    !!sourceAsset &&
+    !!targetAsset &&
+    isArkade(sourceAsset) &&
+    isLightning(targetAsset);
+  const isLnDestination =
+    !!targetAddress &&
+    (isBolt11Invoice(targetAddress) ||
+      isLightningAddress(targetAddress) ||
+      isLnurl(targetAddress));
+  const lightningDestination =
+    isArkadeToLightning && isAddressValid && isLnDestination
+      ? targetAddress
+      : undefined;
+
   const {
     quote,
     isLoading: isLoadingQuote,
@@ -460,6 +483,7 @@ export function HomePage() {
     targetChain,
     targetToken: targetTokenId,
     bridgeRecipientSetup,
+    lightningDestination,
   });
 
   // Debounced quote fetch - fires 800ms after the last amount change.

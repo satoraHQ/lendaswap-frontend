@@ -11,6 +11,7 @@ import {
   type GetSwapResponse,
   IdbSwapStorage,
   IdbWalletStorage,
+  type LightningSendQuote,
   type TokenInfo as PureTokenInfo,
   type QuoteResponse,
   type RecoverAllSwapsResult,
@@ -40,6 +41,7 @@ export type {
   ContinueRefundedEvmSwapInfo,
   ContinueRefundedEvmSwapResult,
   GetSwapResponse,
+  LightningSendQuote,
   PureTokenInfo,
   QuoteResponse,
   RecoverAllSwapsResult,
@@ -282,10 +284,36 @@ export const api = {
     sourceAmount?: number;
     targetAmount?: number;
     bridgeRecipientSetup?: boolean;
+    /**
+     * Lightning destination (invoice / address / LNURL) for
+     * Arkade → Lightning pairs — switches the quote to the exact
+     * provider send fee instead of the estimate.
+     */
+    lightningDestination?: string;
   }): Promise<QuoteResponse> {
     const referralCode = getReferralCode();
     const client = await getClients();
     return await client.getQuote({
+      ...request,
+      referralCode: referralCode || undefined,
+    });
+  },
+
+  /**
+   * Exact Arkade → Lightning quote from a concrete destination — prices
+   * the swap with the provider's real Lightning send fee, unlike
+   * `getQuote`, whose network fee for this route is an estimate.
+   */
+  async getLightningSendQuote(request: {
+    lightningInvoice?: string;
+    lightningAddress?: string;
+    lnurl?: string;
+    sourceAmountSats?: number;
+    targetAmountSats?: number;
+  }): Promise<LightningSendQuote> {
+    const referralCode = getReferralCode();
+    const client = await getClients();
+    return await client.getLightningSendQuote({
       ...request,
       referralCode: referralCode || undefined,
     });
