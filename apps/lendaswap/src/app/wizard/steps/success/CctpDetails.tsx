@@ -5,7 +5,7 @@ import {
   trackCctpMessage,
 } from "@satora/swap";
 import { ExternalLink, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "#/components/ui/button";
 import type { GetSwapResponse } from "../../../api";
 import {
@@ -41,41 +41,49 @@ export function CctpDetails({ swapData }: { swapData: GetSwapResponse }) {
   const [cctpFee, setCctpFee] = useState<string | null>(null);
   const [cctpError, setCctpError] = useState<string | null>(null);
 
+  // Once any run reaches COMPLETE the delivery is a settled on-chain fact;
+  // a later run erroring (remount, poll timeout, IRIS hiccup) must never
+  // regress the display. Ref rather than state so racing closures see it.
+  const completeRef = useRef(false);
+
   useEffect(() => {
     if (!bridgeTxHash || !bridgeInfo.sourceChainName) return;
     let cancelled = false;
+    const abort = new AbortController();
 
     trackCctpMessage({
       sourceChain: bridgeInfo.sourceChainName as CctpChainName,
       txHash: bridgeTxHash,
       pollIntervalMs: 5_000,
       timeoutMs: 600_000,
+      signal: abort.signal,
       onStatusChange: (status) => {
         if (!cancelled) setCctpStatus(status);
       },
     })
       .then((result) => {
+        completeRef.current = true;
         if (!cancelled) {
           setCctpStatus("COMPLETE");
           setCctpAmount(result.amount ?? null);
           setCctpFee(result.feeExecuted ?? null);
+          setCctpError(null);
         }
       })
       .catch((err) => {
-        if (!cancelled) setCctpError(String(err));
+        if (!cancelled && !completeRef.current) setCctpError(String(err));
       });
 
     return () => {
       cancelled = true;
+      abort.abort();
     };
   }, [bridgeTxHash, bridgeInfo.sourceChainName]);
 
-  // Derive cross-chain status for the shared component
-  const bridgeStatusKind: "pending" | "complete" | "error" = cctpError
-    ? "error"
-    : cctpStatus === "COMPLETE"
-      ? "complete"
-      : "pending";
+  // Derive cross-chain status for the shared component. COMPLETE wins over
+  // a recorded error: arrival is a settled fact, later tracking noise isn't.
+  const bridgeStatusKind: "pending" | "complete" | "error" =
+    cctpStatus === "COMPLETE" ? "complete" : cctpError ? "error" : "pending";
 
   const statusText =
     cctpStatus === "CONFIRMING"
