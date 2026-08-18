@@ -129,6 +129,15 @@ export function getDirectionConfig(swapData: GetSwapResponse): DirectionConfig {
   }
 }
 
+/**
+ * The server serializes `chain` as SCREAMING CASE ("ARBITRUM"), but the
+ * SDK's CCTP tables key on title case ("Arbitrum") — normalize here so
+ * `trackCctpMessage` can resolve the source domain.
+ */
+function toCctpCase(chain: string): string {
+  return chain.charAt(0).toUpperCase() + chain.slice(1).toLowerCase();
+}
+
 export function getBridgeInfo(swapData: GetSwapResponse) {
   switch (swapData.direction) {
     case "arkade_to_evm":
@@ -137,7 +146,7 @@ export function getBridgeInfo(swapData: GetSwapResponse) {
       return {
         bridgeTargetChain: swapData.bridge_target_chain,
         claimTxHash: swapData.evm_claim_txid,
-        sourceChainName: swapData.chain,
+        sourceChainName: toCctpCase(swapData.chain),
       };
     default:
       return {
