@@ -293,6 +293,25 @@ function extractTxs(swap: GetSwapResponse): TxItem[] {
           },
           // Step 4 (server settles the hold invoice) is off-chain — no txid.
         ];
+      case "lightning_to_evm":
+        return [
+          // Step 1 (user pays the hold invoice) is off-chain — no txid.
+          {
+            stepNumber: 2,
+            actor: "server",
+            action: "locked",
+            chain: evmChainId,
+            txid: swap.evm_fund_txid,
+          },
+          {
+            stepNumber: 3,
+            actor: "user",
+            action: "claimed",
+            chain: evmChainId,
+            txid: swap.evm_claim_txid,
+          },
+          // Step 4 (server settles the hold invoice) is off-chain — no txid.
+        ];
       case "arkade_to_lightning":
         return [
           {

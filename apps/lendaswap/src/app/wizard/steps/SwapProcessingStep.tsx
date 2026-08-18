@@ -26,7 +26,11 @@ import {
 
 /** Directions where the user sends BTC and receives EVM tokens (auto-claim applies) */
 function isBtcToEvmDirection(direction: GetSwapResponse["direction"]): boolean {
-  return direction === "bitcoin_to_evm" || direction === "arkade_to_evm";
+  return (
+    direction === "bitcoin_to_evm" ||
+    direction === "arkade_to_evm" ||
+    direction === "lightning_to_evm"
+  );
 }
 
 /** Directions where the user sends EVM and receives BTC */
@@ -390,6 +394,25 @@ export function SwapProcessingStep({
           step4TxId: null,
           step4IsEvm: false,
         };
+      case "lightning_to_evm":
+        return {
+          step1Label: "User Funded",
+          // The user funds via Lightning — there is no on-chain txid to link.
+          step1TxId: null,
+          step1IsEvm: false,
+          step2LabelActive: "Server Funding",
+          step2LabelComplete: "Server Funded",
+          step2TxId: swapData.evm_fund_txid,
+          step2IsEvm: true,
+          step3Label: "Client Redeeming",
+          step3TxId: swapData.evm_claim_txid,
+          step3IsEvm: true,
+          // The server settles the held Lightning payment — off-chain, no
+          // txid; step4Done falls back to the swap status below.
+          step4Label: "Complete",
+          step4TxId: null,
+          step4IsEvm: false,
+        };
       case "arkade_to_lightning":
         return {
           step1Label: "User Funded",
@@ -433,6 +456,11 @@ export function SwapProcessingStep({
   const arkadeToLightningComplete =
     swapData.direction === "arkade_to_lightning" &&
     swapData.status === "serverredeemed";
+  // Lightning→EVM's final step (settling the held payment) is off-chain —
+  // it completes on the swap status.
+  const lightningToEvmComplete =
+    swapData.direction === "lightning_to_evm" &&
+    swapData.status === "serverredeemed";
   const step2Done =
     !!config.step2TxId ||
     serverObs === "confirmed" ||
@@ -445,7 +473,8 @@ export function SwapProcessingStep({
   const step4Done =
     !!config.step4TxId ||
     clientObs === "spent_claim" ||
-    arkadeToLightningComplete;
+    arkadeToLightningComplete ||
+    lightningToEvmComplete;
 
   // Determine which step is currently active (the first incomplete step)
   const getCurrentStep = () => {

@@ -7,6 +7,7 @@ import type {
   EvmToBitcoinSwapResponse,
   GetSwapResponse,
   LightningToArkadeSwapResponse,
+  LightningToEvmSwapResponse,
   SwapStatus,
 } from "@satora/swap";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -78,6 +79,8 @@ function determineStepFromStatus(
         return swapData.evm_refund_locktime;
       case "lightning_to_arkade":
         return swapData.vhtlc_refund_locktime;
+      case "lightning_to_evm":
+        return swapData.evm_refund_locktime;
       case "arkade_to_lightning":
         return swapData.vhtlc_refund_locktime;
     }
@@ -446,9 +449,14 @@ export function SwapWizardPage() {
                   }
                 />
               )}
-              {swapDirectionValue === "lightning_to_arkade" && (
+              {(swapDirectionValue === "lightning_to_arkade" ||
+                swapDirectionValue === "lightning_to_evm") && (
                 <DepositLightningStep
-                  swapData={displaySwapData as LightningToArkadeSwapResponse}
+                  swapData={
+                    displaySwapData as
+                      | LightningToArkadeSwapResponse
+                      | LightningToEvmSwapResponse
+                  }
                 />
               )}
               {(swapDirectionValue === "bitcoin_to_evm" ||
@@ -581,9 +589,14 @@ export function SwapWizardPage() {
                 />
               )}
 
-              {swapDirectionValue === "lightning_to_arkade" && (
+              {(swapDirectionValue === "lightning_to_arkade" ||
+                swapDirectionValue === "lightning_to_evm") && (
                 <RefundLightningStep
-                  swapData={displaySwapData as LightningToArkadeSwapResponse}
+                  swapData={
+                    displaySwapData as
+                      | LightningToArkadeSwapResponse
+                      | LightningToEvmSwapResponse
+                  }
                 />
               )}
 
