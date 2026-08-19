@@ -448,14 +448,13 @@ export function SwapProcessingStep({
   // spend also completes the funded step.
   // Arkade→Lightning's server leg is an off-chain Lightning payment — no
   // txid and no chain observation — so its steps complete on the swap
-  // status instead.
-  const arkadeToLightningInvoicePaid =
-    swapData.direction === "arkade_to_lightning" &&
-    (swapData.status === "serverfunded" ||
-      swapData.status === "serverredeemed");
+  // status instead. `serverfunded` only means the payment was initiated
+  // (it may still be in flight, waiting for the recipient to claim);
+  // `serverredeemed` is the first status that proves it settled.
   const arkadeToLightningComplete =
     swapData.direction === "arkade_to_lightning" &&
     swapData.status === "serverredeemed";
+  const arkadeToLightningInvoicePaid = arkadeToLightningComplete;
   // Lightning→EVM's final step (settling the held payment) is off-chain —
   // it completes on the swap status.
   const lightningToEvmComplete =
@@ -704,11 +703,14 @@ export function SwapProcessingStep({
                   )}
                 </div>
               )}
-              {/* Show claiming status inline when server is funded */}
+              {/* Show claiming status inline when server is funded.
+                  Arkade→Lightning has no client claim — `serverfunded`
+                  there means the outgoing payment is in flight. */}
               {(derivedRecommended === "claim" ||
                 isClaiming ||
                 (serverObs === undefined &&
-                  swapData.status === "serverfunded")) && (
+                  swapData.status === "serverfunded" &&
+                  swapData.direction !== "arkade_to_lightning")) && (
                 <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
                   <p className="text-sm font-medium">
                     {isClaiming
