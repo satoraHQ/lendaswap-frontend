@@ -18,6 +18,7 @@ import {
   type RefundResult,
   SATORA_SERVER_VERSION,
   Client as SdkClient,
+  type StatusResponse,
   type StoredSwap,
   type SwapAction,
   type SwapActions,
@@ -265,6 +266,11 @@ export const api = {
   async getTokens(): Promise<TokenInfos> {
     const client = await getClients();
     return await client.getTokens();
+  },
+
+  async getStatus(): Promise<StatusResponse> {
+    const client = await getClients();
+    return await client.getStatus();
   },
 
   async getEvmTokens(): Promise<EvmTokensResponse> {

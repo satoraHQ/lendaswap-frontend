@@ -37,6 +37,7 @@ import { SupportErrorBanner } from "./components/SupportErrorBanner";
 import { updateSwap, upsertCctpInboundSession } from "./db";
 import { useGaslessFeature } from "./hooks/useGaslessFeature";
 import { type RefreshArgs, useQuote } from "./hooks/useQuote";
+import { useSwapsPaused } from "./hooks/useSwapsPaused";
 import { useTokenBalance } from "./hooks/useTokenBalance";
 import {
   evmSmallestToSats,
@@ -473,6 +474,8 @@ export function HomePage() {
       ? targetAddress
       : undefined;
 
+  const swapsPaused = useSwapsPaused();
+
   const {
     quote,
     isLoading: isLoadingQuote,
@@ -903,6 +906,7 @@ export function HomePage() {
   }
 
   const buttonDisabled =
+    swapsPaused ||
     !targetAddress ||
     !isAddressValid ||
     isCreatingSwap ||
@@ -1202,6 +1206,8 @@ export function HomePage() {
                   <Loader className="h-4 w-4 animate-spin" />
                   Please Wait
                 </>
+              ) : swapsPaused ? (
+                <>Swapping is paused at the moment</>
               ) : insufficientBalance && sourceAsset ? (
                 <>Insufficient {sourceAsset.symbol}</>
               ) : (
