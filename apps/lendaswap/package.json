@@ -13,7 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@arkade-os/sdk": "^0.4.45",
+    "@arkade-os/sdk": "^0.4.64",
     "@circle-fin/adapter-viem-v2": "^1.8.0",
     "@circle-fin/bridge-kit": "^1.8.0",
     "@frontend/shadcn": "workspace:*",

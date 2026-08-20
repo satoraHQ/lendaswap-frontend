@@ -43,8 +43,8 @@ importers:
   ../client-sdk/ts-pure-sdk:
     dependencies:
       '@arkade-os/sdk':
-        specifier: ^0.4.58
-        version: 0.4.60(bufferutil@4.0.9)(utf-8-validate@6.0.6)
+        specifier: ^0.4.64
+        version: 0.4.64(bufferutil@4.0.9)(utf-8-validate@6.0.6)
       '@noble/curves':
         specifier: ^2.2.0
         version: 2.2.0
@@ -114,8 +114,8 @@ importers:
   ../client-sdk/ts-sdk/packages/swap:
     dependencies:
       '@arkade-os/sdk':
-        specifier: ^0.4.45
-        version: 0.4.45(bufferutil@4.0.9)(utf-8-validate@6.0.6)
+        specifier: ^0.4.64
+        version: 0.4.64(bufferutil@4.0.9)(utf-8-validate@6.0.6)
       '@lendasat/lendaswap-sdk-pure':
         specifier: workspace:^
         version: link:../../../ts-pure-sdk
@@ -148,8 +148,8 @@ importers:
   apps/lendaswap:
     dependencies:
       '@arkade-os/sdk':
-        specifier: ^0.4.45
-        version: 0.4.45(bufferutil@4.0.9)(utf-8-validate@6.0.6)
+        specifier: ^0.4.64
+        version: 0.4.64(bufferutil@4.0.9)(utf-8-validate@6.0.6)
       '@circle-fin/adapter-viem-v2':
         specifier: ^1.8.0
         version: 1.8.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(viem@2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@3.25.76))
@@ -444,29 +444,8 @@ packages:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
 
-  '@arkade-os/sdk@0.4.45':
-    resolution: {integrity: sha512-8S9oa0iHYh2b2Cf1yDLW+zk8GK+3Cfqg896n8woExk3CMpfwsBLNNpaZpFLvzgVUHgq/RbylpXBDb4MxPL6e+Q==}
-    engines: {node: '>=22.12.0 <25'}
-    peerDependencies:
-      '@react-native-async-storage/async-storage': '>=1.0.0'
-      expo: '>=54.0.0'
-      expo-background-task: ~1.0.10 || >=55.0.0
-      expo-sqlite: ~16.0.10 || >=55.0.0
-      expo-task-manager: ~14.0.9 || >=55.0.0
-    peerDependenciesMeta:
-      '@react-native-async-storage/async-storage':
-        optional: true
-      expo:
-        optional: true
-      expo-background-task:
-        optional: true
-      expo-sqlite:
-        optional: true
-      expo-task-manager:
-        optional: true
-
-  '@arkade-os/sdk@0.4.60':
-    resolution: {integrity: sha512-SznfNVfdOzLAza9/yZIzKUX+QE97eUwsCvFNUgO4O+tb3K4mjF9eX75mp2cZgm/qG42LaET1XCkvz4uwYCOzDQ==}
+  '@arkade-os/sdk@0.4.64':
+    resolution: {integrity: sha512-3R8ewgLzMiq/PGmImUhvINji2w4FkBz4GE1ohHzIFb6m1FiGbFBZUAin9EsRSm2OtBV2uciKWnXdjiQZv3CBEg==}
     engines: {node: '>=22.12.0 <27'}
     peerDependencies:
       '@react-native-async-storage/async-storage': '>=1.0.0'
@@ -6535,26 +6514,7 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@arkade-os/sdk@0.4.45(bufferutil@4.0.9)(utf-8-validate@6.0.6)':
-    dependencies:
-      '@bitcoinerlab/descriptors-scure': 3.1.7
-      '@marcbachmann/cel-js': 8.0.0
-      '@noble/curves': 2.0.1
-      '@noble/secp256k1': 3.0.0
-      '@scure/base': 2.0.0
-      '@scure/bip39': 2.0.1
-      '@scure/btc-signer': 2.0.1
-      bip68: 1.0.4
-      ws-electrumx-client: 1.0.5(bufferutil@4.0.9)(utf-8-validate@6.0.6)
-    transitivePeerDependencies:
-      - '@ledgerhq/ledger-bitcoin'
-      - bip32
-      - bitcoinjs-lib
-      - bufferutil
-      - ecpair
-      - utf-8-validate
-
-  '@arkade-os/sdk@0.4.60(bufferutil@4.0.9)(utf-8-validate@6.0.6)':
+  '@arkade-os/sdk@0.4.64(bufferutil@4.0.9)(utf-8-validate@6.0.6)':
     dependencies:
       '@bitcoinerlab/descriptors-scure': 3.1.7
       '@marcbachmann/cel-js': 8.0.0
