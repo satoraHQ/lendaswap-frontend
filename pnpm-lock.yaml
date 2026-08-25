@@ -43,8 +43,8 @@ importers:
   ../client-sdk/ts-pure-sdk:
     dependencies:
       '@arkade-os/sdk':
-        specifier: ^0.4.64
-        version: 0.4.64(bufferutil@4.0.9)(utf-8-validate@6.0.6)
+        specifier: ^0.4.66
+        version: 0.4.66(bufferutil@4.0.9)(utf-8-validate@6.0.6)
       '@noble/curves':
         specifier: ^2.2.0
         version: 2.2.0
@@ -114,8 +114,8 @@ importers:
   ../client-sdk/ts-sdk/packages/swap:
     dependencies:
       '@arkade-os/sdk':
-        specifier: ^0.4.64
-        version: 0.4.64(bufferutil@4.0.9)(utf-8-validate@6.0.6)
+        specifier: ^0.4.66
+        version: 0.4.66(bufferutil@4.0.9)(utf-8-validate@6.0.6)
       '@lendasat/lendaswap-sdk-pure':
         specifier: workspace:^
         version: link:../../../ts-pure-sdk
@@ -446,6 +446,27 @@ packages:
 
   '@arkade-os/sdk@0.4.64':
     resolution: {integrity: sha512-3R8ewgLzMiq/PGmImUhvINji2w4FkBz4GE1ohHzIFb6m1FiGbFBZUAin9EsRSm2OtBV2uciKWnXdjiQZv3CBEg==}
+    engines: {node: '>=22.12.0 <27'}
+    peerDependencies:
+      '@react-native-async-storage/async-storage': '>=1.0.0'
+      expo: '>=54.0.0'
+      expo-background-task: ~1.0.10 || >=55.0.0
+      expo-sqlite: ~16.0.10 || >=55.0.0
+      expo-task-manager: ~14.0.9 || >=55.0.0
+    peerDependenciesMeta:
+      '@react-native-async-storage/async-storage':
+        optional: true
+      expo:
+        optional: true
+      expo-background-task:
+        optional: true
+      expo-sqlite:
+        optional: true
+      expo-task-manager:
+        optional: true
+
+  '@arkade-os/sdk@0.4.66':
+    resolution: {integrity: sha512-wSpu22ypIse1YHdPjnOx1XWf7IMi/j5RuZpUHa2QclHs1YkzerS5HqwXTeusiynd3s0V/R9/K7ZZz7yRwkcBhg==}
     engines: {node: '>=22.12.0 <27'}
     peerDependencies:
       '@react-native-async-storage/async-storage': '>=1.0.0'
@@ -3475,6 +3496,7 @@ packages:
 
   '@walletconnect/ethereum-provider@2.21.1':
     resolution: {integrity: sha512-SSlIG6QEVxClgl1s0LMk4xr2wg4eT3Zn/Hb81IocyqNSGfXpjtawWxKxiC5/9Z95f1INyBD6MctJbL/R1oBwIw==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/events@1.0.1':
     resolution: {integrity: sha512-NPTqaoi0oPBVNuLv7qPaJazmGHs5JGyO8eEAk5VGKmJzDR7AHzD4k6ilox5kxk1iwiOnFopBOOMLs86Oa76HpQ==}
@@ -6515,6 +6537,25 @@ snapshots:
   '@alloc/quick-lru@5.2.0': {}
 
   '@arkade-os/sdk@0.4.64(bufferutil@4.0.9)(utf-8-validate@6.0.6)':
+    dependencies:
+      '@bitcoinerlab/descriptors-scure': 3.1.7
+      '@marcbachmann/cel-js': 8.0.0
+      '@noble/curves': 2.0.1
+      '@noble/secp256k1': 3.0.0
+      '@scure/base': 2.0.0
+      '@scure/bip39': 2.0.1
+      '@scure/btc-signer': 2.0.1
+      bip68: 1.0.4
+      ws-electrumx-client: 1.0.5(bufferutil@4.0.9)(utf-8-validate@6.0.6)
+    transitivePeerDependencies:
+      - '@ledgerhq/ledger-bitcoin'
+      - bip32
+      - bitcoinjs-lib
+      - bufferutil
+      - ecpair
+      - utf-8-validate
+
+  '@arkade-os/sdk@0.4.66(bufferutil@4.0.9)(utf-8-validate@6.0.6)':
     dependencies:
       '@bitcoinerlab/descriptors-scure': 3.1.7
       '@marcbachmann/cel-js': 8.0.0
