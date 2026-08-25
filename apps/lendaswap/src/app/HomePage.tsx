@@ -768,11 +768,14 @@ export function HomePage() {
       }
 
       // Lightning addresses (user@domain) and LNURLs are resolved server-side
-      // via LNURL-pay and require targetAmount (sats). The quote already
-      // computed it, so always pass it through.
+      // via LNURL-pay. When the user pinned the target side, pass the quoted
+      // targetAmount through; when they pinned the source side, keep sending
+      // only sourceAmount because Arkade → Lightning accepts either side, but
+      // not both.
       if (
         isLightning(targetAsset) &&
         (isLightningAddress(targetAddress) || isLnurl(targetAddress)) &&
+        selectedSourceAmount == null &&
         selectedTargetAmount == null
       ) {
         selectedTargetAmount = targetAmount;
