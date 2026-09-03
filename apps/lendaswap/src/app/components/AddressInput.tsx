@@ -12,7 +12,7 @@ import {
 } from "@satora/swap";
 import { validate as validateBtcAddress } from "bitcoin-address-validation";
 import { isAddress } from "ethers";
-import { Loader2, Wallet, Zap } from "lucide-react";
+import { Loader2, ScanLine, Wallet, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "#/components/ui/button";
@@ -23,9 +23,11 @@ import {
   isLightningAddress,
   isLnurl,
 } from "../../utils/lightningAddress";
+import { hasCameraApi, normalizeScannedText } from "../../utils/qrScan";
 import isValidSpeedWalletContext from "../../utils/speedWallet";
 import { useNwc } from "../NwcContext";
 import { useWalletBridge } from "../WalletBridgeContext";
+import { QrScannerDialog } from "./QrScannerDialog";
 
 interface AddressInputProps {
   value: string;
@@ -66,6 +68,8 @@ export function AddressInput({
 
   const { isConnected: isNwcConnected, makeInvoice } = useNwc();
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const showScanButton = !disabled && hasCameraApi();
 
   const isLightningTarget = targetToken ? isLightning(targetToken) : false;
   // Solana addresses come in two structurally-identical-looking shapes:
@@ -113,6 +117,10 @@ export function AddressInput({
       }
     }
     onChange(raw);
+  };
+
+  const handleScan = (data: string) => {
+    handleInputChange(normalizeScannedText(data));
   };
 
   const handleGenerateInvoice = async () => {
@@ -244,6 +252,16 @@ export function AddressInput({
     };
   }, [value, isSolanaTarget]);
 
+  const showWalletButton = (isEvmTarget || isSolanaTarget) && !isSpeedWallet;
+  const inputPaddingRight =
+    showWalletButton && showScanButton
+      ? "pr-36"
+      : showWalletButton
+        ? "pr-28"
+        : showScanButton
+          ? "pr-10"
+          : "";
+
   const getPlaceholder = () => {
     if (!targetToken) return "Receive address";
     if (isLightning(targetToken))
@@ -265,18 +283,20 @@ export function AddressInput({
           value={value}
           onChange={(e) => handleInputChange(e.target.value)}
           disabled={disabled}
-          className={`${
-            isEvmTarget || isSolanaTarget ? "pr-28" : ""
-          } ${disabled ? "cursor-not-allowed opacity-60" : ""} ${className}`}
+          className={`${inputPaddingRight} ${
+            disabled ? "cursor-not-allowed opacity-60" : ""
+          } ${className}`}
           data-1p-ignore
           data-lpignore="true"
           autoComplete="off"
         />
 
-        {/* Get Address Button - Only for EVM addresses, hidden in Speed Wallet */}
-        {isEvmTarget && !isSpeedWallet && (
-          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
-            {isConnected && !value ? (
+        {/* Right-side actions: wallet connect / autofill (EVM + Solana,
+            hidden in Speed Wallet) and the QR scanner. */}
+        <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
+          {isEvmTarget &&
+            !isSpeedWallet &&
+            (isConnected && !value ? (
               <Button
                 variant="secondary"
                 size="sm"
@@ -301,16 +321,14 @@ export function AddressInput({
                 <Wallet className="mr-1 h-3 w-3" />
                 Connect
               </Button>
-            ) : null}
-          </div>
-        )}
+            ) : null)}
 
-        {/* Solana variant: auto-fill from a connected Phantom / Solflare /
-            Backpack / etc., or prompt to connect if none is yet picked.
-            Speed Wallet hides this — that flow has its own address pipe. */}
-        {isSolanaTarget && !isSpeedWallet && (
-          <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
-            {isSolanaConnected && solanaAddress && !value ? (
+          {/* Solana variant: auto-fill from a connected Phantom / Solflare /
+              Backpack / etc., or prompt to connect if none is yet picked.
+              Speed Wallet hides this — that flow has its own address pipe. */}
+          {isSolanaTarget &&
+            !isSpeedWallet &&
+            (isSolanaConnected && solanaAddress && !value ? (
               <Button
                 variant="secondary"
                 size="sm"
@@ -335,12 +353,31 @@ export function AddressInput({
                 <Wallet className="mr-1 h-3 w-3" />
                 Connect
               </Button>
-            ) : null}
-          </div>
-        )}
+            ) : null)}
 
-        {/* Generate Invoice Button - Lightning target with NWC connected */}
+          {showScanButton && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsScannerOpen(true)}
+              type="button"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+              aria-label="Scan QR code"
+              title="Scan QR code"
+            >
+              <ScanLine className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
+
+      {showScanButton && (
+        <QrScannerDialog
+          open={isScannerOpen}
+          onOpenChange={setIsScannerOpen}
+          onScan={handleScan}
+        />
+      )}
 
       {/* Address Error Display */}
       {validationError && (
