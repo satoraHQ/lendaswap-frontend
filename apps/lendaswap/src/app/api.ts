@@ -136,6 +136,9 @@ export interface OnchainToEvmSwapRequest {
 }
 
 // Token utility functions
+import { readStoredConfirmations } from "./utils/bitcoinConfirmations";
+import { RPC_OVERRIDE } from "./utils/evmTransport";
+
 export { getTokenDisplayName, getTokenIcon } from "./utils/tokenUtils";
 
 // API client for Satora backend
@@ -147,6 +150,11 @@ const ARK_SERVER_URL =
 
 const ESPLORA_URL =
   import.meta.env.VITE_ESPLORA_URL || "https://mempool.space/api";
+
+// Chain-verified tracking builds the SDK's Bitcoin manager, whose Electrum and
+// address defaults are mainnet. On any other network those reads fail (and can
+// stop tracking from starting at all), so the network has to be explicit.
+const BITCOIN_NETWORK = import.meta.env.VITE_BITCOIN_NETWORK?.trim() || "";
 
 // Electrum-over-WebSocket endpoint (our Fulcrum). When set, the SDK prefers
 // it for Bitcoin lookups/broadcasts and gets push-driven funding detection;
@@ -170,11 +178,16 @@ function apiHeaders(extra?: HeadersInit): HeadersInit {
 const AA_BUNDLER_URL = import.meta.env.VITE_AA_BUNDLER_URL?.trim() || "";
 const AA_RPC_URL =
   import.meta.env.VITE_AA_RPC_URL?.trim() ||
-  (import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID === "42161"
-    ? import.meta.env.VITE_RPC_OVERRIDE_URL?.trim()
-    : "") ||
+  (RPC_OVERRIDE?.chainId === 42161 ? RPC_OVERRIDE.url : "") ||
   AA_BUNDLER_URL;
 const AA_POLICY_ID = import.meta.env.VITE_AA_POLICY_ID?.trim() || "";
+
+// Chain-verified tracking reads EVM legs through the SDK's own readers, which
+// default to public RPCs. Point them at the same override wagmi uses so a
+// local fork's HTLCs are visible to the tracker too.
+const EVM_RPC_OVERRIDE: Record<number, string> | null = RPC_OVERRIDE
+  ? { [RPC_OVERRIDE.chainId]: RPC_OVERRIDE.url }
+  : null;
 
 // Lazy-initialized SDK client. Cache the in-flight PROMISE, not the built
 // instance: concurrent first callers (app boot fires several api calls at
@@ -200,6 +213,17 @@ async function buildClient(): Promise<SdkClient> {
     .withArkadeServerUrl(ARK_SERVER_URL)
     .withSwapStorage(new IdbSwapStorage())
     .withReferralCode(REF_CODE)
+    // Hints alone carry no depth, so the payout-security setting needs the
+    // chain monitors. This is the SDK's "rely on the hint, verify against the
+    // chain" mode, not the old chain-only polling: hints still drive the
+    // timing, and only swaps holding funds on-chain are re-read on a timer.
+    // It applies to every direction, not just Bitcoin payouts, and costs one
+    // chain read per at-risk leg per interval where hint tracking cost none.
+    .withChainVerifiedTracking()
+    // Seeded here, not only pushed from the settings hook: tracking starts as
+    // soon as the client exists, and a page reload on the wizard would
+    // otherwise auto-claim at 0-conf before the hook's value lands.
+    .withBitcoinMinConfirmations(readStoredConfirmations())
     // Background auto-claim: the SDK worker claims a swap the moment the chain
     // confirms it's claimable — even when the user isn't on the processing
     // page. The page's own claim effect stays for one swap class: BTC→USDC on
@@ -210,8 +234,18 @@ async function buildClient(): Promise<SdkClient> {
     // there instead of burning toward an unknown destination.
     .withAutoClaim();
 
+  if (BITCOIN_NETWORK) {
+    builder = builder.withBitcoinNetwork(
+      BITCOIN_NETWORK as Parameters<typeof builder.withBitcoinNetwork>[0],
+    );
+  }
+
   if (ELECTRUM_WS_URL) {
     builder = builder.withElectrumWsUrl(ELECTRUM_WS_URL);
+  }
+
+  if (EVM_RPC_OVERRIDE) {
+    builder = builder.withEvmRpcUrls(EVM_RPC_OVERRIDE);
   }
 
   if (REQUEST_SOURCE) {
@@ -259,6 +293,11 @@ function ensureTracking(client: SdkClient): Promise<void> {
 }
 
 export const api = {
+  async setBitcoinMinConfirmations(minConfirmations: number): Promise<void> {
+    const client = await getClients();
+    client.setBitcoinMinConfirmations(minConfirmations);
+  },
+
   async loadMnemonic(mnemonic: string): Promise<void> {
     const client = await getClients();
     await client.loadMnemonic(mnemonic);

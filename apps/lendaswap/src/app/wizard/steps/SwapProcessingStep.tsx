@@ -1,4 +1,4 @@
-import type { GetSwapResponse } from "@satora/swap";
+import { type GetSwapResponse, isBtcOnchain } from "@satora/swap";
 import {
   Check,
   CheckCheck,
@@ -12,6 +12,7 @@ import { Button } from "#/components/ui/button";
 import { api } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import { getSwapById } from "../../db";
+import { useBitcoinConfirmations } from "../../hooks/useBitcoinConfirmations";
 import { useDerivedSwapActions } from "../../swapActionCenter";
 import {
   deriveSolanaUsdcAta,
@@ -63,6 +64,10 @@ export function SwapProcessingStep({
   const hasClaimedRef = useRef(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 10;
+  // Same store the picker writes, so the copy below cannot describe a depth
+  // the running client is not applying, and a change in another tab reaches
+  // this card as well.
+  const { confirmations: requiredDepth } = useBitcoinConfirmations();
 
   // Helper function to sleep
   const sleep = useCallback(
@@ -524,6 +529,14 @@ export function SwapProcessingStep({
    * virtual; an on-chain Bitcoin swap locks an ordinary HTLC.
    */
   const btcContractLabel = receivesSatsOnArkade ? "VHTLC" : "HTLC";
+  // The reader keeps reporting `mempool` until the funding is as deep as the
+  // payout-security setting asks for, so this is the "funded, not yet
+  // claimable" window on any on-chain Bitcoin payout. Chain facts only: the
+  // server's status copy can lag the observation.
+  const waitingForDepth =
+    isBtcOnchain(swapData.target_token) &&
+    serverObs === "mempool" &&
+    requiredDepth > 0;
   /**
    * The chain whose explorer shows the server's funding tx, when there is one
    * to open. Step 2 is the server funding its side of the swap, so on
@@ -731,6 +744,7 @@ export function SwapProcessingStep({
                   there means the outgoing payment is in flight. */}
               {(derivedRecommended === "claim" ||
                 isClaiming ||
+                waitingForDepth ||
                 (serverObs === undefined &&
                   swapData.status === "serverfunded" &&
                   swapData.direction !== "arkade_to_lightning" &&
@@ -741,16 +755,20 @@ export function SwapProcessingStep({
                       ? isEvmToBtc || receivesSatsOnArkade
                         ? "Redeeming your sats..."
                         : "Claiming your tokens..."
-                      : `${btcContractLabel} Funded`}
+                      : waitingForDepth
+                        ? `Waiting for ${requiredDepth} confirmation${requiredDepth === 1 ? "" : "s"}`
+                        : `${btcContractLabel} Funded`}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {isClaiming
                       ? isEvmToBtc || receivesSatsOnArkade
                         ? `Claiming the Bitcoin ${btcContractLabel} and publishing the transaction...`
                         : "Submitting claim request..."
-                      : isEvmToBtc || receivesSatsOnArkade
-                        ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
-                        : "The HTLC has been funded. Preparing to claim your tokens..."}
+                      : waitingForDepth
+                        ? `The ${btcContractLabel} is funded. Your payout security setting claims it once the funding is ${requiredDepth} block${requiredDepth === 1 ? "" : "s"} deep.`
+                        : isEvmToBtc || receivesSatsOnArkade
+                          ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
+                          : "The HTLC has been funded. Preparing to claim your tokens..."}
                   </p>
                   {retryCount > 0 && retryCount < maxRetries && (
                     <p className="text-xs text-muted-foreground">

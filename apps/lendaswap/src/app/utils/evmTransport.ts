@@ -29,12 +29,23 @@ const FALLBACK_RPCS: Record<number, string[]> = {
   ],
 };
 
+/**
+ * The dev/regtest RPC override, read once here so wagmi's transports, the AA
+ * config and the SDK's own chain readers cannot drift apart on whitespace or
+ * on which chain is overridden. One chain only, which is the env var's shape:
+ * a stack running two forks reaches the second through public RPCs.
+ */
+export const RPC_OVERRIDE: { chainId: number; url: string } | undefined =
+  (() => {
+    const chainId = import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID?.trim();
+    const url = import.meta.env.VITE_RPC_OVERRIDE_URL?.trim();
+    return chainId && url ? { chainId: Number(chainId), url } : undefined;
+  })();
+
 // Only the id is needed, so any chain shape (viem Chain, AppKitNetwork) works.
 export function buildTransport(chain: { id: number | string }) {
   const override =
-    import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID === String(chain.id)
-      ? import.meta.env.VITE_RPC_OVERRIDE_URL
-      : undefined;
+    RPC_OVERRIDE?.chainId === Number(chain.id) ? RPC_OVERRIDE.url : undefined;
 
   const urls = override
     ? [override, ...(FALLBACK_RPCS[Number(chain.id)] ?? [])]

@@ -33,8 +33,10 @@ import { api } from "./api";
 import { AddressInput } from "./components/AddressInput";
 import { AmountInput } from "./components/AmountInput";
 import { AssetDropDown } from "./components/AssetDropDown";
+import { ConfirmationPolicyBar } from "./components/ConfirmationPolicyBar";
 import { SupportErrorBanner } from "./components/SupportErrorBanner";
 import { updateSwap, upsertCctpInboundSession } from "./db";
+import { useBitcoinConfirmations } from "./hooks/useBitcoinConfirmations";
 import { useGaslessFeature } from "./hooks/useGaslessFeature";
 import { type RefreshArgs, useQuote } from "./hooks/useQuote";
 import { useSwapsPaused } from "./hooks/useSwapsPaused";
@@ -331,6 +333,9 @@ export function HomePage() {
   // When switching to an EVM target, auto-fill from the connected wallet.
 
   const isEvmTarget = targetAsset ? isEvmToken(targetAsset.chain) : false;
+  // Only an on-chain Bitcoin payout is gated by a confirmation depth.
+  const claimsOnchainBitcoin = targetAsset ? isBtcOnchain(targetAsset) : false;
+  const { confirmations, setConfirmations } = useBitcoinConfirmations();
   const targetChainKey = targetAsset?.chain;
 
   const isInitialTargetChainSet = useRef(false);
@@ -925,6 +930,12 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col p-3">
+      {claimsOnchainBitcoin && (
+        <ConfirmationPolicyBar
+          confirmations={confirmations}
+          onChange={setConfirmations}
+        />
+      )}
       {/* Sell/Buy container with arrow */}
       <div className="relative">
         {/* Sell */}

@@ -30,7 +30,7 @@ import { unstable_connector, WagmiProvider } from "wagmi";
 import { injected } from "wagmi/connectors";
 import App from "./app/App";
 import { NwcProvider } from "./app/NwcContext";
-import { buildTransport } from "./app/utils/evmTransport";
+import { buildTransport, RPC_OVERRIDE } from "./app/utils/evmTransport";
 import { ThemeProvider } from "./app/utils/theme-provider";
 import { WalletBridgeProvider } from "./app/WalletBridgeContext";
 import { getSpeedWalletParams } from "./utils/speedWallet";
@@ -62,8 +62,6 @@ const networks = [
   xdc,
 ];
 const projectId = "a15c535db177c184c98bdbdc5ff12590";
-const rpcOverrideChainId = import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID;
-const rpcOverrideUrl = import.meta.env.VITE_RPC_OVERRIDE_URL;
 
 const transports: Record<number, Transport> = {};
 // Wallet-first reads: when an injected wallet is connected and on the chain,
@@ -79,8 +77,8 @@ for (const chain of networks) {
     buildTransport(chain),
   ]);
 }
-if (rpcOverrideChainId && rpcOverrideUrl) {
-  transports[Number(rpcOverrideChainId)] = http(rpcOverrideUrl);
+if (RPC_OVERRIDE) {
+  transports[RPC_OVERRIDE.chainId] = http(RPC_OVERRIDE.url);
 }
 
 const wagmiAdapter = new WagmiAdapter({
