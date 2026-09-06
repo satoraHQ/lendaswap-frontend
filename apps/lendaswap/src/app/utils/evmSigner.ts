@@ -88,6 +88,7 @@ export function buildEvmSigner(
         status: receipt.status,
         blockNumber: receipt.blockNumber,
         transactionHash: receipt.transactionHash,
+        logs: receipt.logs,
       };
     },
     getTransaction: async (hash) => {
