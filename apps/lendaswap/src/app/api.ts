@@ -34,7 +34,9 @@ import {
 import { createWalletClient, type Hex, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { arbitrum } from "viem/chains";
+import { readStoredConfirmations } from "./utils/bitcoinConfirmations";
 import { buildEvmSigner } from "./utils/evmSigner";
+import { RPC_OVERRIDE } from "./utils/evmTransport";
 import { getReferralCode } from "./utils/referralCode";
 
 // Re-export SDK types for use throughout the frontend
@@ -136,9 +138,6 @@ export interface OnchainToEvmSwapRequest {
 }
 
 // Token utility functions
-import { readStoredConfirmations } from "./utils/bitcoinConfirmations";
-import { RPC_OVERRIDE } from "./utils/evmTransport";
-
 export { getTokenDisplayName, getTokenIcon } from "./utils/tokenUtils";
 
 // API client for Satora backend
