@@ -33,8 +33,8 @@ import { api } from "./api";
 import { AddressInput } from "./components/AddressInput";
 import { AmountInput } from "./components/AmountInput";
 import { AssetDropDown } from "./components/AssetDropDown";
-import { ConfirmationPolicyBar } from "./components/ConfirmationPolicyBar";
 import { SupportErrorBanner } from "./components/SupportErrorBanner";
+import { SwapSettingsMenu } from "./components/SwapSettingsMenu";
 import { updateSwap, upsertCctpInboundSession } from "./db";
 import { useBitcoinConfirmations } from "./hooks/useBitcoinConfirmations";
 import { useGaslessFeature } from "./hooks/useGaslessFeature";
@@ -334,7 +334,6 @@ export function HomePage() {
 
   const isEvmTarget = targetAsset ? isEvmToken(targetAsset.chain) : false;
   // Only an on-chain Bitcoin payout is gated by a confirmation depth.
-  const claimsOnchainBitcoin = targetAsset ? isBtcOnchain(targetAsset) : false;
   const { confirmations, setConfirmations } = useBitcoinConfirmations();
   const targetChainKey = targetAsset?.chain;
 
@@ -930,12 +929,10 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col p-3">
-      {claimsOnchainBitcoin && (
-        <ConfirmationPolicyBar
-          confirmations={confirmations}
-          onChange={setConfirmations}
-        />
-      )}
+      <SwapSettingsMenu
+        confirmations={confirmations}
+        onChange={setConfirmations}
+      />
       {/* Sell/Buy container with arrow */}
       <div className="relative">
         {/* Sell */}
