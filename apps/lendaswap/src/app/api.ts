@@ -13,11 +13,11 @@ import {
   IdbWalletStorage,
   type LightningSendQuote,
   type LightningSendSourceChain,
+  PROTOCOL_HEADERS,
   type TokenInfo as PureTokenInfo,
   type QuoteResponse,
   type RecoverAllSwapsResult,
   type RefundResult,
-  SATORA_SERVER_VERSION,
   Client as SdkClient,
   type StatusResponse,
   type StoredSwap,
@@ -167,7 +167,9 @@ const REQUEST_SOURCE = import.meta.env.VITE_REQUEST_SOURCE?.trim() || "";
 function apiHeaders(extra?: HeadersInit): HeadersInit {
   const headers = new Headers(extra);
   headers.set("X-Lendaswap-Client", CLIENT_AGENT);
-  headers.set("x-satora-server-version", SATORA_SERVER_VERSION);
+  for (const [name, value] of Object.entries(PROTOCOL_HEADERS)) {
+    headers.set(name, value);
+  }
   if (REQUEST_SOURCE) headers.set("X-Request-Source", REQUEST_SOURCE);
   return headers;
 }
