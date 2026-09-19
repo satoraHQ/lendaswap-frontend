@@ -619,7 +619,7 @@ function TrackDetails({
             {status.label}
           </span>
           {isLive && (
-            <span className="text-muted-foreground/70 ml-auto inline-flex items-center gap-1 text-[10px] uppercase tracking-wide">
+            <span className="ml-auto inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground opacity-70">
               <Radio className="h-3 w-3" />
               Live
             </span>
@@ -634,7 +634,7 @@ function TrackDetails({
             symbol={swap.source_token.symbol}
             chain={String(swap.source_token.chain)}
           />
-          <ArrowRight className="text-muted-foreground/50 h-4 w-4 shrink-0" />
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground opacity-50" />
           <TokenBadge
             icon={getTokenIcon(targetToken)}
             network={getTokenNetworkIcon(targetToken)}
@@ -761,7 +761,7 @@ function StepRow({ label, chain, txid, statusIcon, rightHint }: StepRowProps) {
       <div className="flex shrink-0 items-center gap-2">
         {rightHint}
         {clickable && (
-          <ExternalLink className="text-muted-foreground/60 h-4 w-4" />
+          <ExternalLink className="h-4 w-4 text-muted-foreground opacity-60" />
         )}
       </div>
     </div>

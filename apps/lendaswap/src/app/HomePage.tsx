@@ -1142,7 +1142,7 @@ export function HomePage() {
                   <>{totalFee} BTC</>
                 )}
                 <ChevronDown
-                  className={`h-3 w-3 transition-transform ${feeExpanded ? "rotate-180" : ""}`}
+                  className={`h-3 w-3 text-muted-foreground opacity-70 transition-transform ${feeExpanded ? "rotate-180" : ""}`}
                 />
               </button>
               {feeExpanded && (

@@ -445,7 +445,7 @@ export function SwapsPage() {
         {swaps.length === 0 ? (
           <div className="py-12 sm:py-16 text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-muted/50 mb-3 sm:mb-4">
-              <Clock className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground/50" />
+              <Clock className="h-6 w-6 text-muted-foreground opacity-50 sm:h-7 sm:w-7" />
             </div>
             <p className="text-sm sm:text-base text-muted-foreground font-medium">
               No swaps yet
@@ -457,7 +457,7 @@ export function SwapsPage() {
         ) : sortedFilteredSwaps.length === 0 ? (
           <div className="py-10 sm:py-12 text-center">
             <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-muted/50 mb-2 sm:mb-3">
-              <Search className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground/50" />
+              <Search className="h-5 w-5 text-muted-foreground opacity-50 sm:h-6 sm:w-6" />
             </div>
             <p className="text-sm sm:text-base text-muted-foreground font-medium">
               No matches found
@@ -614,7 +614,7 @@ export function SwapsPage() {
                       </DropdownMenu>
 
                       {/* Chevron */}
-                      <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground/50 group-hover:text-muted-foreground group-hover:translate-x-0.5 transition-all" />
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-50 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 sm:h-4 sm:w-4" />
                     </div>
                   </div>
                 </div>

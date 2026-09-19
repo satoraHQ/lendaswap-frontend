@@ -799,7 +799,7 @@ function StepRow({
       case "error":
         return <AlertCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <Circle className="text-muted-foreground/40 h-4 w-4" />;
+        return <Circle className="h-4 w-4 text-muted-foreground opacity-40" />;
     }
   };
   const explorerHref =

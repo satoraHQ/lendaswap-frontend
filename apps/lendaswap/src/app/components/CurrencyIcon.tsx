@@ -73,9 +73,10 @@ const CATEGORY_ICON: Record<CurrencyCategory, IconComponent> = {
   gold: GoldBar,
 };
 
-const ICON_CLASS = "h-6 w-6 md:h-8 md:w-8 text-muted-foreground/70 shrink-0";
+const ICON_CLASS =
+  "h-6 w-6 shrink-0 text-muted-foreground opacity-70 md:h-8 md:w-8";
 const CLICKABLE_ICON_CLASS =
-  "h-6 w-6 md:h-8 md:w-8 text-muted-foreground/70 shrink-0 cursor-pointer hover:text-muted-foreground transition-colors";
+  "h-6 w-6 shrink-0 cursor-pointer text-muted-foreground opacity-70 transition-opacity hover:opacity-100 md:h-8 md:w-8";
 
 // ── Exported component ───────────────────────────────────────────────
 

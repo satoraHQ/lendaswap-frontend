@@ -194,7 +194,7 @@ export default function App() {
               <div className="text-center">
                 {stepInfo.isHomePage ? (
                   <div className="space-y-1">
-                    <div className="flex items-center justify-center gap-1.5 text-muted-foreground/60">
+                    <div className="flex items-center justify-center gap-1.5 text-muted-foreground opacity-60">
                       <Zap className="h-3 w-3 md:h-3.5 md:w-3.5" />
                       <span className="font-sans text-xs font-semibold uppercase tracking-widest md:text-sm">
                         Lightning-fast
@@ -202,7 +202,7 @@ export default function App() {
                     </div>
                     <h1 className="flex items-center justify-center gap-2 bg-gradient-to-b from-foreground to-foreground/40 bg-clip-text font-sans text-xl font-bold tracking-tight text-transparent md:gap-3 md:text-3xl">
                       <span>Bitcoin</span>
-                      <ArrowLeftRight className="h-4 w-4 text-muted-foreground/30 md:h-6 md:w-6" />
+                      <ArrowLeftRight className="h-4 w-4 text-muted-foreground opacity-30 md:h-6 md:w-6" />
                       <span>Stablecoins</span>
                     </h1>
                   </div>

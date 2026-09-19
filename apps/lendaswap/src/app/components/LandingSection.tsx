@@ -305,7 +305,7 @@ export function LandingSection() {
                   </div>
                   {/* Swap arrows */}
                   <div className="flex flex-col items-center gap-0.5">
-                    <ArrowLeftRight className="w-5 h-5 md:w-7 md:h-7 text-lime-400/70" />
+                    <ArrowLeftRight className="w-5 h-5 text-lime-400 opacity-70 md:w-7 md:h-7" />
                   </div>
                   {/* Bitcoin Coin - Right - Glossy Lime Glass */}
                   <div
