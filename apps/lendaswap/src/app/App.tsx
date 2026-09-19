@@ -31,6 +31,11 @@ import {
 import { startSwapActionCenter } from "./swapActionCenter";
 import { SwapWizardPage } from "./wizard";
 
+const SWAP_CARD_GLOW_STYLE = {
+  background:
+    "radial-gradient(ellipse at center, rgba(163, 230, 53, 0.14) 0%, rgba(163, 230, 53, 0.06) 42%, rgba(163, 230, 53, 0) 74%)",
+} as const;
+
 /** Redirect `/` to the default pair, preserving query params like `?ref=`. */
 function DefaultRedirect() {
   const location = useLocation();
@@ -230,8 +235,13 @@ export default function App() {
                     path="*"
                     element={
                       <div className="group relative">
-                        {/* Lime glow effect on hover */}
-                        <div className="group-hover:via-lime-400/8 absolute -inset-1 rounded-[28px] bg-gradient-to-br from-lime-400/0 via-lime-400/0 to-lime-400/0 opacity-0 blur-xl transition-all duration-500 group-hover:from-lime-400/10 group-hover:to-lime-400/10 group-hover:opacity-100" />
+                        {/* Keep this glow filter-free: CSS blur can expose rectangular compositor bounds. */}
+                        <div
+                          aria-hidden="true"
+                          data-satora-glow="swap-card"
+                          className="pointer-events-none absolute -inset-x-12 -inset-y-10 opacity-70 transition-opacity duration-500 group-hover:opacity-100"
+                          style={SWAP_CARD_GLOW_STYLE}
+                        />
                         <Card className="relative !gap-0 rounded-3xl border border-border bg-gradient-to-br from-card via-card to-lime-400/5 !py-0 shadow-sm">
                           <Routes>
                             <Route path="/" element={<DefaultRedirect />} />
