@@ -10,6 +10,7 @@ import {
   isBtcOnchain,
   isCctpUsdc,
   isLightning,
+  isNativeLockTarget,
   isSolanaToken,
   isSourceEvmChain,
   isValidSolanaAddress,
@@ -146,8 +147,14 @@ function getAvailableTargetAssets(
   const sort = (list: TokenInfo[]) =>
     list.sort((a, b) => a.symbol.localeCompare(b.symbol));
 
-  // Bridge-only tokens (USDC on Base, Optimism, etc.)
-  const bridgeTokens = allTokens.filter((t) => isBridgeOnlyChain(t.chain));
+  // Bridge-only tokens (USDC on Base, Optimism, etc.). Rootstock is a bridge
+  // destination for USDT0 but settles its own coin: RBTC is already in
+  // `evmTokens`, so it is not a bridge token as well.
+  const bridgeTokens = allTokens.filter(
+    (t) =>
+      isBridgeOnlyChain(t.chain) &&
+      !isNativeLockTarget(t.chain, String(t.token_id)),
+  );
 
   if (!sourceAsset) {
     return sort([...allTokens]);

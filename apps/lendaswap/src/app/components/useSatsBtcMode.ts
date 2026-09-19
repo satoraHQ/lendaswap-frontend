@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 // ── Constants ────────────────────────────────────────────────────────
 
-const BTC_SYMBOLS = new Set(["btc", "wbtc", "tbtc"]);
+const BTC_SYMBOLS = new Set(["btc", "wbtc", "tbtc", "rbtc"]);
 
 export function isBtcToken(symbol: string | undefined): boolean {
   return symbol !== undefined && BTC_SYMBOLS.has(symbol.toLowerCase());

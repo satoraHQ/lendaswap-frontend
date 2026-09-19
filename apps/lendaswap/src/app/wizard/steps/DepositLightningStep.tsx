@@ -12,7 +12,10 @@ import isValidSpeedWalletContext, {
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import { useNwc } from "../../NwcContext";
 import { totalFeeSats } from "../../utils/feeUtils";
-import { getTargetChainDisplayName } from "../../utils/tokenUtils";
+import {
+  displayDecimals,
+  getTargetChainDisplayName,
+} from "../../utils/tokenUtils";
 import { useWalletBridge } from "../../WalletBridgeContext";
 import {
   AddressDisplay,
@@ -42,7 +45,7 @@ export function DepositLightningStep({ swapData }: SendLightningStepProps) {
   const tokenAmount = (
     Number(swapData.target_amount) /
     10 ** swapData.target_token.decimals
-  ).toFixed(swapData.target_token.decimals);
+  ).toFixed(displayDecimals(swapData.target_token));
 
   const tokenSymbol = swapData.target_token.symbol;
 

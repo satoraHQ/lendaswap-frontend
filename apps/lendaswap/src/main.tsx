@@ -14,6 +14,7 @@ import {
   monad,
   optimism,
   polygon,
+  rootstock,
   sei,
   solana,
   sonic,
@@ -30,7 +31,7 @@ import { unstable_connector, WagmiProvider } from "wagmi";
 import { injected } from "wagmi/connectors";
 import App from "./app/App";
 import { NwcProvider } from "./app/NwcContext";
-import { buildTransport, RPC_OVERRIDE } from "./app/utils/evmTransport";
+import { buildTransport, RPC_OVERRIDES } from "./app/utils/evmTransport";
 import { ThemeProvider } from "./app/utils/theme-provider";
 import { WalletBridgeProvider } from "./app/WalletBridgeContext";
 import { getSpeedWalletParams } from "./utils/speedWallet";
@@ -39,15 +40,18 @@ import { getSpeedWalletParams } from "./utils/speedWallet";
 // This persists them to sessionStorage so they survive React Router redirects.
 getSpeedWalletParams();
 
-// Allow overriding the RPC URL for a specific chain via env variable.
-// e.g. VITE_RPC_OVERRIDE_CHAIN_ID=137 VITE_RPC_OVERRIDE_URL=http://localhost:8545
-// Native source chains (Ethereum/Polygon/Arbitrum) first; the rest are
-// CCTPv2-only source chains enabled for the any-chain-USDC → BTC flow so
-// wagmi can both read USDC balances and drive depositForBurn txs there.
+// Allow overriding the RPC URL per chain via env variable, e.g.
+// VITE_RPC_OVERRIDES=137=http://localhost:8545,30=http://localhost:8547
+// Native source chains (Ethereum/Polygon/Arbitrum) first, then Rootstock
+// (RBTC target: the wallet only needs it to read its balance, the claim is
+// relayed); the rest are CCTPv2-only source chains enabled for the
+// any-chain-USDC → BTC flow so wagmi can both read USDC balances and drive
+// depositForBurn txs there.
 const networks = [
   mainnet,
   polygon,
   arbitrum,
+  rootstock,
   base,
   optimism,
   linea,
@@ -77,8 +81,8 @@ for (const chain of networks) {
     buildTransport(chain),
   ]);
 }
-if (RPC_OVERRIDE) {
-  transports[RPC_OVERRIDE.chainId] = http(RPC_OVERRIDE.url);
+for (const [chainId, url] of Object.entries(RPC_OVERRIDES)) {
+  transports[Number(chainId)] = http(url);
 }
 
 const wagmiAdapter = new WagmiAdapter({

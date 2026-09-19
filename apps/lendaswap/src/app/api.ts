@@ -36,7 +36,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { arbitrum } from "viem/chains";
 import { readStoredConfirmations } from "./utils/bitcoinConfirmations";
 import { buildEvmSigner } from "./utils/evmSigner";
-import { RPC_OVERRIDE } from "./utils/evmTransport";
+import { RPC_OVERRIDES } from "./utils/evmTransport";
 import { getReferralCode } from "./utils/referralCode";
 
 // Re-export SDK types for use throughout the frontend
@@ -177,16 +177,15 @@ function apiHeaders(extra?: HeadersInit): HeadersInit {
 const AA_BUNDLER_URL = import.meta.env.VITE_AA_BUNDLER_URL?.trim() || "";
 const AA_RPC_URL =
   import.meta.env.VITE_AA_RPC_URL?.trim() ||
-  (RPC_OVERRIDE?.chainId === 42161 ? RPC_OVERRIDE.url : "") ||
+  RPC_OVERRIDES[42161] ||
   AA_BUNDLER_URL;
 const AA_POLICY_ID = import.meta.env.VITE_AA_POLICY_ID?.trim() || "";
 
 // Chain-verified tracking reads EVM legs through the SDK's own readers, which
 // default to public RPCs. Point them at the same override wagmi uses so a
 // local fork's HTLCs are visible to the tracker too.
-const EVM_RPC_OVERRIDE: Record<number, string> | null = RPC_OVERRIDE
-  ? { [RPC_OVERRIDE.chainId]: RPC_OVERRIDE.url }
-  : null;
+const EVM_RPC_OVERRIDE: Record<number, string> | null =
+  Object.keys(RPC_OVERRIDES).length > 0 ? RPC_OVERRIDES : null;
 
 // Lazy-initialized SDK client. Cache the in-flight PROMISE, not the built
 // instance: concurrent first callers (app boot fires several api calls at

@@ -27,25 +27,58 @@ const FALLBACK_RPCS: Record<number, string[]> = {
     "https://arbitrum.drpc.org",
     "https://arbitrum-one-rpc.publicnode.com",
   ],
+  // Rootstock — the public node, HTTP only (no WebSocket endpoint exists).
+  30: ["https://public-node.rsk.co"],
 };
 
+/** The env vars the RPC overrides are read from. */
+export interface RpcOverrideEnv {
+  /** `chainId=url` pairs, comma separated: `137=http://localhost:8545,30=http://localhost:8547`. */
+  VITE_RPC_OVERRIDES?: string;
+  /** The single-chain form, kept for existing env files. */
+  VITE_RPC_OVERRIDE_CHAIN_ID?: string;
+  VITE_RPC_OVERRIDE_URL?: string;
+}
+
 /**
- * The dev/regtest RPC override, read once here so wagmi's transports, the AA
- * config and the SDK's own chain readers cannot drift apart on whitespace or
- * on which chain is overridden. One chain only, which is the env var's shape:
- * a stack running two forks reaches the second through public RPCs.
+ * Parse the dev/regtest RPC overrides: the single pair plus the list, the
+ * list winning for a chain named in both. Whitespace is trimmed and a
+ * malformed entry is dropped rather than poisoning the rest.
  */
-export const RPC_OVERRIDE: { chainId: number; url: string } | undefined =
-  (() => {
-    const chainId = import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID?.trim();
-    const url = import.meta.env.VITE_RPC_OVERRIDE_URL?.trim();
-    return chainId && url ? { chainId: Number(chainId), url } : undefined;
-  })();
+export function parseRpcOverrides(env: RpcOverrideEnv): Record<number, string> {
+  const overrides: Record<number, string> = {};
+  const chainId = env.VITE_RPC_OVERRIDE_CHAIN_ID?.trim();
+  const url = env.VITE_RPC_OVERRIDE_URL?.trim();
+  if (chainId && url && Number.isInteger(Number(chainId))) {
+    overrides[Number(chainId)] = url;
+  }
+  for (const entry of (env.VITE_RPC_OVERRIDES ?? "").split(",")) {
+    const separator = entry.indexOf("=");
+    if (separator < 0) continue;
+    const id = entry.slice(0, separator).trim();
+    const entryUrl = entry.slice(separator + 1).trim();
+    if (id && entryUrl && Number.isInteger(Number(id))) {
+      overrides[Number(id)] = entryUrl;
+    }
+  }
+  return overrides;
+}
+
+/**
+ * The dev/regtest RPC overrides by chain id, read once here so wagmi's
+ * transports, the AA config and the SDK's own chain readers cannot drift
+ * apart on whitespace or on which chains are overridden. A chain without an
+ * entry is reached through its public RPCs.
+ */
+export const RPC_OVERRIDES: Record<number, string> = parseRpcOverrides({
+  VITE_RPC_OVERRIDES: import.meta.env.VITE_RPC_OVERRIDES,
+  VITE_RPC_OVERRIDE_CHAIN_ID: import.meta.env.VITE_RPC_OVERRIDE_CHAIN_ID,
+  VITE_RPC_OVERRIDE_URL: import.meta.env.VITE_RPC_OVERRIDE_URL,
+});
 
 // Only the id is needed, so any chain shape (viem Chain, AppKitNetwork) works.
 export function buildTransport(chain: { id: number | string }) {
-  const override =
-    RPC_OVERRIDE?.chainId === Number(chain.id) ? RPC_OVERRIDE.url : undefined;
+  const override: string | undefined = RPC_OVERRIDES[Number(chain.id)];
 
   const urls = override
     ? [override, ...(FALLBACK_RPCS[Number(chain.id)] ?? [])]

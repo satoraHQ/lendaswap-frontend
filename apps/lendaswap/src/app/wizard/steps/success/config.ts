@@ -1,6 +1,9 @@
 import { toChainName, USDC_ADDRESSES, USDT0_ADDRESSES } from "@satora/swap";
 import type { GetSwapResponse } from "../../../api";
-import { getTargetChainDisplayName } from "../../../utils/tokenUtils";
+import {
+  displayDecimals,
+  getTargetChainDisplayName,
+} from "../../../utils/tokenUtils";
 
 export interface DirectionConfig {
   sourceAmount: string;
@@ -15,11 +18,12 @@ export interface DirectionConfig {
 export function formatAmount(
   amount: number | string,
   decimals: number,
+  maximumFractionDigits = decimals,
 ): string {
   const value = Number(amount) / 10 ** decimals;
   return value.toLocaleString(undefined, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: decimals,
+    maximumFractionDigits,
   });
 }
 
@@ -36,10 +40,12 @@ export function getDirectionConfig(swapData: GetSwapResponse): DirectionConfig {
   const sent = formatAmount(
     swapData.source_amount,
     swapData.source_token.decimals,
+    displayDecimals(swapData.source_token),
   );
   const received = formatAmount(
     swapData.target_amount,
     swapData.target_token.decimals,
+    displayDecimals(swapData.target_token),
   );
 
   switch (swapData.direction) {

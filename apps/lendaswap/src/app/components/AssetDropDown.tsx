@@ -4,6 +4,7 @@ import {
   isBridgeOnlyChain,
   isBtc,
   isEthereumToken,
+  isNativeLockTarget,
   isOptimismToken,
   isPolygonToken,
   isSolanaToken,
@@ -96,7 +97,8 @@ const networkTabs: {
     id: "bitcoin",
     label: "Bitcoin",
     icon: <BitcoinIcon width={14} height={14} />,
-    filter: (a) => isBtc(a),
+    // RBTC is bitcoin on Rootstock, not a bridged stablecoin.
+    filter: (a) => isBtc(a) || isNativeLockTarget(a.chain, String(a.token_id)),
   },
   {
     id: "ethereum",
@@ -140,6 +142,7 @@ const networkTabs: {
     icon: null,
     filter: (a) =>
       isBridgeOnlyChain(a.chain) &&
+      !isNativeLockTarget(a.chain, String(a.token_id)) &&
       !isBaseToken(a.chain) &&
       !isOptimismToken(a.chain) &&
       !isSolanaToken(a.chain),

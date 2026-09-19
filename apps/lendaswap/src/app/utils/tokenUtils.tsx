@@ -1,6 +1,7 @@
 import {
   type BridgeTokenInfo,
   type Chain,
+  isBtcPegged,
   isSolanaToken,
   type TokenInfo,
   toChain,
@@ -38,6 +39,7 @@ import {
   arbitrum,
   mainnet,
   polygon,
+  rootstock,
   type Chain as ViemChain,
 } from "viem/chains";
 import { ReactComponent as Arbitrum } from "../../assets/arbitrum.svg";
@@ -101,6 +103,10 @@ export function getTokenIcon(
   }
   if (tokenId.symbol.toLowerCase() === "tbtc") {
     return <Tbtc width={64} height={64} />;
+  }
+  // Rootstock's coin is bitcoin; the network badge says where.
+  if (tokenId.symbol.toLowerCase() === "rbtc") {
+    return <TokenBTC height={height} width={width} variant={"branded"} />;
   }
 
   return (
@@ -190,6 +196,8 @@ export function getViemChain(chain?: Chain): ViemChain | undefined {
       return arbitrum;
     case "1":
       return mainnet;
+    case "30":
+      return rootstock;
     default:
       return undefined;
   }
@@ -206,9 +214,23 @@ export function getViemChainById(chainId: number): ViemChain | undefined {
       return arbitrum;
     case 1:
       return mainnet;
+    case 30:
+      return rootstock;
     default:
       return undefined;
   }
+}
+
+/**
+ * Decimal places to show for a token: BTC-pegged EVM assets (tBTC, RBTC) have
+ * 18 on-chain decimals but are bitcoin, so they display at 8 like BTC.
+ */
+export function displayDecimals(token: {
+  chain: string;
+  symbol: string;
+  decimals: number;
+}): number {
+  return isBtcPegged(token) ? Math.min(8, token.decimals) : token.decimals;
 }
 
 // Re-export token helpers from SDK
