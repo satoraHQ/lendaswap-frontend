@@ -487,8 +487,8 @@ export function SwapProcessingStep({
           step1IsEvm: false,
           step2LabelActive: "Paying Invoice",
           step2LabelComplete: "Invoice Paid",
-          // The server pays via Lightning — no on-chain txid; step2Done
-          // falls back to the swap status below.
+          // The server pays via Lightning, so there is no on-chain txid:
+          // step2Done falls back to the swap status below.
           step2TxId: null,
           step2IsEvm: false,
           step3Label: "Server Claiming",
@@ -545,13 +545,14 @@ export function SwapProcessingStep({
   // never regresses it — and the txid links still render whenever the server
   // did record them. A spent server leg was necessarily funded first, so a
   // spend also completes the funded step.
-  // Arkade→Lightning's server leg is an off-chain Lightning payment — no
-  // txid and no chain observation — so its steps complete on the swap
-  // status instead. `serverfunded` only means the payment was initiated
-  // (it may still be in flight, waiting for the recipient to claim);
-  // `serverredeemed` is the first status that proves it settled.
+  // A Lightning-target swap's server leg is an off-chain Lightning payment
+  // with no txid and no chain observation, so its steps complete on the
+  // swap status instead. `serverfunded` only means the payment was
+  // initiated (it may still be in flight, waiting for the recipient to
+  // claim); `serverredeemed` is the first status that proves it settled.
   const arkadeToLightningComplete =
     (swapData.direction === "arkade_to_lightning" ||
+      swapData.direction === "bitcoin_to_lightning" ||
       swapData.direction === "evm_to_lightning") &&
     swapData.status === "serverredeemed";
   // EVM→Lightning reports the settled payment as soon as the preimage is
@@ -560,10 +561,11 @@ export function SwapProcessingStep({
     arkadeToLightningComplete ||
     (swapData.direction === "evm_to_lightning" &&
       swapData.lightning_payment_settled === true);
-  // Lightning→EVM's final step (settling the held payment) is off-chain —
-  // it completes on the swap status.
+  // Lightning→EVM's and Lightning→Bitcoin's final step (settling the held
+  // payment) is off-chain, so it completes on the swap status.
   const lightningToEvmComplete =
-    swapData.direction === "lightning_to_evm" &&
+    (swapData.direction === "lightning_to_evm" ||
+      swapData.direction === "lightning_to_bitcoin") &&
     swapData.status === "serverredeemed";
   const step2Done =
     !!config.step2TxId ||
@@ -606,6 +608,11 @@ export function SwapProcessingStep({
    * virtual; an on-chain Bitcoin swap locks an ordinary HTLC.
    */
   const btcContractLabel = receivesSatsOnArkade ? "VHTLC" : "HTLC";
+  /** Directions where the server funded the sats the user claims. */
+  const receivesBtcFromServer =
+    isEvmToBtc ||
+    receivesSatsOnArkade ||
+    swapData.direction === "lightning_to_bitcoin";
   // The reader keeps reporting `mempool` until the funding is as deep as the
   // payout-security setting asks for, so this is the "funded, not yet
   // claimable" window on any on-chain Bitcoin payout. Chain facts only: the
@@ -620,7 +627,9 @@ export function SwapProcessingStep({
    * EVM→Bitcoin that is an ordinary on-chain transaction.
    */
   const step2ExplorerChain =
-    config.step2IsEvm || swapData.direction === "evm_to_bitcoin"
+    config.step2IsEvm ||
+    swapData.direction === "evm_to_bitcoin" ||
+    swapData.direction === "lightning_to_bitcoin"
       ? swapData.target_token.chain
       : undefined;
 
@@ -832,11 +841,12 @@ export function SwapProcessingStep({
                   (serverObs === undefined &&
                     swapData.status === "serverfunded" &&
                     swapData.direction !== "arkade_to_lightning" &&
+                    swapData.direction !== "bitcoin_to_lightning" &&
                     swapData.direction !== "evm_to_lightning")) && (
                   <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
                     <p className="text-sm font-medium">
                       {isClaiming
-                        ? isEvmToBtc || receivesSatsOnArkade
+                        ? receivesBtcFromServer
                           ? "Redeeming your sats..."
                           : "Claiming your tokens..."
                         : waitingForDepth
@@ -845,12 +855,12 @@ export function SwapProcessingStep({
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {isClaiming
-                        ? isEvmToBtc || receivesSatsOnArkade
+                        ? receivesBtcFromServer
                           ? `Claiming the Bitcoin ${btcContractLabel} and publishing the transaction...`
                           : "Submitting claim request..."
                         : waitingForDepth
                           ? `The ${btcContractLabel} is funded. Your payout security setting claims it once the funding is ${requiredDepth} block${requiredDepth === 1 ? "" : "s"} deep.`
-                          : isEvmToBtc || receivesSatsOnArkade
+                          : receivesBtcFromServer
                             ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
                             : "The HTLC has been funded. Preparing to claim your tokens..."}
                     </p>

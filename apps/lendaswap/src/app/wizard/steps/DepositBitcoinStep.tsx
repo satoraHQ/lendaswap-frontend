@@ -1,9 +1,11 @@
 import {
   type BitcoinToEvmSwapResponse,
+  type BitcoinToLightningSwapResponse,
   isArkade,
   isEvmToken,
+  isLightning,
 } from "@satora/swap";
-import { Clock } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import type { BtcToArkadeSwapResponse } from "../../api";
@@ -21,7 +23,10 @@ import {
 } from "../components";
 
 interface SendOnchainBtcStepProps {
-  swapData: BitcoinToEvmSwapResponse | BtcToArkadeSwapResponse;
+  swapData:
+    | BitcoinToEvmSwapResponse
+    | BtcToArkadeSwapResponse
+    | BitcoinToLightningSwapResponse;
   swapId: string;
 }
 
@@ -41,8 +46,16 @@ export function DepositBitcoinStep({
     return () => clearInterval(interval);
   }, []);
 
+  // Paying out to Lightning, the invoice expiry is the deadline: the server
+  // pays only once the deposit confirms, and a deposit that confirms after
+  // the invoice expired stays locked until the refund locktime.
+  const deadline = isLightning(swapData.target_token)
+    ? Number((swapData as BitcoinToLightningSwapResponse).invoice_expires_at)
+    : Number(swapData.btc_refund_locktime);
+  const isExpired = now >= deadline;
+
   const timeRemaining = useMemo(() => {
-    const secondsLeft = Number(swapData.btc_refund_locktime) - now;
+    const secondsLeft = deadline - now;
     if (secondsLeft <= 0) return null;
 
     const hours = Math.floor(secondsLeft / 3600);
@@ -56,7 +69,7 @@ export function DepositBitcoinStep({
     } else {
       return `${seconds}s`;
     }
-  }, [now, swapData.btc_refund_locktime]);
+  }, [now, deadline]);
 
   const btcAmountInBtc = (Number(swapData.source_amount) / 100_000_000).toFixed(
     8,
@@ -72,9 +85,11 @@ export function DepositBitcoinStep({
 
   const receiveLabel = isArkade(swapData.target_token)
     ? `${Number((swapData as BtcToArkadeSwapResponse).target_amount).toLocaleString()} sats on Arkade`
-    : isEvmToken(swapData.target_token.chain)
-      ? `${tokenAmount} ${swapData.target_token.symbol} on ${getTargetChainDisplayName(swapData)}`
-      : undefined;
+    : isLightning(swapData.target_token)
+      ? `${Number(swapData.target_amount).toLocaleString()} sats over Lightning`
+      : isEvmToken(swapData.target_token.chain)
+        ? `${tokenAmount} ${swapData.target_token.symbol} on ${getTargetChainDisplayName(swapData)}`
+        : undefined;
 
   return (
     <DepositCard
@@ -83,12 +98,21 @@ export function DepositBitcoinStep({
       swapId={swapId}
       title={`${swapData.source_token.symbol} → ${swapData.target_token.symbol}`}
     >
-      <QrCodeSection value={bitcoinUri} />
-      <AddressDisplay
-        label="Bitcoin Address"
-        value={swapData.btc_htlc_address}
-        explorerUrl={`https://mempool.space/address/${swapData.btc_htlc_address}`}
-      />
+      {isExpired ? (
+        <div className="flex items-center gap-2 rounded-lg border border-red-500 bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/20">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          This swap has expired. Do not send funds to it.
+        </div>
+      ) : (
+        <>
+          <QrCodeSection value={bitcoinUri} />
+          <AddressDisplay
+            label="Bitcoin Address"
+            value={swapData.btc_htlc_address}
+            explorerUrl={`https://mempool.space/address/${swapData.btc_htlc_address}`}
+          />
+        </>
+      )}
       <AmountSummary>
         <AmountRow
           label="You Send"
@@ -112,10 +136,12 @@ export function DepositBitcoinStep({
         )}
       </AmountSummary>
 
-      <p className="text-xs text-muted-foreground text-center">
-        Send the exact amount above. This page updates automatically once
-        payment is detected.
-      </p>
+      {!isExpired && (
+        <p className="text-xs text-muted-foreground text-center">
+          Send the exact amount above. This page updates automatically once
+          payment is detected.
+        </p>
+      )}
 
       <DepositActions onCancel={() => navigate("/")} />
     </DepositCard>

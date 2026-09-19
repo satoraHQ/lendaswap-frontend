@@ -53,7 +53,7 @@ export function DefaultDetails({ swapData }: { swapData: GetSwapResponse }) {
           <TxHashRow
             label="Transaction Hash"
             txHash={config.swapTxId}
-            chain={swapData.target_token.chain}
+            chain={config.swapTxChain ?? swapData.target_token.chain}
             copiedAddress={copiedAddress}
             onCopy={handleCopy}
           />

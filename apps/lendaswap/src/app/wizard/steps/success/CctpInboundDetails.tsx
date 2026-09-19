@@ -115,7 +115,7 @@ export function CctpInboundDetails({
           <TxHashRow
             label={`Claim Transaction (${targetNetwork})`}
             txHash={config.swapTxId}
-            chain={swapData.target_token.chain}
+            chain={config.swapTxChain ?? swapData.target_token.chain}
             copiedAddress={copiedAddress}
             onCopy={handleCopy}
           />

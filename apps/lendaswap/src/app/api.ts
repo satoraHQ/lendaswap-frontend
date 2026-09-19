@@ -309,6 +309,11 @@ export const api = {
     return withRootstockGate(await client.getTokens());
   },
 
+  async getSwapPairs(): ReturnType<SdkClient["getSwapPairs"]> {
+    const client = await getClients();
+    return await client.getSwapPairs();
+  },
+
   async getStatus(): Promise<StatusResponse> {
     const client = await getClients();
     return await client.getStatus();

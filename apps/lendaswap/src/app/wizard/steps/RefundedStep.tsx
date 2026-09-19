@@ -1,4 +1,4 @@
-import { toChainName } from "@satora/swap";
+import { isLightning, toChainName } from "@satora/swap";
 import {
   ArrowRight,
   CheckCheck,
@@ -135,8 +135,12 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
     return assertNever(direction, "Unhandled swap direction in getRefundTxId");
   };
 
-  // Chain for block explorer links (source chain, since refund goes back to source)
-  const sourceChain = swapData.source_token.chain;
+  // Block explorer links point at the source chain, since a refund goes back
+  // to the source. A Lightning source has no chain to link; its refund txid
+  // is the server reclaiming its own leg on the target chain.
+  const explorerChain = isLightning(swapData.source_token)
+    ? swapData.target_token.chain
+    : swapData.source_token.chain;
 
   const refundAddress = getRefundAddress();
   const refundTxId = getRefundTxId();
@@ -224,8 +228,10 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
                 <div className="flex items-center gap-2">
                   <a
                     href={
-                      getBlockexplorerAddressLink(sourceChain, refundAddress) ??
-                      "#"
+                      getBlockexplorerAddressLink(
+                        explorerChain,
+                        refundAddress,
+                      ) ?? "#"
                     }
                     target="_blank"
                     rel="noopener noreferrer"
@@ -255,7 +261,7 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
                       <a
                         href={
                           getBlockexplorerAddressLink(
-                            sourceChain,
+                            explorerChain,
                             refundAddress,
                           ) ?? "#"
                         }
@@ -277,7 +283,7 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
                 <div className="flex items-center gap-2">
                   <a
                     href={
-                      getBlockexplorerTxLink(sourceChain, refundTxId) ?? "#"
+                      getBlockexplorerTxLink(explorerChain, refundTxId) ?? "#"
                     }
                     target="_blank"
                     rel="noopener noreferrer"
@@ -306,7 +312,8 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
                     >
                       <a
                         href={
-                          getBlockexplorerTxLink(sourceChain, refundTxId) ?? "#"
+                          getBlockexplorerTxLink(explorerChain, refundTxId) ??
+                          "#"
                         }
                         target="_blank"
                         rel="noopener noreferrer"

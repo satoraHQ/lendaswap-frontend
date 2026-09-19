@@ -2,12 +2,14 @@ import type {
   ArkadeToEvmSwapResponse,
   ArkadeToLightningSwapResponse,
   BitcoinToEvmSwapResponse,
+  BitcoinToLightningSwapResponse,
   BtcToArkadeSwapResponse,
   EvmToArkadeSwapResponse,
   EvmToBitcoinSwapResponse,
   EvmToLightningSwapResponse,
   GetSwapResponse,
   LightningToArkadeSwapResponse,
+  LightningToBitcoinSwapResponse,
   LightningToEvmSwapResponse,
   SwapStatus,
 } from "@satora/swap";
@@ -72,6 +74,8 @@ function determineStepFromStatus(
         return swapData.vhtlc_refund_locktime;
       case "bitcoin_to_evm":
         return swapData.evm_refund_locktime;
+      case "bitcoin_to_lightning":
+        return swapData.btc_refund_locktime;
       case "arkade_to_evm":
         return swapData.vhtlc_refund_locktime;
       case "evm_to_arkade":
@@ -84,6 +88,8 @@ function determineStepFromStatus(
         return swapData.vhtlc_refund_locktime;
       case "lightning_to_evm":
         return swapData.evm_refund_locktime;
+      case "lightning_to_bitcoin":
+        return swapData.btc_refund_locktime;
       case "arkade_to_lightning":
         return swapData.vhtlc_refund_locktime;
     }
@@ -183,7 +189,9 @@ function determineStepFromActions(
 
   switch (recommended.id) {
     case "fund":
-      return "user-deposit";
+      // The chain only knows the client's refund locktime; the server stops
+      // watching for a deposit earlier, e.g. when a Lightning invoice lapses.
+      return status === "expired" ? "expired" : "user-deposit";
     case "claim":
       // The processing step performs the claim; the action model makes sure we
       // only get here while claiming is actually safe.
@@ -465,22 +473,26 @@ export function SwapWizardPage() {
                 />
               )}
               {(swapDirectionValue === "lightning_to_arkade" ||
-                swapDirectionValue === "lightning_to_evm") && (
+                swapDirectionValue === "lightning_to_evm" ||
+                swapDirectionValue === "lightning_to_bitcoin") && (
                 <DepositLightningStep
                   swapData={
                     displaySwapData as
                       | LightningToArkadeSwapResponse
                       | LightningToEvmSwapResponse
+                      | LightningToBitcoinSwapResponse
                   }
                 />
               )}
               {(swapDirectionValue === "bitcoin_to_evm" ||
-                swapDirectionValue === "btc_to_arkade") && (
+                swapDirectionValue === "btc_to_arkade" ||
+                swapDirectionValue === "bitcoin_to_lightning") && (
                 <DepositBitcoinStep
                   swapData={
                     displaySwapData as
                       | BtcToArkadeSwapResponse
                       | BitcoinToEvmSwapResponse
+                      | BitcoinToLightningSwapResponse
                   }
                   swapId={displaySwapData.id}
                 />
@@ -611,23 +623,27 @@ export function SwapWizardPage() {
               )}
 
               {(swapDirectionValue === "lightning_to_arkade" ||
-                swapDirectionValue === "lightning_to_evm") && (
+                swapDirectionValue === "lightning_to_evm" ||
+                swapDirectionValue === "lightning_to_bitcoin") && (
                 <RefundLightningStep
                   swapData={
                     displaySwapData as
                       | LightningToArkadeSwapResponse
                       | LightningToEvmSwapResponse
+                      | LightningToBitcoinSwapResponse
                   }
                 />
               )}
 
               {(swapDirectionValue === "btc_to_arkade" ||
-                swapDirectionValue === "bitcoin_to_evm") && (
+                swapDirectionValue === "bitcoin_to_evm" ||
+                swapDirectionValue === "bitcoin_to_lightning") && (
                 <RefundBitcoinStep
                   swapData={
                     displaySwapData as
                       | BtcToArkadeSwapResponse
                       | BitcoinToEvmSwapResponse
+                      | BitcoinToLightningSwapResponse
                   }
                 />
               )}

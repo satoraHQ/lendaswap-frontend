@@ -88,6 +88,7 @@ function findToken(tokens: TokenInfo[], url: string): TokenInfo | undefined {
 
 function pickFallbackSource(
   tokens: TokenInfo[],
+  routes: OnchainLightningRoutes,
   target?: TokenInfo,
 ): TokenInfo | undefined {
   const candidates = [
@@ -97,7 +98,7 @@ function pickFallbackSource(
     ...tokens.filter((t) => isEvmSwapSource(t.chain, t.token_id)),
   ].filter((t): t is TokenInfo => t !== undefined);
   if (target) {
-    const valid = candidates.find((c) => isValidPair(c, target));
+    const valid = candidates.find((c) => isValidPair(c, target, routes));
     if (valid) return valid;
   }
   return candidates[0];
@@ -105,6 +106,7 @@ function pickFallbackSource(
 
 function pickFallbackTarget(
   tokens: TokenInfo[],
+  routes: OnchainLightningRoutes,
   source?: TokenInfo,
 ): TokenInfo | undefined {
   const nonBridge = tokens.filter((t) => !isBridgeOnlyChain(t.chain));
@@ -115,38 +117,55 @@ function pickFallbackTarget(
     nonBridge.find((t) => isArkade(t)),
   ].filter((t): t is TokenInfo => t !== undefined);
   if (source) {
-    const valid = candidates.find((c) => isValidPair(source, c));
+    const valid = candidates.find((c) => isValidPair(source, c, routes));
     if (valid) return valid;
   }
   return candidates[0];
 }
 
+/**
+ * On-chain BTC ⇄ Lightning routes the server lists in `/swap-pairs`. A
+ * deployment enables them separately from their chains, so `/tokens` alone
+ * cannot tell whether they are offered.
+ */
+type OnchainLightningRoutes = { toLightning: boolean; fromLightning: boolean };
+
 /** Check if a source→target pair is a valid swap direction */
-function isValidPair(source: TokenInfo, target: TokenInfo): boolean {
+function isValidPair(
+  source: TokenInfo,
+  target: TokenInfo,
+  routes: OnchainLightningRoutes,
+): boolean {
   // EVM → EVM: not allowed
   if (isEvmToken(source.chain) && isEvmToken(target.chain)) return false;
   // A native lock (RBTC) is served towards every BTC leg.
   if (isNativeLockSource(source)) {
     return isLightning(target) || isArkade(target) || isBtcOnchain(target);
   }
-  // BTC → BTC: onchain/lightning → arkade, arkade → lightning
+  // BTC → BTC: onchain/lightning → arkade, arkade → lightning, and
+  // onchain ⇄ lightning where the server offers it
   if (isBtc(source) && isBtc(target)) {
     if ((isBtcOnchain(source) || isLightning(source)) && isArkade(target))
       return true;
     if (isArkade(source) && isLightning(target)) return true;
+    if (isBtcOnchain(source) && isLightning(target)) return routes.toLightning;
+    if (isLightning(source) && isBtcOnchain(target))
+      return routes.fromLightning;
     return false;
   }
   return true;
 }
 
 // Valid targets for a given source:
-//  - BTC onchain / Lightning → Arkade + all EVM tokens
+//  - BTC onchain → Arkade + Lightning (if offered) + all EVM tokens
+//  - Lightning → Arkade + BTC onchain (if offered) + all EVM tokens
 //  - Arkade → Lightning + all EVM tokens
 //  - EVM token → all BTC tokens
 function getAvailableTargetAssets(
   btcTokens: TokenInfo[],
   evmTokens: TokenInfo[],
   allTokens: TokenInfo[],
+  routes: OnchainLightningRoutes,
   sourceAsset?: TokenInfo,
 ): TokenInfo[] {
   const sort = (list: TokenInfo[]) =>
@@ -165,10 +184,20 @@ function getAvailableTargetAssets(
     return sort([...allTokens]);
   }
 
-  if (isBtcOnchain(sourceAsset) || isLightning(sourceAsset)) {
-    // Onchain BTC / Lightning → EVM tokens + Arkade + CCTP bridge tokens
-    const arkadeTokens = btcTokens.filter((t) => isArkade(t));
-    return sort([...evmTokens, ...arkadeTokens, ...bridgeTokens]);
+  if (isBtcOnchain(sourceAsset)) {
+    // Onchain BTC → EVM tokens + Arkade + Lightning + CCTP bridge tokens
+    const btcTargets = btcTokens.filter(
+      (t) => isArkade(t) || (routes.toLightning && isLightning(t)),
+    );
+    return sort([...evmTokens, ...btcTargets, ...bridgeTokens]);
+  }
+
+  if (isLightning(sourceAsset)) {
+    // Lightning → EVM tokens + Arkade + onchain BTC + CCTP bridge tokens
+    const btcTargets = btcTokens.filter(
+      (t) => isArkade(t) || (routes.fromLightning && isBtcOnchain(t)),
+    );
+    return sort([...evmTokens, ...btcTargets, ...bridgeTokens]);
   }
 
   if (isArkade(sourceAsset)) {
@@ -301,6 +330,20 @@ export function HomePage() {
     console.error(tokensLoadingError);
   }
 
+  const { value: swapPairs } = useAsync(async () => {
+    return api.getSwapPairs();
+  });
+  const onchainLightningRoutes = useMemo<OnchainLightningRoutes>(() => {
+    const offered = (source: string, target: string) =>
+      swapPairs?.pairs.some(
+        (pair) => pair.source === source && pair.target === target,
+      ) ?? false;
+    return {
+      toLightning: offered("Bitcoin", "Lightning"),
+      fromLightning: offered("Lightning", "Bitcoin"),
+    };
+  }, [swapPairs]);
+
   const allAvailableTokens = useMemo(() => {
     const btc = maybeAvailableTokens?.btc_tokens || [];
     const evm = maybeAvailableTokens?.evm_tokens || [];
@@ -337,12 +380,22 @@ export function HomePage() {
     if (sourceAsset && targetAsset) return;
 
     const fallbackSource =
-      sourceAsset ?? pickFallbackSource(allAvailableTokens, targetAsset);
+      sourceAsset ??
+      pickFallbackSource(
+        allAvailableTokens,
+        onchainLightningRoutes,
+        targetAsset,
+      );
     const fallbackTarget =
       targetAsset &&
-      (!fallbackSource || isValidPair(fallbackSource, targetAsset))
+      (!fallbackSource ||
+        isValidPair(fallbackSource, targetAsset, onchainLightningRoutes))
         ? targetAsset
-        : pickFallbackTarget(allAvailableTokens, fallbackSource);
+        : pickFallbackTarget(
+            allAvailableTokens,
+            onchainLightningRoutes,
+            fallbackSource,
+          );
     if (!fallbackSource || !fallbackTarget) return;
 
     const src = formatTokenUrl(fallbackSource);
@@ -352,6 +405,7 @@ export function HomePage() {
   }, [
     tokensLoading,
     allAvailableTokens,
+    onchainLightningRoutes,
     urlSourceParam,
     urlTargetParam,
     sourceAsset,
@@ -419,6 +473,7 @@ export function HomePage() {
     maybeAvailableTokens?.btc_tokens || [],
     maybeAvailableTokens?.evm_tokens || [],
     allAvailableTokens,
+    onchainLightningRoutes,
     sourceAsset,
   );
 
@@ -493,14 +548,15 @@ export function HomePage() {
     };
   }, [isSolanaTarget, targetAddress]);
 
-  // Arkade/EVM → Lightning with a concrete destination: the SDK serves the
-  // quote from /quote/lightning-send (provider's real send fee) instead
-  // of the flat estimate. Single quote path, so the amount sync below
-  // renders the exact lock amount with no estimate/exact race.
-  const isArkadeToLightning =
+  // Arkade, on-chain BTC or EVM → Lightning with a concrete destination: the
+  // SDK serves the quote from /quote/lightning-send (provider's real send
+  // fee) instead of the flat estimate. Single quote path, so the amount sync
+  // below renders the exact lock amount with no estimate/exact race.
+  const isLightningSendQuote =
     !!sourceAsset &&
     !!targetAsset &&
     (isArkade(sourceAsset) ||
+      isBtcOnchain(sourceAsset) ||
       isEvmSwapSource(sourceAsset.chain, sourceAsset.token_id)) &&
     isLightning(targetAsset);
   const isLnDestination =
@@ -509,7 +565,7 @@ export function HomePage() {
       isLightningAddress(targetAddress) ||
       isLnurl(targetAddress));
   const lightningDestination =
-    isArkadeToLightning && isAddressValid && isLnDestination
+    isLightningSendQuote && isAddressValid && isLnDestination
       ? targetAddress
       : undefined;
 
@@ -1021,12 +1077,16 @@ export function HomePage() {
                 onChange={(asset) => {
                   setSwapError("");
                   const src = formatTokenUrl(asset);
-                  if (targetAsset && isValidPair(asset, targetAsset)) {
+                  if (
+                    targetAsset &&
+                    isValidPair(asset, targetAsset, onchainLightningRoutes)
+                  ) {
                     navigateToTokens(asset, targetAsset);
                   } else {
                     // Invalid pair or no target - pick a sensible default
                     const fallback = pickFallbackTarget(
                       allAvailableTokens,
+                      onchainLightningRoutes,
                       asset,
                     );
                     const defaultTarget = fallback
@@ -1057,7 +1117,8 @@ export function HomePage() {
           data-no-press
           onClick={() => {
             if (!sourceAsset || !targetAsset) return;
-            if (!isValidPair(targetAsset, sourceAsset)) return;
+            if (!isValidPair(targetAsset, sourceAsset, onchainLightningRoutes))
+              return;
 
             // Swap source and target tokens + amounts
             setSourceAmountState(targetAmount);
@@ -1071,7 +1132,7 @@ export function HomePage() {
               "",
             );
           }}
-          className={`group/swap absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 ${!sourceAsset || !targetAsset || !isValidPair(targetAsset, sourceAsset) ? "cursor-not-allowed opacity-50" : ""}`}
+          className={`group/swap absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 ${!sourceAsset || !targetAsset || !isValidPair(targetAsset, sourceAsset, onchainLightningRoutes) ? "cursor-not-allowed opacity-50" : ""}`}
         >
           <div className="rounded-xl bg-background p-1 transition-transform duration-200 ease-out group-hover/swap:scale-110 group-active/swap:scale-125">
             <div className="rounded-lg bg-muted p-1.5 transition-colors group-hover/swap:bg-muted/80">
@@ -1101,12 +1162,16 @@ export function HomePage() {
                 onChange={(asset) => {
                   setSwapError("");
                   const tgt = formatTokenUrl(asset);
-                  if (sourceAsset && isValidPair(sourceAsset, asset)) {
+                  if (
+                    sourceAsset &&
+                    isValidPair(sourceAsset, asset, onchainLightningRoutes)
+                  ) {
                     navigateToTokens(sourceAsset, asset);
                   } else {
                     // Invalid pair or no source - pick a sensible default
                     const fallback = pickFallbackSource(
                       allAvailableTokens,
+                      onchainLightningRoutes,
                       asset,
                     );
                     const defaultSource = fallback

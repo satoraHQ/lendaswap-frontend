@@ -1,4 +1,8 @@
-import { type BitcoinToEvmSwapResponse, toChainName } from "@satora/swap";
+import {
+  type BitcoinToEvmSwapResponse,
+  type BitcoinToLightningSwapResponse,
+  toChainName,
+} from "@satora/swap";
 import { ArrowRight, Clock, ExternalLink, Loader2, Unlock } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Alert, AlertDescription } from "#/components/ui/alert";
@@ -13,7 +17,10 @@ import { getTargetChainDisplayName } from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
 interface OnchainBtcRefundStepProps {
-  swapData: BtcToArkadeSwapResponse | BitcoinToEvmSwapResponse;
+  swapData:
+    | BtcToArkadeSwapResponse
+    | BitcoinToEvmSwapResponse
+    | BitcoinToLightningSwapResponse;
 }
 
 export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {

@@ -12,6 +12,8 @@ export interface DirectionConfig {
   isLightning: boolean;
   noAddressLink?: boolean;
   swapTxId?: string | null;
+  /** Chain `swapTxId` is on, when it is not the target chain. */
+  swapTxChain?: string;
   tweetText: string;
 }
 
@@ -138,7 +140,9 @@ export function getDirectionConfig(swapData: GetSwapResponse): DirectionConfig {
         targetAddress: null,
         isLightning: true,
         noAddressLink: true,
+        // The server's claim of the user's HTLC, on the source chain.
         swapTxId: swapData.btc_claim_txid,
+        swapTxChain: swapData.source_token.chain,
         tweetText: makeTweet(sent, received),
       };
     case "arkade_to_lightning":

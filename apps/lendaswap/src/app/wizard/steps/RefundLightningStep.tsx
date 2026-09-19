@@ -1,5 +1,6 @@
 import type {
   LightningToArkadeSwapResponse,
+  LightningToBitcoinSwapResponse,
   LightningToEvmSwapResponse,
 } from "@satora/swap";
 import { toChainName } from "@satora/swap";
@@ -8,7 +9,10 @@ import { getTargetChainDisplayName } from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
 interface RefundLightningStepProps {
-  swapData: LightningToArkadeSwapResponse | LightningToEvmSwapResponse;
+  swapData:
+    | LightningToArkadeSwapResponse
+    | LightningToEvmSwapResponse
+    | LightningToBitcoinSwapResponse;
 }
 
 export function RefundLightningStep({ swapData }: RefundLightningStepProps) {

@@ -1,5 +1,6 @@
 import type {
   LightningToArkadeSwapResponse,
+  LightningToBitcoinSwapResponse,
   LightningToEvmSwapResponse,
 } from "@satora/swap";
 import { Loader2, Zap } from "lucide-react";
@@ -27,7 +28,10 @@ import {
 } from "../components";
 
 interface SendLightningStepProps {
-  swapData: LightningToArkadeSwapResponse | LightningToEvmSwapResponse;
+  swapData:
+    | LightningToArkadeSwapResponse
+    | LightningToEvmSwapResponse
+    | LightningToBitcoinSwapResponse;
 }
 
 export function DepositLightningStep({ swapData }: SendLightningStepProps) {
