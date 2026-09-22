@@ -3,4 +3,4 @@ Allow: /
 Disallow: /swap/*/wizard
 Disallow: /swap/*/refund
 
-Sitemap: https://lendaswap.com/sitemap.xml
+Sitemap: https://app.satora.io/sitemap.xml
