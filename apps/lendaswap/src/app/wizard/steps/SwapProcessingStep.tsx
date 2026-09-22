@@ -91,6 +91,12 @@ export function SwapProcessingStep({
   // deposit. The old trigger (`status === "serverfunded"`) knew none of that.
   const derivedActions = useDerivedSwapActions().get(swapId);
   const derivedRecommended = derivedActions?.recommended;
+  // The server has the claim (relayed, or seen on chain): nothing to submit,
+  // whatever a chain view that could not be refreshed still recommends.
+  const claimSubmitted =
+    swapData.status === "clientredeeming" ||
+    swapData.status === "clientredeemed" ||
+    swapData.status === "serverredeemed";
   /** Raw chain observations — live even when the server is stale/unreachable. */
   const clientObs = derivedActions?.observations?.clientHtlc;
   const serverObs = derivedActions?.observations?.serverHtlc;
@@ -122,7 +128,7 @@ export function SwapProcessingStep({
 
   useEffect(() => {
     const autoClaim = async () => {
-      if (derivedRecommended !== "claim") return;
+      if (derivedRecommended !== "claim" || claimSubmitted) return;
 
       const claimKey = `swap_${swapData.id}_claim_attempted`;
       const attemptTimestamp = localStorage.getItem(claimKey);
@@ -287,7 +293,15 @@ export function SwapProcessingStep({
     };
 
     autoClaim();
-  }, [swapData, swapId, isClaiming, retryCount, sleep, derivedRecommended]);
+  }, [
+    swapData,
+    swapId,
+    isClaiming,
+    retryCount,
+    sleep,
+    derivedRecommended,
+    claimSubmitted,
+  ]);
 
   const handleCopyTxId = async (txId: string) => {
     try {
@@ -742,46 +756,47 @@ export function SwapProcessingStep({
               {/* Show claiming status inline when server is funded.
                   Lightning-target swaps have no client claim — `serverfunded`
                   there means the outgoing payment is in flight. */}
-              {(derivedRecommended === "claim" ||
-                isClaiming ||
-                waitingForDepth ||
-                (serverObs === undefined &&
-                  swapData.status === "serverfunded" &&
-                  swapData.direction !== "arkade_to_lightning" &&
-                  swapData.direction !== "evm_to_lightning")) && (
-                <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
-                  <p className="text-sm font-medium">
-                    {isClaiming
-                      ? isEvmToBtc || receivesSatsOnArkade
-                        ? "Redeeming your sats..."
-                        : "Claiming your tokens..."
-                      : waitingForDepth
-                        ? `Waiting for ${requiredDepth} confirmation${requiredDepth === 1 ? "" : "s"}`
-                        : `${btcContractLabel} Funded`}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {isClaiming
-                      ? isEvmToBtc || receivesSatsOnArkade
-                        ? `Claiming the Bitcoin ${btcContractLabel} and publishing the transaction...`
-                        : "Submitting claim request..."
-                      : waitingForDepth
-                        ? `The ${btcContractLabel} is funded. Your payout security setting claims it once the funding is ${requiredDepth} block${requiredDepth === 1 ? "" : "s"} deep.`
-                        : isEvmToBtc || receivesSatsOnArkade
-                          ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
-                          : "The HTLC has been funded. Preparing to claim your tokens..."}
-                  </p>
-                  {retryCount > 0 && retryCount < maxRetries && (
-                    <p className="text-xs text-muted-foreground">
-                      Retry attempt {retryCount}/{maxRetries}...
+              {!claimSubmitted &&
+                (derivedRecommended === "claim" ||
+                  isClaiming ||
+                  waitingForDepth ||
+                  (serverObs === undefined &&
+                    swapData.status === "serverfunded" &&
+                    swapData.direction !== "arkade_to_lightning" &&
+                    swapData.direction !== "evm_to_lightning")) && (
+                  <div className="mt-2 space-y-2 rounded-lg border bg-gradient-to-t from-primary/5 to-card p-4">
+                    <p className="text-sm font-medium">
+                      {isClaiming
+                        ? isEvmToBtc || receivesSatsOnArkade
+                          ? "Redeeming your sats..."
+                          : "Claiming your tokens..."
+                        : waitingForDepth
+                          ? `Waiting for ${requiredDepth} confirmation${requiredDepth === 1 ? "" : "s"}`
+                          : `${btcContractLabel} Funded`}
                     </p>
-                  )}
-                  {isBtcToEvm && !isClaiming && !claimError && (
                     <p className="text-xs text-muted-foreground">
-                      Gas fees fully sponsored
+                      {isClaiming
+                        ? isEvmToBtc || receivesSatsOnArkade
+                          ? `Claiming the Bitcoin ${btcContractLabel} and publishing the transaction...`
+                          : "Submitting claim request..."
+                        : waitingForDepth
+                          ? `The ${btcContractLabel} is funded. Your payout security setting claims it once the funding is ${requiredDepth} block${requiredDepth === 1 ? "" : "s"} deep.`
+                          : isEvmToBtc || receivesSatsOnArkade
+                            ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
+                            : "The HTLC has been funded. Preparing to claim your tokens..."}
                     </p>
-                  )}
-                </div>
-              )}
+                    {retryCount > 0 && retryCount < maxRetries && (
+                      <p className="text-xs text-muted-foreground">
+                        Retry attempt {retryCount}/{maxRetries}...
+                      </p>
+                    )}
+                    {isBtcToEvm && !isClaiming && !claimError && (
+                      <p className="text-xs text-muted-foreground">
+                        Gas fees fully sponsored
+                      </p>
+                    )}
+                  </div>
+                )}
             </div>
           </div>
 
