@@ -25,7 +25,7 @@ import {
 import { api } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import { buildEvmSigner } from "../../utils/evmSigner";
-import { getViemChain } from "../../utils/tokenUtils";
+import { getViemChain, isNativeLockSwap } from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
 interface RefundEvmStepProps {
@@ -76,8 +76,18 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
   const evmChain = isEvmToken(swapData.source_token.chain)
     ? swapData.source_token.chain
     : swapData.target_token.chain;
-  const htlcTokenDecimals = evmChain === "137" ? 8 : 18;
-  const htlcTokenSymbol = evmChain === "137" ? "WBTC" : "tBTC";
+  // A native lock holds the chain's own coin (RBTC), named by the source token.
+  const isNativeLock = isNativeLockSwap(swapData);
+  const htlcTokenDecimals = isNativeLock
+    ? swapData.source_token.decimals
+    : evmChain === "137"
+      ? 8
+      : 18;
+  const htlcTokenSymbol = isNativeLock
+    ? swapData.source_token.symbol
+    : evmChain === "137"
+      ? "WBTC"
+      : "tBTC";
   const lockedWbtcFormatted = formatAmount(
     swapData.evm_expected_sats,
     htlcTokenDecimals,

@@ -73,13 +73,26 @@ export function buildEvmSigner(
         nonce: signed.nonce,
       };
     },
-    sendTransaction: (tx: { to: string; data: string; gas?: bigint }) =>
+    // `value` and `type` matter for a native lock (RBTC on Rootstock): the
+    // lock is the transaction value, and Rootstock rejects typed
+    // transactions, so the SDK asks for a legacy one there.
+    sendTransaction: (tx: {
+      to: string;
+      data: string;
+      value?: bigint;
+      type?: "legacy";
+      gas?: bigint;
+    }) =>
       walletClient.sendTransaction({
         to: tx.to as `0x${string}`,
         data: tx.data as `0x${string}`,
+        value: tx.value,
+        type: tx.type,
         chain,
         gas: tx.gas,
       }),
+    getBalance: (account) =>
+      publicClient.getBalance({ address: account as `0x${string}` }),
     waitForReceipt: async (hash) => {
       const receipt = await publicClient.waitForTransactionReceipt({
         hash: hash as `0x${string}`,
@@ -101,6 +114,7 @@ export function buildEvmSigner(
       const result = await publicClient.call({
         to: tx.to as `0x${string}`,
         data: tx.data as `0x${string}`,
+        value: tx.value,
         account: tx.from as `0x${string}` | undefined,
         blockNumber: tx.blockNumber,
       });

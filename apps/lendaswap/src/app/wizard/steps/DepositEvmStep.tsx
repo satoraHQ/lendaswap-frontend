@@ -32,8 +32,10 @@ import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import { buildEvmSigner } from "../../utils/evmSigner";
 import { totalFeeSats } from "../../utils/feeUtils";
 import {
+  displayDecimals,
   getTargetChainDisplayName,
   getViemChain,
+  isNativeLockSwap,
 } from "../../utils/tokenUtils";
 import { AmountRow, AmountSummary, DepositCard } from "../components";
 
@@ -138,8 +140,12 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
 
   const tokenSymbol = swapData.source_token.symbol;
   const sourceDecimals = swapData.source_token.decimals;
+  const shownDecimals = displayDecimals(swapData.source_token);
   const formatSource = (units: bigint) =>
-    (Number(units) / 10 ** sourceDecimals).toFixed(sourceDecimals);
+    (Number(units) / 10 ** sourceDecimals).toFixed(shownDecimals);
+  // A native lock (RBTC) is one payable transaction: no token approval, no
+  // DEX leg, the value is the quoted amount exactly.
+  const isNativeLock = isNativeLockSwap(swapData);
   const quotedSourceUnits = BigInt(swapData.source_amount);
   const sourceAmount = formatSource(liveSourceUnits ?? quotedSourceUnits);
   const sourceRequoted =
@@ -210,10 +216,11 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
           return updated;
         });
       } else if (err instanceof SimulationRevertError) {
-        // Caught before sending — no gas spent. On a funding the usual cause
-        // is the DEX rate moving past the swap's min-out between quote and
-        // signature; retrying re-quotes at the current rate.
-        setRateMoved(true);
+        // Caught before sending — no gas spent. On a DEX-routed funding the
+        // usual cause is the rate moving past the swap's min-out between
+        // quote and signature; retrying re-quotes at the current rate. A
+        // native lock has no rate to move.
+        setRateMoved(!isNativeLock);
         setFundError(err.reason);
         updateStep("fund", { status: "error", error: err.reason });
       } else {
@@ -230,7 +237,12 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
 
   const stepDefs = [
     { key: "switchChain", label: `Switch to ${chainLabel}` },
-    { key: "fund", label: "Approve & fund swap" },
+    {
+      key: "fund",
+      label: isNativeLock
+        ? `Fund swap (one transaction, gas in ${tokenSymbol})`
+        : "Approve & fund swap",
+    },
   ];
 
   const allCompleted = stepDefs.every(
@@ -285,7 +297,9 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
       {/* Step checklist */}
       <div className="space-y-4">
         <p className="text-muted-foreground text-xs">
-          Your wallet approves and submits all transactions directly.
+          {isNativeLock
+            ? `Your wallet sends the ${tokenSymbol} in a single transaction.`
+            : "Your wallet approves and submits all transactions directly."}
         </p>
         <div className="space-y-2">
           {stepDefs.map(({ key, label }) => {

@@ -61,10 +61,18 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
     swapData.direction === "evm_to_lightning"
   ) {
     const isPolygon = swapData.source_token.chain === "137";
-    refundedSymbol = isPolygon ? "WBTC" : "tBTC";
+    // A native lock refunds the chain's own coin (RBTC), i.e. the source token.
+    const isNativeLock =
+      swapData.direction === "evm_to_lightning" &&
+      swapData.evm_htlc_kind === "native";
+    refundedSymbol = isNativeLock
+      ? swapData.source_token.symbol
+      : isPolygon
+        ? "WBTC"
+        : "tBTC";
     refundedAmount = formatAmount(
       swapData.evm_expected_sats,
-      isPolygon ? 8 : 18,
+      isNativeLock ? swapData.source_token.decimals : isPolygon ? 8 : 18,
     );
   }
 
@@ -127,10 +135,13 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
 
   const refundAddress = getRefundAddress();
   const refundTxId = getRefundTxId();
+  // The refund-then-reuse continuation is an ERC20 coordinator feature; a
+  // native lock has nothing to carry over.
   const canContinueFromRefund =
     swapData.direction === "evm_to_arkade" ||
     swapData.direction === "evm_to_bitcoin" ||
-    swapData.direction === "evm_to_lightning";
+    (swapData.direction === "evm_to_lightning" &&
+      swapData.evm_htlc_kind !== "native");
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">

@@ -222,6 +222,15 @@ export function getViemChainById(chainId: number): ViemChain | undefined {
 }
 
 /**
+ * Whether an EVM-sourced swap locks the chain's own coin (`HTLCNative`,
+ * RBTC on Rootstock) rather than an ERC20 through the coordinator. Only the
+ * responses that carry `evm_htlc_kind` can say so; anything else is ERC20.
+ */
+export function isNativeLockSwap(swap: object): boolean {
+  return (swap as { evm_htlc_kind?: string }).evm_htlc_kind === "native";
+}
+
+/**
  * Decimal places to show for a token: BTC-pegged EVM assets (tBTC, RBTC) have
  * 18 on-chain decimals but are bitcoin, so they display at 8 like BTC.
  */

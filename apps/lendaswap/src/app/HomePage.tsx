@@ -9,6 +9,7 @@ import {
   isBtc,
   isBtcOnchain,
   isCctpUsdc,
+  isEvmSwapSource,
   isLightning,
   isNativeLockTarget,
   isSolanaToken,
@@ -93,7 +94,7 @@ function pickFallbackSource(
     tokens.find((t) => isLightning(t)),
     tokens.find((t) => isBtcOnchain(t)),
     tokens.find((t) => isArkade(t)),
-    ...tokens.filter((t) => isEvmToken(t.chain) && !isBridgeOnlyChain(t.chain)),
+    ...tokens.filter((t) => isEvmSwapSource(t.chain, t.token_id)),
   ].filter((t): t is TokenInfo => t !== undefined);
   if (target) {
     const valid = candidates.find((c) => isValidPair(c, target));
@@ -124,6 +125,8 @@ function pickFallbackTarget(
 function isValidPair(source: TokenInfo, target: TokenInfo): boolean {
   // EVM → EVM: not allowed
   if (isEvmToken(source.chain) && isEvmToken(target.chain)) return false;
+  // A native lock (RBTC) is only served towards Lightning so far.
+  if (isNativeLockSource(source)) return isLightning(target);
   // BTC → BTC: onchain/lightning → arkade, arkade → lightning
   if (isBtc(source) && isBtc(target)) {
     if ((isBtcOnchain(source) || isLightning(source)) && isArkade(target))
@@ -172,12 +175,32 @@ function getAvailableTargetAssets(
     return sort([...evmTokens, ...lightningTokens, ...bridgeTokens]);
   }
 
+  if (isNativeLockSource(sourceAsset)) {
+    return sort(btcTokens.filter((t) => isLightning(t)));
+  }
+
   if (isEvmToken(sourceAsset.chain)) {
     return sort([...btcTokens]);
   }
 
   return sort([...allTokens]);
 }
+
+/**
+ * The coin of a native-lock chain (RBTC on Rootstock) as a swap source: one
+ * payable transaction locks it, so there is no relayed (gasless) funding,
+ * and the wallet pays gas from the same balance.
+ */
+function isNativeLockSource(token: TokenInfo): boolean {
+  return isNativeLockTarget(token.chain, token.token_id);
+}
+
+/**
+ * Gas a native-lock source keeps back from "Max": Rootstock gas is cheap
+ * (about 0.06 gwei × 250k gas for the lock), so 0.0001 RBTC covers the lock
+ * and a refund with room to spare.
+ */
+const NATIVE_LOCK_GAS_RESERVE_WEI = 100_000_000_000_000n;
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -409,16 +432,18 @@ export function HomePage() {
   const sourceDecimals = sourceAsset?.decimals;
   const isSourceBtc = sourceAsset ? isBtc(sourceAsset) : false;
   const isSourceEvm = sourceAsset ? isEvmToken(sourceAsset.chain) : false;
+  const isNativeSource = sourceAsset ? isNativeLockSource(sourceAsset) : false;
+  const gaslessOffered = isSourceEvm && !isNativeSource;
   // `needsCctpQuoteRewrite` kept for the `createSwap` branch below,
   // which still builds its own Arbitrum-side call + CCTP session.
   const needsCctpQuoteRewrite = sourceAsset
     ? isCctpUsdc(sourceAsset) && !isSourceEvmChain(sourceAsset.chain)
     : false;
 
-  // Reset gasless toggle when source is not EVM
+  // Reset gasless toggle when the source cannot be funded through the relay
   useEffect(() => {
-    if (!isSourceEvm) setGaslessEnabled(false);
-  }, [isSourceEvm]);
+    if (!gaslessOffered) setGaslessEnabled(false);
+  }, [gaslessOffered]);
 
   const targetTokenId = targetAsset?.token_id;
   const targetChain = targetAsset?.chain;
@@ -466,14 +491,15 @@ export function HomePage() {
     };
   }, [isSolanaTarget, targetAddress]);
 
-  // Arkade → Lightning with a concrete destination: the SDK serves the
+  // Arkade/EVM → Lightning with a concrete destination: the SDK serves the
   // quote from /quote/lightning-send (provider's real send fee) instead
   // of the flat estimate. Single quote path, so the amount sync below
   // renders the exact lock amount with no estimate/exact race.
   const isArkadeToLightning =
     !!sourceAsset &&
     !!targetAsset &&
-    isArkade(sourceAsset) &&
+    (isArkade(sourceAsset) ||
+      isEvmSwapSource(sourceAsset.chain, sourceAsset.token_id)) &&
     isLightning(targetAsset);
   const isLnDestination =
     !!targetAddress &&
@@ -629,9 +655,7 @@ export function HomePage() {
   // are NOT bridge-only (bridge targets don't need the wallet on that chain -
   // CCTP handles delivery automatically).
   const requiredEvmChain =
-    sourceAsset &&
-    isEvmToken(sourceAsset.chain) &&
-    !isBridgeOnlyChain(sourceAsset.chain)
+    sourceAsset && isEvmSwapSource(sourceAsset.chain, sourceAsset.token_id)
       ? sourceAsset.chain
       : targetAsset &&
           isEvmToken(targetAsset.chain) &&
@@ -954,7 +978,12 @@ export function HomePage() {
                     type="button"
                     onClick={() => {
                       setLastEditedField("sourceAsset");
-                      const amt = (sourceBalance * BigInt(pct)) / 100n;
+                      const spendable = isNativeSource
+                        ? sourceBalance > NATIVE_LOCK_GAS_RESERVE_WEI
+                          ? sourceBalance - NATIVE_LOCK_GAS_RESERVE_WEI
+                          : 0n
+                        : sourceBalance;
+                      const amt = (spendable * BigInt(pct)) / 100n;
                       setSourceAmountState(Number(amt));
                     }}
                     className="rounded-full bg-background px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-background/80 hover:text-foreground"
@@ -981,7 +1010,10 @@ export function HomePage() {
               <AssetDropDown
                 value={sourceAsset}
                 availableAssets={allAvailableTokens.filter(
-                  (t) => !isBridgeOnlyChain(t.chain) || isCctpUsdc(t),
+                  (t) =>
+                    !isBridgeOnlyChain(t.chain) ||
+                    isCctpUsdc(t) ||
+                    isNativeLockSource(t),
                 )}
                 label="sell"
                 onChange={(asset) => {
@@ -1155,7 +1187,7 @@ export function HomePage() {
                   ) : (
                     <>
                       <div>Network Fee: {networkFee} BTC</div>
-                      {isSourceEvm && gaslessFeeEstimate && (
+                      {gaslessOffered && gaslessFeeEstimate && (
                         <div className="flex items-center justify-end gap-1.5">
                           <span>
                             Gasless Fee:{" "}
