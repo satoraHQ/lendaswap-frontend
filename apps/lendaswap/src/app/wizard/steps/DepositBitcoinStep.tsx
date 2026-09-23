@@ -7,7 +7,10 @@ import { Clock } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import type { BtcToArkadeSwapResponse } from "../../api";
-import { getTargetChainDisplayName } from "../../utils/tokenUtils";
+import {
+  displayDecimals,
+  getTargetChainDisplayName,
+} from "../../utils/tokenUtils";
 import {
   AddressDisplay,
   AmountRow,
@@ -60,10 +63,12 @@ export function DepositBitcoinStep({
   );
   const bitcoinUri = `bitcoin:${swapData.btc_htlc_address}?amount=${btcAmountInBtc}`;
 
+  // A BTC-pegged target (tBTC, RBTC) has 18 on-chain decimals but is
+  // bitcoin, so it is shown at 8.
   const tokenAmount = (
     Number(swapData.target_amount) /
     10 ** swapData.target_token.decimals
-  ).toFixed(swapData.target_token.decimals);
+  ).toFixed(displayDecimals(swapData.target_token));
 
   const receiveLabel = isArkade(swapData.target_token)
     ? `${Number((swapData as BtcToArkadeSwapResponse).target_amount).toLocaleString()} sats on Arkade`
