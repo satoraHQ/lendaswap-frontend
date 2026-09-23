@@ -43,12 +43,15 @@ export function useEvmFundingConfirmations(params: {
   });
   const [fundBlock, setFundBlock] = useState<bigint | null | undefined>();
 
+  // Read the receipt once it exists; until then (`null`: the node knows no
+  // receipt yet) try again on every new head.
+  const mined = fundBlock !== undefined && fundBlock !== null;
   useEffect(() => {
-    if (!enabled || !txid || !publicClient) return;
+    // `head` gates the read so a retry follows each new block.
+    if (!enabled || !txid || !publicClient || mined || head === undefined) {
+      return;
+    }
     let cancelled = false;
-    setFundBlock(undefined);
-    // Re-read on each new head while the tx has not mined: `null` means the
-    // node knows no receipt yet.
     publicClient
       .getTransactionReceipt({ hash: txid as `0x${string}` })
       .then((receipt) => {
@@ -60,7 +63,7 @@ export function useEvmFundingConfirmations(params: {
     return () => {
       cancelled = true;
     };
-  }, [enabled, txid, publicClient, fundBlock === null ? head : undefined]);
+  }, [enabled, txid, publicClient, mined, head]);
 
   if (!enabled || !txid || head === undefined || fundBlock === undefined) {
     return { required };
