@@ -125,8 +125,10 @@ function pickFallbackTarget(
 function isValidPair(source: TokenInfo, target: TokenInfo): boolean {
   // EVM → EVM: not allowed
   if (isEvmToken(source.chain) && isEvmToken(target.chain)) return false;
-  // A native lock (RBTC) is only served towards Lightning so far.
-  if (isNativeLockSource(source)) return isLightning(target);
+  // A native lock (RBTC) is served towards Lightning and Arkade.
+  if (isNativeLockSource(source)) {
+    return isLightning(target) || isArkade(target);
+  }
   // BTC → BTC: onchain/lightning → arkade, arkade → lightning
   if (isBtc(source) && isBtc(target)) {
     if ((isBtcOnchain(source) || isLightning(source)) && isArkade(target))
@@ -176,7 +178,7 @@ function getAvailableTargetAssets(
   }
 
   if (isNativeLockSource(sourceAsset)) {
-    return sort(btcTokens.filter((t) => isLightning(t)));
+    return sort(btcTokens.filter((t) => isLightning(t) || isArkade(t)));
   }
 
   if (isEvmToken(sourceAsset.chain)) {
