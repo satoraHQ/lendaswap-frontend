@@ -13,6 +13,10 @@ import { api } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import { getSwapById } from "../../db";
 import { useBitcoinConfirmations } from "../../hooks/useBitcoinConfirmations";
+import {
+  formatEta,
+  useEvmFundingConfirmations,
+} from "../../hooks/useEvmFundingConfirmations";
 import { useDerivedSwapActions } from "../../swapActionCenter";
 import {
   deriveSolanaUsdcAta,
@@ -477,10 +481,24 @@ export function SwapProcessingStep({
 
   const config = getConfig();
 
-  // Check if client funding is still being confirmed (seen but not confirmed)
+  // Client funding seen but not final. The server's `clientfundingseen` is
+  // authoritative: an EVM reader reports the lock "confirmed" as soon as it
+  // exists on chain, while the server still counts its finality depth.
   const isClientFundingSeen =
-    clientObs === "mempool" ||
-    (clientObs === undefined && swapData.status === "clientfundingseen");
+    clientObs === "mempool" || swapData.status === "clientfundingseen";
+
+  // An EVM deposit waits for the server's funding-finality floor, which the
+  // swap response states; the depth comes from the chain so the count moves.
+  const evmFundingRequired =
+    "evm_funding_confirmations" in swapData
+      ? swapData.evm_funding_confirmations
+      : 0;
+  const evmFunding = useEvmFundingConfirmations({
+    chainId: Number(swapData.source_token.chain),
+    txid: config.step1IsEvm ? config.step1TxId : undefined,
+    required: evmFundingRequired,
+    enabled: isClientFundingSeen && config.step1IsEvm && evmFundingRequired > 0,
+  });
 
   // Chain facts, merged with the server's recorded txids via OR: chain truth
   // advances the display when the server copy is stale (or unreachable) but
@@ -496,7 +514,12 @@ export function SwapProcessingStep({
     (swapData.direction === "arkade_to_lightning" ||
       swapData.direction === "evm_to_lightning") &&
     swapData.status === "serverredeemed";
-  const arkadeToLightningInvoicePaid = arkadeToLightningComplete;
+  // EVM→Lightning reports the settled payment as soon as the preimage is
+  // in, before the claim lands; Arkade→Lightning only proves it at the end.
+  const arkadeToLightningInvoicePaid =
+    arkadeToLightningComplete ||
+    (swapData.direction === "evm_to_lightning" &&
+      swapData.lightning_payment_settled === true);
   // Lightning→EVM's final step (settling the held payment) is off-chain —
   // it completes on the swap status.
   const lightningToEvmComplete =
@@ -650,7 +673,13 @@ export function SwapProcessingStep({
               )}
               {isClientFundingSeen && (
                 <p className="text-xs text-muted-foreground">
-                  Transaction detected, awaiting confirmation...
+                  {evmFunding.confirmations === undefined
+                    ? "Transaction detected, awaiting confirmation..."
+                    : `Waiting for finality: ${Math.min(evmFunding.confirmations, evmFunding.required)} of ${evmFunding.required} confirmations` +
+                      (evmFunding.etaMs === undefined ||
+                      evmFunding.confirmations >= evmFunding.required
+                        ? ""
+                        : `, ${formatEta(evmFunding.etaMs)} left`)}
                 </p>
               )}
             </div>
