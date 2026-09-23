@@ -331,12 +331,24 @@ export function SwapWizardPage() {
     let unsubscribe: (() => void) | null = null;
     let cancelled = false;
 
+    // A fresh subscription replays the current status first. That replay is
+    // not news: this effect re-subscribes whenever the displayed swap
+    // changes, so acting on it would refetch, change the swap, resubscribe
+    // and replay again, without end. Every later event is a server write:
+    // a status change, or a transaction hash recorded under the same status
+    // (the lock it broadcast, the claim it relayed), so refetch on all of
+    // them. The step itself reacts to the chain-derived action stream
+    // independently.
+    let replayed = false;
     api
       .subscribeToSwaps([swapId], (_id, status) => {
         console.log(`ws status update: ${status}`);
-        // Refresh the stored/displayed swap on a status change; the step itself
-        // reacts to the chain-derived action stream independently.
-        if (!displaySwapData || status !== displaySwapData.status) retry();
+        const replay = !replayed;
+        replayed = true;
+        if (replay && displaySwapData && status === displaySwapData.status) {
+          return;
+        }
+        retry();
       })
       .then((unsub) => {
         if (cancelled) unsub();

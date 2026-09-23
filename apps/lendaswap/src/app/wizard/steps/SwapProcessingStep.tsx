@@ -64,6 +64,10 @@ export function SwapProcessingStep({
 }: ConfirmingDepositStepProps) {
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
+  // The relayed claim's tx hash as the SDK returned it. The server records
+  // the same hash on broadcast, but the wizard only refetches the swap on a
+  // status change, and the status only moves once the claim mines.
+  const [claimTxHash, setClaimTxHash] = useState<string | null>(null);
   const [isClaiming, setIsClaiming] = useState(false);
   const hasClaimedRef = useRef(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -261,6 +265,7 @@ export function SwapProcessingStep({
           swapId: swapData.id,
           claimResponse,
         });
+        if (claimResponse.txHash) setClaimTxHash(claimResponse.txHash);
 
         // Success! Reset retry count
         setRetryCount(0);
@@ -350,7 +355,7 @@ export function SwapProcessingStep({
           step2TxId: swapData.evm_fund_txid,
           step2IsEvm: true,
           step3Label: "Client Redeeming",
-          step3TxId: swapData.evm_claim_txid,
+          step3TxId: swapData.evm_claim_txid ?? claimTxHash,
           step3IsEvm: true,
           step4Label: "Server Redeemed",
           step4TxId: swapData.btc_claim_txid,
@@ -366,7 +371,7 @@ export function SwapProcessingStep({
           step2TxId: swapData.evm_fund_txid,
           step2IsEvm: true,
           step3Label: "Client Redeeming",
-          step3TxId: swapData.evm_claim_txid,
+          step3TxId: swapData.evm_claim_txid ?? claimTxHash,
           step3IsEvm: true,
           step4Label: "Server Redeemed",
           step4TxId: swapData.btc_claim_txid,
@@ -432,7 +437,7 @@ export function SwapProcessingStep({
           step2TxId: swapData.evm_fund_txid,
           step2IsEvm: true,
           step3Label: "Client Redeeming",
-          step3TxId: swapData.evm_claim_txid,
+          step3TxId: swapData.evm_claim_txid ?? claimTxHash,
           step3IsEvm: true,
           // The server settles the held Lightning payment — off-chain, no
           // txid; step4Done falls back to the swap status below.
