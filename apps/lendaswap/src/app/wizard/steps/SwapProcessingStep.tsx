@@ -463,6 +463,24 @@ export function SwapProcessingStep({
           step4TxId: null,
           step4IsEvm: false,
         };
+      case "bitcoin_to_lightning":
+        return {
+          step1Label: "User Funded",
+          step1TxId: swapData.btc_fund_txid,
+          step1IsEvm: false,
+          step2LabelActive: "Paying Invoice",
+          step2LabelComplete: "Invoice Paid",
+          // The server pays via Lightning — no on-chain txid; step2Done
+          // falls back to the swap status below.
+          step2TxId: null,
+          step2IsEvm: false,
+          step3Label: "Server Claiming",
+          step3TxId: swapData.btc_claim_txid,
+          step3IsEvm: false,
+          step4Label: "Complete",
+          step4TxId: null,
+          step4IsEvm: false,
+        };
       case "evm_to_lightning":
         return {
           step1Label: "User Funded",
