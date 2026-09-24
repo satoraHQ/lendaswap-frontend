@@ -29,6 +29,7 @@ const FALLBACK_RPCS: Record<number, string[]> = {
   ],
   // Rootstock — the public node, HTTP only (no WebSocket endpoint exists).
   30: ["https://public-node.rsk.co"],
+  31: ["https://public-node.testnet.rsk.co"],
 };
 
 /** The env vars the RPC overrides are read from. */

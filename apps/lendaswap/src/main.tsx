@@ -15,6 +15,7 @@ import {
   optimism,
   polygon,
   rootstock,
+  rootstockTestnet,
   sei,
   solana,
   sonic,
@@ -47,11 +48,18 @@ getSpeedWalletParams();
 // relayed); the rest are CCTPv2-only source chains enabled for the
 // any-chain-USDC → BTC flow so wagmi can both read USDC balances and drive
 // depositForBurn txs there.
+//
+// Rootstock testnet is what a mutinynet daemon serves as Rootstock (chain
+// "31"). Only the test deploy and local dev list it: on production it would
+// just be a wrong network in the wallet's picker.
+const rootstockTestnetEnabled =
+  import.meta.env.VITE_APP_ENV === "mutinynet" || import.meta.env.DEV;
 const networks = [
   mainnet,
   polygon,
   arbitrum,
   rootstock,
+  ...(rootstockTestnetEnabled ? [rootstockTestnet] : []),
   base,
   optimism,
   linea,

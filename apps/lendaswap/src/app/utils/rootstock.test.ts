@@ -40,6 +40,15 @@ describe("Rootstock in the frontend", () => {
     );
     expect(getViemChainById(30)?.id).toBe(30);
   });
+
+  it("knows the testnet id a mutinynet daemon reports Rootstock as", () => {
+    expect(parseUrlToken("31:RBTC")).toEqual({ chain: "31", symbol: "RBTC" });
+    expect(displayDecimals({ ...rbtc, chain: "31" })).toBe(8);
+    expect(getBlockexplorerTxLink("31", "0xabc")).toBe(
+      "https://rootstock-testnet.blockscout.com/tx/0xabc",
+    );
+    expect(getViemChainById(31)?.id).toBe(31);
+  });
 });
 
 describe("parseRpcOverrides", () => {

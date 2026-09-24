@@ -40,6 +40,7 @@ import {
   mainnet,
   polygon,
   rootstock,
+  rootstockTestnet,
   type Chain as ViemChain,
 } from "viem/chains";
 import { ReactComponent as Arbitrum } from "../../assets/arbitrum.svg";
@@ -170,6 +171,7 @@ export function getTokenNetworkIcon(tokenId: BridgeTokenInfo): ReactElement {
     "4326": <NetworkMegaEth variant="branded" size={16} />,
     "9745": <NetworkPlasma variant="branded" size={16} />,
     "30": <NetworkRootstock variant="branded" size={16} />,
+    "31": <NetworkRootstock variant="branded" size={16} />,
     "988": <NetworkStable variant="branded" size={16} />,
     "4217": <NetworkTempo variant="branded" size={16} />,
     "196": <NetworkXLayer variant="branded" size={16} />,
@@ -198,6 +200,8 @@ export function getViemChain(chain?: Chain): ViemChain | undefined {
       return mainnet;
     case "30":
       return rootstock;
+    case "31":
+      return rootstockTestnet;
     default:
       return undefined;
   }
@@ -216,6 +220,8 @@ export function getViemChainById(chainId: number): ViemChain | undefined {
       return mainnet;
     case 30:
       return rootstock;
+    case 31:
+      return rootstockTestnet;
     default:
       return undefined;
   }
@@ -299,6 +305,7 @@ const BLOCK_EXPLORERS: Record<string, string> = {
   "2818": "https://explorer.morphl2.io",
   "9745": "https://plasma-explorer.com",
   "30": "https://rootstock.blockscout.com",
+  "31": "https://rootstock-testnet.blockscout.com",
   "988": "https://stable-explorer.com",
   "4217": "https://explore.tempo.xyz",
   "196": "https://www.okx.com/web3/explorer/xlayer",
