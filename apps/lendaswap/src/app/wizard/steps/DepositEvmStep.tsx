@@ -387,7 +387,7 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
           <Button
             onClick={handleFund}
             disabled={isRunning}
-            className="h-12 w-full bg-black text-base font-semibold text-white hover:bg-black/90"
+            className="h-12 w-full text-base font-semibold"
           >
             {isRunning ? (
               <>

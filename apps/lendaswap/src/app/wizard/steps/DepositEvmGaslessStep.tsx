@@ -249,7 +249,7 @@ export function DepositEvmGaslessStep({
           <Button
             onClick={handleFundGasless}
             disabled={isFunding || !hasSufficientBalance}
-            className="h-12 w-full text-base font-semibold bg-black text-white hover:bg-black/90"
+            className="h-12 w-full text-base font-semibold"
           >
             {isFunding ? (
               <>
