@@ -80,9 +80,12 @@ use-sdk version:
 release env sdk_version="":
     #!/usr/bin/env bash
     set -euo pipefail
+    # RBTC swaps ship to beta first: both apps share api.satora.io, so the
+    # build flag is what keeps them off production. Set explicitly both ways so
+    # a stray shell export cannot leak into a production build.
     case "{{ env }}" in
-      production) proj="{{ project }}" ;;
-      beta)       proj="{{ beta_project }}" ;;
+      production) proj="{{ project }}"; export VITE_ENABLE_ROOTSTOCK=false ;;
+      beta)       proj="{{ beta_project }}"; export VITE_ENABLE_ROOTSTOCK=true ;;
       *) echo "error: env must be 'production' or 'beta' (got '{{ env }}')" >&2; exit 1 ;;
     esac
     if [ -n "{{ sdk_version }}" ]; then just use-sdk "{{ sdk_version }}"; fi

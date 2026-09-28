@@ -38,6 +38,7 @@ import { readStoredConfirmations } from "./utils/bitcoinConfirmations";
 import { buildEvmSigner } from "./utils/evmSigner";
 import { RPC_OVERRIDES } from "./utils/evmTransport";
 import { getReferralCode } from "./utils/referralCode";
+import { withRootstockGate } from "./utils/rootstockFlag";
 
 // Re-export SDK types for use throughout the frontend
 export type {
@@ -305,7 +306,7 @@ export const api = {
 
   async getTokens(): Promise<TokenInfos> {
     const client = await getClients();
-    return await client.getTokens();
+    return withRootstockGate(await client.getTokens());
   },
 
   async getStatus(): Promise<StatusResponse> {
