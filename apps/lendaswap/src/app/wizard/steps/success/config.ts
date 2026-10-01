@@ -110,6 +110,15 @@ export function getDirectionConfig(swapData: GetSwapResponse): DirectionConfig {
         swapTxId: swapData.arkade_claim_txid,
         tweetText: makeTweet(sent, received),
       };
+    case "lightning_to_bitcoin":
+      return {
+        sourceAmount: sent,
+        targetAmount: received,
+        targetAddress: swapData.target_btc_address,
+        isLightning: false,
+        swapTxId: swapData.btc_claim_txid,
+        tweetText: makeTweet(sent, received),
+      };
     case "lightning_to_evm":
       return {
         sourceAmount: sent,

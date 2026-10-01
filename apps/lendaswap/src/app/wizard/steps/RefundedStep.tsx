@@ -94,6 +94,7 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
         return swapData.btc_htlc_address ?? null;
       case "lightning_to_arkade":
       case "lightning_to_evm":
+      case "lightning_to_bitcoin":
         return null; // Lightning refunds go back via the LN channel
     }
 
@@ -126,6 +127,9 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
         // The server refunding its own EVM HTLC; the user's held Lightning
         // payment unwinds off-chain with no txid.
         return swapData.evm_claim_txid ?? null;
+      case "lightning_to_bitcoin":
+        // Likewise for the server's on-chain HTLC.
+        return swapData.btc_claim_txid ?? null;
     }
 
     return assertNever(direction, "Unhandled swap direction in getRefundTxId");
