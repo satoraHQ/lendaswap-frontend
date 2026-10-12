@@ -18,6 +18,7 @@ import {
   type QuoteResponse,
   type RecoverAllSwapsResult,
   type RefundResult,
+  type RifRelayConfig,
   Client as SdkClient,
   type StatusResponse,
   type StoredSwap,
@@ -495,6 +496,28 @@ export const api = {
   ): Promise<ClaimResult> {
     const client = await getClients();
     return await client.claim(id, options);
+  },
+
+  /**
+   * The RIF Relay native locks on EVM chain `chainId` are claimed through,
+   * or `undefined` where the server relays the claim.
+   */
+  async getRifRelay(chainId: number): Promise<RifRelayConfig | undefined> {
+    const client = await getClients();
+    return await client.getRifRelay(chainId);
+  },
+
+  /**
+   * Claim an EVM-targeted swap with the connected wallet. On a RIF Relay
+   * chain the wallet signs the relay request and receives the coin, less
+   * the relayer's fee; it needs no gas of its own.
+   */
+  async claimEvmWithSigner(
+    id: string,
+    signer: EvmSigner,
+  ): Promise<{ txHash?: string; message: string }> {
+    const client = await getClients();
+    return await client.claimEvmWithSigner(id, signer);
   },
 
   async amountsForSwap(id: string): Promise<VhtlcAmounts> {

@@ -369,6 +369,32 @@ export function HomePage() {
       t.symbol.toLowerCase() === urlTargetToken?.symbol.toLowerCase(),
   );
 
+  // RBTC claimed through RIF Relay is paid to the wallet that signs the
+  // claim, so on such a chain the payout address is the connected wallet.
+  const rifTargetChainId =
+    targetAsset &&
+    isNativeLockTarget(targetAsset.chain, String(targetAsset.token_id)) &&
+    Number.isInteger(Number(targetAsset.chain))
+      ? Number(targetAsset.chain)
+      : undefined;
+  const [rifTarget, setRifTarget] = useState(false);
+  useEffect(() => {
+    setRifTarget(false);
+    if (rifTargetChainId === undefined) return;
+    let cancelled = false;
+    api
+      .getRifRelay(rifTargetChainId)
+      .then((relay) => !cancelled && setRifTarget(relay !== undefined))
+      .catch((error) => console.warn("RIF Relay lookup failed:", error));
+    return () => {
+      cancelled = true;
+    };
+  }, [rifTargetChainId]);
+  const rifPayoutMismatch =
+    rifTarget &&
+    (!connectedAddress ||
+      targetAddress.toLowerCase() !== connectedAddress.toLowerCase());
+
   // The URL (including the hardcoded "/" redirect) may name a token the
   // server has disabled (e.g. Lightning). Once tokens have loaded, replace
   // any side that doesn't resolve with an available fallback.
@@ -925,7 +951,8 @@ export function HomePage() {
   };
 
   const isWeb3WalletNeeded =
-    sourceAsset && isEvmToken(sourceAsset.chain) && !gaslessEnabled;
+    (sourceAsset && isEvmToken(sourceAsset.chain) && !gaslessEnabled) ||
+    rifTarget;
   const isConnectionStillNeeded = isWeb3WalletNeeded && !isWeb3WalletConnected;
 
   // Compute the BTC-equivalent amount in sats for limit validation
@@ -1003,6 +1030,7 @@ export function HomePage() {
 
   const buttonDisabled =
     swapsPaused ||
+    rifPayoutMismatch ||
     !targetAddress ||
     !isAddressValid ||
     isCreatingSwap ||
@@ -1213,6 +1241,18 @@ export function HomePage() {
             targetAsset && isBtc(targetAsset) ? targetAmount : undefined
           }
         />
+        {rifTarget && (
+          <div
+            className={`pt-1 text-xs ${rifPayoutMismatch && connectedAddress ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            You claim the RBTC by signing with your connected wallet, which
+            receives it. No gas needed: the relayer's fee is paid out of the
+            RBTC.
+            {rifPayoutMismatch &&
+              connectedAddress &&
+              " The payout address must be the connected wallet."}
+          </div>
+        )}
         {/*Fees - below inputs, above Continue button*/}
         {(isLoadingQuote || quote) && (
           <div className="space-y-1 pt-2 text-xs text-muted-foreground/70">

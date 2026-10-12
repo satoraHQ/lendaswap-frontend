@@ -1,3 +1,4 @@
+import { useAppKit } from "@reown/appkit/react";
 import { type GetSwapResponse, isBtcOnchain } from "@satora/swap";
 import {
   Check,
@@ -8,6 +9,13 @@ import {
   Loader2,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type {
+  Account,
+  Transport,
+  Chain as ViemChain,
+  WalletClient,
+} from "viem";
+import { useSwitchChain, useWalletClient } from "wagmi";
 import { Button } from "#/components/ui/button";
 import { api } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
@@ -18,6 +26,7 @@ import {
   useEvmFundingConfirmations,
 } from "../../hooks/useEvmFundingConfirmations";
 import { useDerivedSwapActions } from "../../swapActionCenter";
+import { buildEvmSigner } from "../../utils/evmSigner";
 import {
   deriveSolanaUsdcAta,
   isSolanaTokenAccount,
@@ -27,6 +36,8 @@ import {
   getBlockexplorerTxLink,
   getTokenIcon,
   getTokenNetworkIcon,
+  getViemChainById,
+  isNativeLockSwap,
 } from "../../utils/tokenUtils";
 
 /** Directions where the user sends BTC and receives EVM tokens (auto-claim applies) */
@@ -58,6 +69,9 @@ interface ConfirmingDepositStepProps {
  */
 const WORKER_CLAIM_GRACE_MS = 15_000;
 
+/** How long to wait before asking again whether the chain claims through RIF Relay. */
+const RIF_LOOKUP_RETRY_MS = 10_000;
+
 export function SwapProcessingStep({
   swapData,
   swapId,
@@ -68,6 +82,77 @@ export function SwapProcessingStep({
   // the same hash on broadcast, but the wizard only refetches the swap on a
   // status change, and the status only moves once the claim mines.
   const [claimTxHash, setClaimTxHash] = useState<string | null>(null);
+  // A native lock (RBTC) on a chain served by RIF Relay is claimed by the
+  // receiving wallet: it signs the relay request and gets the coin, less the
+  // relayer's fee. No background claim: `undefined` while the lookup runs
+  // or keeps failing, which is not the same as the chain having no relay.
+  const nativeTargetChainId =
+    isBtcToEvmDirection(swapData.direction) && isNativeLockSwap(swapData)
+      ? (swapData as { evm_chain_id?: number }).evm_chain_id
+      : undefined;
+  const [walletClaim, setWalletClaim] = useState<boolean | undefined>(
+    nativeTargetChainId === undefined ? false : undefined,
+  );
+  useEffect(() => {
+    if (nativeTargetChainId === undefined) {
+      setWalletClaim(false);
+      return;
+    }
+    let cancelled = false;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const lookup = () => {
+      api
+        .getRifRelay(nativeTargetChainId)
+        .then((relay) => !cancelled && setWalletClaim(relay !== undefined))
+        .catch((error) => {
+          console.warn("RIF Relay lookup failed; retrying:", error);
+          if (!cancelled) retry = setTimeout(lookup, RIF_LOOKUP_RETRY_MS);
+        });
+    };
+    lookup();
+    return () => {
+      cancelled = true;
+      clearTimeout(retry);
+    };
+  }, [nativeTargetChainId]);
+  const { data: walletClient } = useWalletClient();
+  const { switchChainAsync } = useSwitchChain();
+  const { open: openConnectModal } = useAppKit();
+  const [walletClaiming, setWalletClaiming] = useState(false);
+  const claimDestination = (swapData as { target_evm_address?: string })
+    .target_evm_address;
+
+  const handleWalletClaim = async () => {
+    const chain =
+      nativeTargetChainId === undefined
+        ? undefined
+        : getViemChainById(nativeTargetChainId);
+    if (!chain) return;
+    if (!walletClient) {
+      openConnectModal();
+      return;
+    }
+    setWalletClaiming(true);
+    setClaimError(null);
+    try {
+      if (walletClient.chain?.id !== chain.id) {
+        await switchChainAsync({ chainId: chain.id });
+      }
+      const signer = buildEvmSigner(
+        walletClient as WalletClient<Transport, ViemChain, Account>,
+        chain,
+      );
+      const result = await api.claimEvmWithSigner(swapId, signer);
+      console.log("Claimed through RIF Relay", { swapId, result });
+      if (result.txHash) setClaimTxHash(result.txHash);
+    } catch (error) {
+      console.error("Wallet claim failed:", error);
+      setClaimError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setWalletClaiming(false);
+    }
+  };
+
   const [isClaiming, setIsClaiming] = useState(false);
   const hasClaimedRef = useRef(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -137,6 +222,8 @@ export function SwapProcessingStep({
   useEffect(() => {
     const autoClaim = async () => {
       if (derivedRecommended !== "claim" || claimSubmitted) return;
+      // The wallet claims (button below), or the lookup has not answered yet.
+      if (walletClaim !== false) return;
 
       const claimKey = `swap_${swapData.id}_claim_attempted`;
       const attemptTimestamp = localStorage.getItem(claimKey);
@@ -270,6 +357,17 @@ export function SwapProcessingStep({
         // Success! Reset retry count
         setRetryCount(0);
       } catch (error) {
+        // The SDK found the chain claims through RIF Relay after all (the
+        // lookup above had failed): the wallet claims, nothing to retry.
+        if (
+          error instanceof Error &&
+          error.name === "WalletClaimRequiredError"
+        ) {
+          setWalletClaim(true);
+          setRetryCount(0);
+          hasClaimedRef.current = false;
+          return;
+        }
         console.error(
           `Failed to auto-claim (attempt ${retryCount + 1}/${maxRetries}):`,
           error,
@@ -310,6 +408,7 @@ export function SwapProcessingStep({
     sleep,
     derivedRecommended,
     claimSubmitted,
+    walletClaim,
   ]);
 
   const handleCopyTxId = async (txId: string) => {
@@ -869,11 +968,41 @@ export function SwapProcessingStep({
                         Retry attempt {retryCount}/{maxRetries}...
                       </p>
                     )}
-                    {isBtcToEvm && !isClaiming && !claimError && (
-                      <p className="text-xs text-muted-foreground">
-                        Gas fees fully sponsored
-                      </p>
-                    )}
+                    {walletClaim &&
+                      derivedRecommended === "claim" &&
+                      !claimTxHash && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-muted-foreground">
+                            {walletClient
+                              ? "Sign the claim in your wallet. No gas needed: the relayer's fee is paid out of the claimed RBTC."
+                              : `Connect the wallet ${claimDestination ?? "this swap pays out to"} to claim.`}
+                          </p>
+                          <Button
+                            size="sm"
+                            onClick={handleWalletClaim}
+                            disabled={walletClaiming}
+                          >
+                            {walletClaiming ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Confirm in your wallet...
+                              </>
+                            ) : walletClient ? (
+                              "Claim with wallet"
+                            ) : (
+                              "Connect wallet"
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    {isBtcToEvm &&
+                      walletClaim === false &&
+                      !isClaiming &&
+                      !claimError && (
+                        <p className="text-xs text-muted-foreground">
+                          Gas fees fully sponsored
+                        </p>
+                      )}
                   </div>
                 )}
             </div>
