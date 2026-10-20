@@ -6,68 +6,66 @@
  * `inputMode="decimal"` keypad shows "," instead of "." for German, French,
  * Spanish and many other regions. The numeric parsing in the app expects ".",
  * so we translate here instead of forcing users onto a US layout.
+ *
+ * The inputs are controlled and echo the canonical "." form, so whatever this
+ * function emits is fed straight back in on the next keystroke. Every rule
+ * below must therefore be a fixed point on its own output.
  */
 
-interface Separators {
-  decimal: string;
-  group: string;
-}
-
-const FALLBACK: Separators = { decimal: ".", group: "," };
-
-/** Whitespace-like grouping characters used by e.g. fr, de-CH, ru. */
+/** Whitespace-like and apostrophe grouping characters used by e.g. fr, de-CH, ru. */
 const SPACE_GROUPS = /[\s  '’]/g;
 
-export function getLocaleSeparators(locale?: string): Separators {
+export function usesCommaDecimal(locale?: string): boolean {
   try {
     const resolved =
       locale ??
       (typeof navigator !== "undefined" ? navigator.language : undefined);
-    const parts = new Intl.NumberFormat(resolved).formatToParts(1234567.8);
-    return {
-      decimal: parts.find((p) => p.type === "decimal")?.value ?? ".",
-      group: parts.find((p) => p.type === "group")?.value ?? ",",
-    };
+    const parts = new Intl.NumberFormat(resolved).formatToParts(1.5);
+    return parts.find((p) => p.type === "decimal")?.value === ",";
   } catch {
-    return FALLBACK;
+    return false;
   }
+}
+
+function count(value: string, char: string): number {
+  return value.split(char).length - 1;
 }
 
 /**
  * Normalize `raw` for the given locale (defaults to the browser locale).
  *
- * Rules:
- * - the locale's grouping separator is removed,
- * - the locale's decimal separator becomes ".",
- * - whitespace-like grouping characters are always removed,
- * - a lone grouping separator that is not followed by exactly three digits is
- *   treated as a decimal separator, so a German user typing "0.1" on a desktop
- *   keyboard or a US user typing "0,1" still gets what they meant.
+ * Rules, in order:
+ * - whitespace-like and apostrophe grouping characters are removed,
+ * - if both "." and "," are present, the last one is the decimal separator
+ *   and every other separator is grouping ("1,000.5" and "1.000,5" → "1000.5"),
+ * - two or more of the same separator are grouping and removed,
+ * - a single "." is always a decimal separator (it is the canonical form the
+ *   inputs echo back, so it must round-trip unchanged in every locale),
+ * - a single "," is a decimal separator in comma-decimal locales; in other
+ *   locales it is left in place so the caller's format validation rejects
+ *   the keystroke rather than guessing between "0,1" and "1,000".
  *
- * Any remaining character outside digits and "." is left in place so the
- * caller's format validation can reject it.
+ * Any other character is left in place for the caller to reject.
  */
 export function normalizeDecimalInput(raw: string, locale?: string): string {
-  const { decimal, group } = getLocaleSeparators(locale);
-  let value = raw.replace(SPACE_GROUPS, "");
+  const value = raw.replace(SPACE_GROUPS, "");
+  const dots = count(value, ".");
+  const commas = count(value, ",");
 
-  const groupCount = value.split(group).length - 1;
-  const hasDecimal = decimal !== "" && value.includes(decimal);
-  const groupLooksLikeDecimal =
-    group !== "" &&
-    groupCount === 1 &&
-    !hasDecimal &&
-    !new RegExp(`\\${group}\\d{3}$`).test(value);
-
-  if (groupLooksLikeDecimal) {
-    value = value.replace(group, ".");
-  } else if (group !== "") {
-    value = value.split(group).join("");
+  if (dots > 0 && commas > 0) {
+    const decimal = value.lastIndexOf(".") > value.lastIndexOf(",") ? "." : ",";
+    const grouping = decimal === "." ? "," : ".";
+    const withoutGrouping = value.split(grouping).join("");
+    return count(withoutGrouping, decimal) === 1
+      ? withoutGrouping.replace(decimal, ".")
+      : withoutGrouping.split(decimal).join("");
   }
 
-  if (decimal !== "." && decimal !== "") {
-    value = value.split(decimal).join(".");
-  }
+  if (dots >= 2) return value.split(".").join("");
+  if (dots === 1) return value;
+
+  if (commas >= 2) return value.split(",").join("");
+  if (commas === 1 && usesCommaDecimal(locale)) return value.replace(",", ".");
 
   return value;
 }

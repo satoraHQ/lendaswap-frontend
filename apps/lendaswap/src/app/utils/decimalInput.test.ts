@@ -1,20 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { getLocaleSeparators, normalizeDecimalInput } from "./decimalInput";
+import { normalizeDecimalInput, usesCommaDecimal } from "./decimalInput";
 
-describe("getLocaleSeparators", () => {
-  it("detects en-US", () => {
-    expect(getLocaleSeparators("en-US")).toEqual({ decimal: ".", group: "," });
+describe("usesCommaDecimal", () => {
+  it("is false for en-US", () => {
+    expect(usesCommaDecimal("en-US")).toBe(false);
   });
 
-  it("detects de-DE", () => {
-    expect(getLocaleSeparators("de-DE")).toEqual({ decimal: ",", group: "." });
+  it("is true for de-DE and fr-FR", () => {
+    expect(usesCommaDecimal("de-DE")).toBe(true);
+    expect(usesCommaDecimal("fr-FR")).toBe(true);
   });
 
-  it("falls back on an invalid locale", () => {
-    expect(getLocaleSeparators("not-a-locale-!!")).toEqual({
-      decimal: ".",
-      group: ",",
-    });
+  it("falls back to dot on an invalid locale", () => {
+    expect(usesCommaDecimal("not-a-locale-!!")).toBe(false);
   });
 });
 
@@ -27,17 +25,24 @@ describe("normalizeDecimalInput", () => {
       expect(n("12,5")).toBe("12.5");
       expect(n(",")).toBe(".");
       expect(n("0,100")).toBe("0.100");
+      expect(n("0,123")).toBe("0.123");
     });
 
-    it("strips dot grouping", () => {
-      expect(n("1.000")).toBe("1000");
+    it("round-trips the canonical dot form on successive keystrokes", () => {
+      // The input echoes "0.12"; the user types "3" and "0.123" comes back in.
+      expect(n("0.12")).toBe("0.12");
+      expect(n("0.123")).toBe("0.123");
+      expect(n("1.500")).toBe("1.500");
+      expect(n("0.00000001")).toBe("0.00000001");
+    });
+
+    it("strips repeated dot grouping", () => {
       expect(n("1.000.000")).toBe("1000000");
-      expect(n("1.000,5")).toBe("1000.5");
     });
 
-    it("treats a lone dot as a decimal typo", () => {
-      expect(n("0.1")).toBe("0.1");
-      expect(n("12.5")).toBe("12.5");
+    it("handles mixed grouping and decimal", () => {
+      expect(n("1.000,5")).toBe("1000.5");
+      expect(n("1.000.000,25")).toBe("1000000.25");
     });
   });
 
@@ -47,17 +52,22 @@ describe("normalizeDecimalInput", () => {
     it("keeps the dot decimal", () => {
       expect(n("0.1")).toBe("0.1");
       expect(n("0.100")).toBe("0.100");
+      expect(n("0.123")).toBe("0.123");
     });
 
-    it("strips comma grouping", () => {
-      expect(n("1,000")).toBe("1000");
+    it("strips repeated comma grouping", () => {
       expect(n("1,000,000")).toBe("1000000");
-      expect(n("1,000.5")).toBe("1000.5");
     });
 
-    it("treats a lone comma as a decimal typo", () => {
-      expect(n("0,1")).toBe("0.1");
-      expect(n("12,5")).toBe("12.5");
+    it("handles mixed grouping and decimal", () => {
+      expect(n("1,000.5")).toBe("1000.5");
+      expect(n("1,000,000.25")).toBe("1000000.25");
+    });
+
+    it("leaves a lone comma for the caller to reject", () => {
+      expect(n("0,1")).toBe("0,1");
+      expect(n("0,100")).toBe("0,100");
+      expect(n("1,000")).toBe("1,000");
     });
   });
 
@@ -78,6 +88,20 @@ describe("normalizeDecimalInput", () => {
       expect(n("1’000.5")).toBe("1000.5");
       expect(n("1'000")).toBe("1000");
     });
+  });
+
+  it("is idempotent on its own output", () => {
+    const cases: Array<[string, string]> = [
+      ["0,123", "de-DE"],
+      ["1.000,5", "de-DE"],
+      ["1,000.5", "en-US"],
+      ["0.123", "en-US"],
+      ["1 000,5", "fr-FR"],
+    ];
+    for (const [input, locale] of cases) {
+      const once = normalizeDecimalInput(input, locale);
+      expect(normalizeDecimalInput(once, locale)).toBe(once);
+    }
   });
 
   it("leaves other characters for the caller to reject", () => {

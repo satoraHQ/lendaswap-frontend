@@ -115,7 +115,7 @@ export function useSatsBtcMode({
   }, [displayValue, isBtc, satsMode, displayDecimals]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = normalizeDecimalInput(e.target.value).replace(/[^0-9.]/g, "");
+    const input = normalizeDecimalInput(e.target.value);
 
     if (input === "") {
       setInputValue("");
