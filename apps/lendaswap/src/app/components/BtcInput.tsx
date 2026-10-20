@@ -1,5 +1,6 @@
 import { Input } from "#/components/ui/input";
 import { Skeleton } from "#/components/ui/skeleton";
+import { normalizeDecimalInput } from "../utils/decimalInput";
 
 interface BtcInputProps {
   value: string;
@@ -33,8 +34,7 @@ export function BtcInput({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // iOS/Safari decimal keypads show "," instead of "." in many locales.
-    const input = e.target.value.replace(/,/g, ".");
+    const input = normalizeDecimalInput(e.target.value);
 
     // Allow empty string (user can delete everything)
     if (input === "") {

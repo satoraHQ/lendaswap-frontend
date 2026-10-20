@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { normalizeDecimalInput } from "../utils/decimalInput";
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -114,8 +115,7 @@ export function useSatsBtcMode({
   }, [displayValue, isBtc, satsMode, displayDecimals]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // iOS/Safari decimal keypads show "," instead of "." in many locales.
-    const input = e.target.value.replace(/,/g, ".").replace(/[^0-9.]/g, "");
+    const input = normalizeDecimalInput(e.target.value).replace(/[^0-9.]/g, "");
 
     if (input === "") {
       setInputValue("");
