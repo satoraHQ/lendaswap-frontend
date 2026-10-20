@@ -33,7 +33,8 @@ export function BtcInput({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
+    // iOS/Safari decimal keypads show "," instead of "." in many locales.
+    const input = e.target.value.replace(/,/g, ".");
 
     // Allow empty string (user can delete everything)
     if (input === "") {
