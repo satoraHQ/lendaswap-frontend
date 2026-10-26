@@ -91,6 +91,13 @@ export function buildEvmSigner(
         chain,
         gas: tx.gas,
       }),
+    estimateGas: (tx) =>
+      publicClient.estimateGas({
+        account: tx.from as `0x${string}` | undefined,
+        to: tx.to as `0x${string}`,
+        data: tx.data as `0x${string}`,
+        value: tx.value,
+      }),
     getBalance: (account) =>
       publicClient.getBalance({ address: account as `0x${string}` }),
     waitForReceipt: async (hash) => {
