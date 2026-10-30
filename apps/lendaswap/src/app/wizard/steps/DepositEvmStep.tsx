@@ -200,7 +200,9 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
       });
       updateStep("fund", { status: "completed" });
 
-      // Wizard polling will detect the status change and advance
+      // The SDK re-verifies the swap against the chain as soon as fundSwap
+      // resolves, so the derived action moves off `fund` and the wizard
+      // advances without waiting on the server's status push.
     } catch (err) {
       console.error("Fund error:", err);
       if (isUserRejection(err)) {
