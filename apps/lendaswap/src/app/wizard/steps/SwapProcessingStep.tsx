@@ -40,6 +40,8 @@ import {
   isNativeLockSwap,
 } from "../../utils/tokenUtils";
 
+import { WalletPaidClaim } from "../components/WalletPaidClaim";
+
 /** Directions where the user sends BTC and receives EVM tokens (auto-claim applies) */
 function isBtcToEvmDirection(direction: GetSwapResponse["direction"]): boolean {
   return (
@@ -157,6 +159,10 @@ export function SwapProcessingStep({
   const hasClaimedRef = useRef(false);
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 10;
+  const walletClaimRequired =
+    isBtcToEvmDirection(swapData.direction) &&
+    "evm_chain_id" in swapData &&
+    (swapData.evm_chain_id === 30 || swapData.evm_chain_id === 31);
   // Same store the picker writes, so the copy below cannot describe a depth
   // the running client is not applying, and a change in another tab reaches
   // this card as well.
@@ -223,7 +229,7 @@ export function SwapProcessingStep({
     const autoClaim = async () => {
       if (derivedRecommended !== "claim" || claimSubmitted) return;
       // The wallet claims (button below), or the lookup has not answered yet.
-      if (walletClaim !== false) return;
+      if (walletClaimRequired || walletClaim !== false) return;
 
       const claimKey = `swap_${swapData.id}_claim_attempted`;
       const attemptTimestamp = localStorage.getItem(claimKey);
@@ -409,6 +415,7 @@ export function SwapProcessingStep({
     derivedRecommended,
     claimSubmitted,
     walletClaim,
+    walletClaimRequired,
   ]);
 
   const handleCopyTxId = async (txId: string) => {
@@ -961,7 +968,9 @@ export function SwapProcessingStep({
                           ? `The ${btcContractLabel} is funded. Your payout security setting claims it once the funding is ${requiredDepth} block${requiredDepth === 1 ? "" : "s"} deep.`
                           : receivesBtcFromServer
                             ? `The ${btcContractLabel} has been funded. Preparing to claim your sats...`
-                            : "The HTLC has been funded. Preparing to claim your tokens..."}
+                            : walletClaimRequired
+                              ? "Your payout is funded. Claim it using your wallet."
+                              : "The HTLC has been funded. Preparing to claim your tokens..."}
                     </p>
                     {retryCount > 0 && retryCount < maxRetries && (
                       <p className="text-xs text-muted-foreground">
@@ -995,7 +1004,18 @@ export function SwapProcessingStep({
                           </Button>
                         </div>
                       )}
+                    {walletClaimRequired &&
+                      walletClaim === false &&
+                      derivedRecommended === "claim" &&
+                      !claimTxHash && (
+                        <WalletPaidClaim
+                          swapData={swapData}
+                          swapId={swapId}
+                          onSubmitted={setClaimTxHash}
+                        />
+                      )}
                     {isBtcToEvm &&
+                      !walletClaimRequired &&
                       walletClaim === false &&
                       !isClaiming &&
                       !claimError && (

@@ -492,7 +492,11 @@ export const api = {
 
   async claim(
     id: string,
-    options?: { bridgeRecipient?: string; bridgeRecipientWallet?: string },
+    options?: {
+      bridgeRecipient?: string;
+      bridgeRecipientWallet?: string;
+      signer?: EvmSigner;
+    },
   ): Promise<ClaimResult> {
     const client = await getClients();
     return await client.claim(id, options);
