@@ -1,6 +1,7 @@
 import {
   getLzExplorerUrl,
   type LayerZeroMessageStatus,
+  LZ_EIDS,
   toChain,
   trackLzMessage,
 } from "@satora/swap";
@@ -37,22 +38,34 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
   // LayerZero tracking state
   const [bridgeStatus, setBridgeStatus] =
     useState<LayerZeroMessageStatus | null>(null);
+  const [destinationTxHash, setDestinationTxHash] = useState<string | null>(
+    null,
+  );
   const [bridgeError, setBridgeError] = useState<string | null>(null);
 
   useEffect(() => {
+    setBridgeStatus(null);
+    setBridgeError(null);
+    setDestinationTxHash(null);
     if (!bridgeTxHash) return;
     let cancelled = false;
+    const controller = new AbortController();
 
     trackLzMessage({
       txHash: bridgeTxHash,
+      signal: controller.signal,
+      destinationEid: LZ_EIDS[targetNetwork as keyof typeof LZ_EIDS],
       pollIntervalMs: 5_000,
       timeoutMs: 600_000,
       onStatusChange: (status) => {
         if (!cancelled) setBridgeStatus(status);
       },
     })
-      .then(() => {
-        if (!cancelled) setBridgeStatus("DELIVERED");
+      .then((result) => {
+        if (!cancelled) {
+          setBridgeStatus(result.status);
+          setDestinationTxHash(result.dstTxHash ?? null);
+        }
       })
       .catch((err) => {
         if (!cancelled) setBridgeError(String(err));
@@ -60,8 +73,9 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
-  }, [bridgeTxHash]);
+  }, [bridgeTxHash, targetNetwork]);
 
   const bridgeStatusKind: "pending" | "complete" | "error" = bridgeError
     ? "error"
@@ -75,13 +89,17 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
       : `Bridging to ${targetNetwork}...`;
 
   const description =
-    bridgeStatus === "DELIVERED" || !bridgeTxHash ? (
+    bridgeStatus === "DELIVERED" ? (
       <>Arrived on {targetNetwork} via LayerZero.</>
     ) : bridgeError ? (
-      <>Tracking failed. Your funds are safe.</>
+      <>
+        Delivery is not confirmed. Check the LayerZero transaction before taking
+        further action.
+      </>
     ) : (
       <>
-        Bridging from Arbitrum to {targetNetwork} via LayerZero. Usually 30-60s.
+        Bridging from Arbitrum to {targetNetwork} via LayerZero. Delivery may
+        take several minutes.
       </>
     );
 
@@ -94,11 +112,11 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
       targetSymbol={targetSymbol}
       targetChainOverride={toChain(targetNetwork)}
     >
-      <div className="bg-muted/50 w-full max-w-md space-y-3 rounded-lg p-4">
+      <div className="w-full max-w-md space-y-3 rounded-lg bg-muted/50 p-4">
         <AmountRow label="Amount Sent">
           {config.sourceAmount} {sourceSymbol} on {sourceNetwork}
         </AmountRow>
-        <AmountRow label="Amount Received">
+        <AmountRow label="Expected Amount">
           {config.targetAmount} {targetSymbol} on {targetNetwork}
         </AmountRow>
 
@@ -112,8 +130,19 @@ export function Usdt0Details({ swapData }: { swapData: GetSwapResponse }) {
           />
         )}
 
+        {targetNetwork === "Tron" && destinationTxHash && (
+          <a
+            href={`https://tronscan.org/#/transaction/${destinationTxHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-sm underline"
+          >
+            View delivery on Tronscan
+          </a>
+        )}
+
         {bridgeTxHash && (
-          <div className="border-border flex flex-col gap-2 border-t pt-2 text-sm">
+          <div className="flex flex-col gap-2 border-t border-border pt-2 text-sm">
             <span className="text-muted-foreground">LayerZero Transfer</span>
             <div className="flex items-center gap-2">
               <a

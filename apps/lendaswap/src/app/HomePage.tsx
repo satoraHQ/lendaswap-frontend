@@ -14,6 +14,7 @@ import {
   isNativeLockTarget,
   isSolanaToken,
   isSourceEvmChain,
+  isTronToken,
   isValidSolanaAddress,
   type TokenInfo,
   toChainName,
@@ -136,6 +137,8 @@ function isValidPair(
   target: TokenInfo,
   routes: OnchainLightningRoutes,
 ): boolean {
+  if (isTronToken(source.chain)) return false;
+  if (isTronToken(target.chain)) return isBtc(source);
   // EVM → EVM: not allowed
   if (isEvmToken(source.chain) && isEvmToken(target.chain)) return false;
   // A native lock (RBTC) is served towards every BTC leg.
@@ -1318,14 +1321,15 @@ export function HomePage() {
                       {quote?.bridge_fee != null &&
                         (needsCctpQuoteRewrite ? (
                           <div>
-                            CCTP Fee: ~{(quote.bridge_fee / 1e6).toFixed(4)}{" "}
+                            Bridge Fee: ~{(quote.bridge_fee / 1e6).toFixed(4)}{" "}
                             USDC (deducted from source amount)
                           </div>
                         ) : (
                           <div>
                             Max Bridge Fee: ~
-                            {(quote.bridge_fee / 1e6).toFixed(4)} USDC (deducted
-                            from received amount)
+                            {(quote.bridge_fee / 1e6).toFixed(4)}{" "}
+                            {targetAsset?.symbol ?? "tokens"} (deducted from
+                            received amount)
                           </div>
                         ))}
                     </>

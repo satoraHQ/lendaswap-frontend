@@ -6,8 +6,10 @@ import {
   isEvmToken,
   isLightning,
   isSolanaToken,
+  isTronToken,
   isValidArkadeAddress,
   isValidSolanaAddress,
+  isValidTronAddress,
   type TokenInfo,
 } from "@satora/swap";
 import { validate as validateBtcAddress } from "bitcoin-address-validation";
@@ -52,6 +54,7 @@ export function AddressInput({
   targetAmountSats,
 }: AddressInputProps) {
   const isEvmTarget = targetToken ? isEvmToken(targetToken.chain) : false;
+  const isTronTarget = targetToken ? isTronToken(targetToken.chain) : false;
   const isSolanaTarget = targetToken ? isSolanaToken(targetToken.chain) : false;
   const { address, isConnected } = useAccount();
   const { open } = useAppKit();
@@ -155,6 +158,12 @@ export function AddressInput({
       } else {
         setValidationError("");
       }
+    } else if (isTronTarget) {
+      const valid = isValidTronAddress(value);
+      setValidationError(
+        valid ? "" : "Invalid Tron address (expected a checksummed T… address)",
+      );
+      setAddressIsValid(valid);
     } else if (isSolanaTarget) {
       if (!isValidSolanaAddress(value)) {
         setValidationError("Invalid Solana address");
@@ -219,6 +228,7 @@ export function AddressInput({
     targetToken,
     isEvmTarget,
     isSolanaTarget,
+    isTronTarget,
     setAddressIsValid,
     setBitcoinAmount,
   ]);
@@ -269,6 +279,7 @@ export function AddressInput({
     if (isArkade(targetToken)) return "Receive address (Arkade)";
     if (isBtcOnchain(targetToken)) return "Receive address (Bitcoin)";
     if (isSolanaToken(targetToken.chain)) return "Receive address (Solana)";
+    if (isTronToken(targetToken.chain)) return "Receive address (Tron)";
     if (isEvmToken(targetToken.chain)) return "Receive address (EVM)";
     return "Receive address";
   };

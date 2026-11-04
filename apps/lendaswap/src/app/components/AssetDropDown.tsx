@@ -8,12 +8,14 @@ import {
   isOptimismToken,
   isPolygonToken,
   isSolanaToken,
+  isTronToken,
   type TokenInfo,
   toChainName,
 } from "@satora/swap";
 import NetworkBase from "@web3icons/react/icons/networks/NetworkBase";
 import NetworkOptimism from "@web3icons/react/icons/networks/NetworkOptimism";
 import NetworkSolana from "@web3icons/react/icons/networks/NetworkSolana";
+import NetworkTron from "@web3icons/react/icons/networks/NetworkTron";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -65,6 +67,7 @@ type NetworkTabId =
   | "polygon"
   | "base"
   | "optimism"
+  | "tron"
   | "solana"
   | "other";
 
@@ -137,6 +140,12 @@ const networkTabs: {
     filter: (a) => isSolanaToken(a.chain),
   },
   {
+    id: "tron",
+    label: "Tron",
+    icon: <NetworkTron variant="branded" size={14} />,
+    filter: (a) => isTronToken(a.chain),
+  },
+  {
     id: "other",
     label: "Other",
     icon: null,
@@ -145,7 +154,8 @@ const networkTabs: {
       !isNativeLockTarget(a.chain, String(a.token_id)) &&
       !isBaseToken(a.chain) &&
       !isOptimismToken(a.chain) &&
-      !isSolanaToken(a.chain),
+      !isSolanaToken(a.chain) &&
+      !isTronToken(a.chain),
   },
 ];
 

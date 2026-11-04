@@ -3,6 +3,7 @@ import {
   type Chain,
   isBtcPegged,
   isSolanaToken,
+  isTronToken,
   type TokenInfo,
   toChain,
   toChainName,
@@ -30,6 +31,7 @@ import NetworkSolana from "@web3icons/react/icons/networks/NetworkSolana";
 import NetworkSonic from "@web3icons/react/icons/networks/NetworkSonic";
 import NetworkStable from "@web3icons/react/icons/networks/NetworkStable";
 import NetworkTempo from "@web3icons/react/icons/networks/NetworkTempo";
+import NetworkTron from "@web3icons/react/icons/networks/NetworkTron";
 import NetworkUnichain from "@web3icons/react/icons/networks/NetworkUnichain";
 import NetworkWorld from "@web3icons/react/icons/networks/NetworkWorld";
 import NetworkXdc from "@web3icons/react/icons/networks/NetworkXdc";
@@ -135,6 +137,8 @@ export function getTokenNetworkIcon(tokenId: BridgeTokenInfo): ReactElement {
   // Solana isn't in the backend's Chain union — bridge-only chains are
   // cast in via `getCctpBridgeTokens`, so compare against the runtime
   // string via the SDK helper.
+  if (isTronToken(tokenId.chain as string))
+    return <NetworkTron variant="branded" size={16} />;
   if (isSolanaToken(tokenId.chain as string)) {
     return <NetworkSolana variant="branded" size={16} />;
   }
@@ -314,6 +318,7 @@ const BLOCK_EXPLORERS: Record<string, string> = {
   Arkade: "https://arkade.space",
   Lightning: "https://arkade.space",
   Solana: "https://solscan.io",
+  Tron: "https://tronscan.org/#",
 };
 
 /** Fallback for unrecognized EVM chains — Etherscan's multi-chain aggregator. */
