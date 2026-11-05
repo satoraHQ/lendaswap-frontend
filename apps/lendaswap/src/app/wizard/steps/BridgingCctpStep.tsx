@@ -397,6 +397,9 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
             // is deployed by the UserOp's factoryData.
             const { calls } = await buildCctpInboundBatch({
               server,
+              // The swap's own hash, spender, lock and input: calldata
+              // naming anything else is refused before it is signed.
+              expected: await api.getEvmFundingExpectation(swapId),
               smartAccountAddress: accountAddress,
               signTypedData: (args) => smartAccount.signTypedData(args),
               cctpMessage: message as `0x${string}`,

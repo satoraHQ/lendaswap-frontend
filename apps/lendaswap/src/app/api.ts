@@ -607,6 +607,13 @@ export const api = {
     return await client.refundEvmWithSigner(swapId, signer);
   },
 
+  async refundEvmSponsored(
+    swapId: string,
+  ): Promise<{ txHash: string; userOpHash: string }> {
+    const client = await getClients();
+    return await client.refundEvmSponsored(swapId);
+  },
+
   async collabRefundEvmSwap(
     swapId: string,
   ): Promise<{ id: string; txHash: string; message: string }> {
@@ -620,6 +627,25 @@ export const api = {
   ): Promise<{ txHash: string }> {
     const client = await getClients();
     return await client.collabRefundEvmWithSigner(swapId, signer);
+  },
+
+  /** Gasless EVM → Lightning swap the server could not pay: move the lock to a new invoice (SDK key, sponsored). */
+  async retrySwapWithInvoice(
+    swapId: string,
+    invoice: string,
+  ): Promise<{ txHash: string; newPreimageHash: string; newTimelock: number }> {
+    const client = await getClients();
+    return await client.retrySwapWithInvoice(swapId, invoice);
+  },
+
+  /** Wallet-funded EVM → Lightning swap the server could not pay: the wallet authorizes and sends the move. */
+  async retrySwapWithInvoiceWithSigner(
+    swapId: string,
+    invoice: string,
+    signer: EvmSigner,
+  ): Promise<{ txHash: string; newPreimageHash: string; newTimelock: number }> {
+    const client = await getClients();
+    return await client.retrySwapWithInvoiceWithSigner(swapId, invoice, signer);
   },
 
   // Return type derived through the SDK client so it names types via
@@ -704,6 +730,12 @@ export const api = {
       );
     }
     return resp.json();
+  },
+
+  /** The hash lock and funding terms this client fixed for an EVM-sourced swap. */
+  async getEvmFundingExpectation(swapId: string) {
+    const client = await getClients();
+    return await client.getEvmFundingExpectation(swapId);
   },
 
   async getSwapDepositorKey(

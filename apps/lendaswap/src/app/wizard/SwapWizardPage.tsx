@@ -113,9 +113,15 @@ function determineStepFromStatus(
   // the server truly fails the swap will transition to `clientfundedtoolate` / `expired` and collab
   // refund kicks in then.
 
+  // EVM-sourced swaps refund early too once the server has given them up
+  // (`serverwontfund`), and an EVM → Lightning one can instead retry with a
+  // new invoice; both live on the refund step.
   const supportsInstantRefund =
     swapData.direction === "arkade_to_evm" ||
-    swapData.direction === "arkade_to_lightning";
+    swapData.direction === "arkade_to_lightning" ||
+    swapData.direction === "evm_to_arkade" ||
+    swapData.direction === "evm_to_bitcoin" ||
+    swapData.direction === "evm_to_lightning";
 
   switch (swapData.status) {
     case "pending":
