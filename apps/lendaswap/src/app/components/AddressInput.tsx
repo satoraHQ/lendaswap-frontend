@@ -27,6 +27,7 @@ import {
 } from "../../utils/lightningAddress";
 import { hasCameraApi, normalizeScannedText } from "../../utils/qrScan";
 import isValidSpeedWalletContext from "../../utils/speedWallet";
+import { useArkadeWallet } from "../ArkadeWalletContext";
 import { useNwc } from "../NwcContext";
 import { useWalletBridge } from "../WalletBridgeContext";
 import { QrScannerDialog } from "./QrScannerDialog";
@@ -75,6 +76,18 @@ export function AddressInput({
   const showScanButton = !disabled && hasCameraApi();
 
   const isLightningTarget = targetToken ? isLightning(targetToken) : false;
+  const isArkadeTarget = targetToken ? isArkade(targetToken) : false;
+  // Inscrib3 Arkade wallet (extension or web wallet). Hidden when embedded in
+  // Lendasat, whose host wallet already supplies the address, and in Speed
+  // Wallet, which has its own address pipe.
+  const {
+    isConnected: isArkadeWalletConnected,
+    isConnecting: isArkadeWalletConnecting,
+    address: arkadeWalletAddress,
+    connect: connectArkadeWallet,
+  } = useArkadeWallet();
+  const showArkadeWalletButton =
+    isArkadeTarget && !isEmbedded && !isSpeedWallet;
   // Solana addresses come in two structurally-identical-looking shapes:
   // wallet pubkeys (on-curve, signable) and PDAs like SPL token accounts
   // (off-curve, unsignable). Pasting a token account address by mistake
@@ -262,7 +275,9 @@ export function AddressInput({
     };
   }, [value, isSolanaTarget]);
 
-  const showWalletButton = (isEvmTarget || isSolanaTarget) && !isSpeedWallet;
+  const showWalletButton =
+    ((isEvmTarget || isSolanaTarget) && !isSpeedWallet) ||
+    showArkadeWalletButton;
   const inputPaddingRight =
     showWalletButton && showScanButton
       ? "pr-36"
@@ -362,6 +377,45 @@ export function AddressInput({
                 className="h-7 px-2 text-xs"
               >
                 <Wallet className="mr-1 h-3 w-3" />
+                Connect
+              </Button>
+            ) : null)}
+
+          {/* Arkade variant: auto-fill from a connected Inscrib3 wallet, or
+              connect one (extension prompt, else the web wallet popup). */}
+          {showArkadeWalletButton &&
+            (isArkadeWalletConnected && arkadeWalletAddress && !value ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onChange(arkadeWalletAddress)}
+                type="button"
+                className="h-7 px-2 text-xs"
+              >
+                Use wallet
+              </Button>
+            ) : !isArkadeWalletConnected ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  connectArkadeWallet().catch((err) =>
+                    setValidationError(
+                      err instanceof Error
+                        ? err.message
+                        : "Failed to connect Arkade wallet",
+                    ),
+                  )
+                }
+                disabled={isArkadeWalletConnecting}
+                type="button"
+                className="h-7 px-2 text-xs"
+              >
+                {isArkadeWalletConnecting ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <Wallet className="mr-1 h-3 w-3" />
+                )}
                 Connect
               </Button>
             ) : null)}

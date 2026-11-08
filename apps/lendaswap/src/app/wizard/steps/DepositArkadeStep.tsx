@@ -4,8 +4,8 @@ import type {
 } from "@satora/swap";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useArkadeFundingWallet } from "../../hooks/useArkadeFundingWallet";
 import { totalFeeSats } from "../../utils/feeUtils";
-import { useWalletBridge } from "../../WalletBridgeContext";
 import {
   AddressDisplay,
   AmountRow,
@@ -21,7 +21,9 @@ interface DepositArkadeStepProps {
 
 export function DepositArkadeStep({ swapData }: DepositArkadeStepProps) {
   const navigate = useNavigate();
-  const { client, isEmbedded, isReady } = useWalletBridge();
+  // Embedded Lendasat wallet or a connected Inscrib3 wallet, whichever is
+  // present; both pay the VHTLC address directly.
+  const wallet = useArkadeFundingWallet();
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
@@ -38,15 +40,13 @@ export function DepositArkadeStep({ swapData }: DepositArkadeStepProps) {
   const qrValue = `bitcoin:?ark=${arkadeAddress}&amount=${(Number(swapData.source_amount) / 100_000_000).toFixed(8)}`;
 
   const handleSendFromWallet = async () => {
-    if (!client || !arkadeAddress) return;
+    if (!wallet.canSend || !arkadeAddress) return;
     try {
       setIsSending(true);
       setSendError(null);
-      await client.sendToAddress(
-        arkadeAddress,
-        Number(swapData.source_amount),
-        "bitcoin",
-      );
+      await wallet.sendToAddress(arkadeAddress, Number(swapData.source_amount));
+      // Stay in the "Sending..." state: the swap tracker moves the wizard on
+      // once the server sees the VHTLC funded.
     } catch (error) {
       console.error("Failed to send from wallet:", error);
       setSendError(
@@ -82,9 +82,7 @@ export function DepositArkadeStep({ swapData }: DepositArkadeStepProps) {
         />
       </AmountSummary>
       <DepositActions
-        onSendFromWallet={
-          isEmbedded && isReady && client ? handleSendFromWallet : undefined
-        }
+        onSendFromWallet={wallet.canSend ? handleSendFromWallet : undefined}
         onCancel={() => navigate("/")}
         isSending={isSending}
         sendError={sendError}

@@ -31,6 +31,7 @@ import { fallback, http, type Transport } from "viem";
 import { unstable_connector, WagmiProvider } from "wagmi";
 import { injected } from "wagmi/connectors";
 import App from "./app/App";
+import { ArkadeWalletProvider } from "./app/ArkadeWalletContext";
 import { NwcProvider } from "./app/NwcContext";
 import { buildTransport, RPC_OVERRIDES } from "./app/utils/evmTransport";
 import { ThemeProvider } from "./app/utils/theme-provider";
@@ -139,9 +140,11 @@ root.render(
           <Theme>
             <ThemeProvider>
               <WalletBridgeProvider>
-                <NwcProvider>
-                  <App />
-                </NwcProvider>
+                <ArkadeWalletProvider>
+                  <NwcProvider>
+                    <App />
+                  </NwcProvider>
+                </ArkadeWalletProvider>
               </WalletBridgeProvider>
             </ThemeProvider>
           </Theme>

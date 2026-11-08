@@ -23,10 +23,15 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { ReactComponent as XLogo } from "../../assets/x-com-logo.svg";
 import isValidSpeedWalletContext from "../../utils/speedWallet";
+import { useArkadeWallet } from "../ArkadeWalletContext";
 import { useNwc } from "../NwcContext";
 import { useActionableSwaps } from "../swapActionCenter";
 import { ThemeToggle } from "../utils/theme-toggle";
 import { useWalletBridge } from "../WalletBridgeContext";
+import {
+  ArkadeWalletDialog,
+  truncateArkadeAddress,
+} from "./ArkadeWalletDialog";
 import { NwcConnectDialog } from "./NwcConnectDialog";
 
 interface AppHeaderProps {
@@ -57,6 +62,14 @@ export function AppHeader({
   const isSpeedWallet = isValidSpeedWalletContext();
   const showNwc = !isEmbedded && !isSpeedWallet;
   const { isConnected: isNwcConnected, balanceSats } = useNwc();
+  // Inscrib3 Arkade wallet: same visibility rules as NWC — an embedding host
+  // wallet or Speed Wallet already supplies the Arkade side.
+  const showArkadeWallet = !isEmbedded && !isSpeedWallet;
+  const {
+    isConnected: isArkadeWalletConnected,
+    address: arkadeWalletAddress,
+    balanceSats: arkadeBalanceSats,
+  } = useArkadeWallet();
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : undefined;
@@ -184,6 +197,27 @@ export function AppHeader({
                     />
                   )}
 
+                  {/* Inscrib3 Arkade Wallet - only in standalone mode */}
+                  {showArkadeWallet && (
+                    <ArkadeWalletDialog
+                      trigger={
+                        <button
+                          type="button"
+                          className="focus:bg-accent focus:text-accent-foreground outline-hidden relative flex w-full cursor-default select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-gray-200"
+                        >
+                          <Wallet
+                            className={`h-4 w-4 shrink-0 ${isArkadeWalletConnected ? "text-lime-500" : "text-muted-foreground"}`}
+                          />
+                          {isArkadeWalletConnected && arkadeWalletAddress
+                            ? arkadeBalanceSats !== null
+                              ? `${arkadeBalanceSats.toLocaleString()} sats`
+                              : truncateArkadeAddress(arkadeWalletAddress)
+                            : "Arkade"}
+                        </button>
+                      }
+                    />
+                  )}
+
                   {/* Hide Connect button in Speed Wallet - not needed */}
                   {!isSpeedWallet && (
                     <DropdownMenuItem
@@ -248,6 +282,8 @@ export function AppHeader({
               </DropdownMenu>
               {/* NWC Lightning Wallet - only in standalone mode */}
               {showNwc && <NwcConnectDialog />}
+              {/* Inscrib3 Arkade Wallet - only in standalone mode */}
+              {showArkadeWallet && <ArkadeWalletDialog />}
               <ThemeToggle />
               {/* Hide Connect button in Speed Wallet - not needed */}
               {!isSpeedWallet && (

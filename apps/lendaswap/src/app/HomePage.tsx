@@ -39,6 +39,7 @@ import { AssetDropDown } from "./components/AssetDropDown";
 import { SupportErrorBanner } from "./components/SupportErrorBanner";
 import { SwapSettingsMenu } from "./components/SwapSettingsMenu";
 import { updateSwap, upsertCctpInboundSession } from "./db";
+import { useArkadeFundingWallet } from "./hooks/useArkadeFundingWallet";
 import { useBitcoinConfirmations } from "./hooks/useBitcoinConfirmations";
 import { useGaslessFeature } from "./hooks/useGaslessFeature";
 import { type RefreshArgs, useQuote } from "./hooks/useQuote";
@@ -53,7 +54,6 @@ import {
 } from "./utils/quoteUtils";
 import { getReferralCode, setReferralCode } from "./utils/referralCode";
 import { formatTokenUrl, isEvmToken, parseUrlToken } from "./utils/tokenUtils";
-import { useWalletBridge } from "./WalletBridgeContext";
 
 // Build query string from amounts and target address
 function buildQueryParams(
@@ -247,7 +247,9 @@ export function HomePage() {
 
   const { switchChainAsync } = useSwitchChain();
   const { open: openConnectModal } = useAppKit();
-  const { arkAddress, isEmbedded } = useWalletBridge();
+  // Embedded Lendasat wallet or connected Inscrib3 wallet: either one gives
+  // us an Arkade address to receive into.
+  const { address: arkAddress } = useArkadeFundingWallet();
 
   useEffect(() => {
     document.title = "Satora - Lightning-Fast Bitcoin Atomic Swaps";
@@ -472,19 +474,33 @@ export function HomePage() {
       } else {
         setTargetAddress("");
       }
-    } else if (
-      isEmbedded &&
-      targetAsset &&
-      isArkade(targetAsset) &&
-      arkAddress
-    ) {
-      // Embedded host wallet provides the Ark address — auto-fill it.
+    } else if (targetAsset && isArkade(targetAsset) && arkAddress) {
+      // A connected Arkade wallet provides the address — auto-fill it.
       setTargetAddress(arkAddress);
     } else {
       // Switching to a BTC target - clear any stale EVM address
       setTargetAddress("");
     }
-  }, [targetChainKey, isEmbedded, arkAddress]);
+    // Deliberately not keyed on `arkAddress`: a wallet connecting or
+    // disconnecting must not wipe an address the user typed. The effect
+    // below handles those transitions.
+  }, [targetChainKey]);
+
+  // Also react to an Arkade wallet connecting while the target is Arkade:
+  // fill an empty field, and clear it again when that wallet disconnects.
+  const isArkadeTarget = targetAsset ? isArkade(targetAsset) : false;
+  const previousArkAddress = useRef<string | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only re-run on wallet connect/disconnect events
+  useEffect(() => {
+    const previous = previousArkAddress.current;
+    previousArkAddress.current = arkAddress;
+    if (!isArkadeTarget) return;
+    if (arkAddress && !targetAddress) {
+      setTargetAddress(arkAddress);
+    } else if (!arkAddress && previous && targetAddress === previous) {
+      setTargetAddress("");
+    }
+  }, [arkAddress]);
 
   // Also react to wallet connect/disconnect while target is EVM
   // biome-ignore lint/correctness/useExhaustiveDependencies: only re-run on wallet connect/disconnect events

@@ -12,13 +12,13 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { api, type VhtlcAmounts } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
+import { useArkadeFundingWallet } from "../../hooks/useArkadeFundingWallet";
 import { useBitcoinChainClock } from "../../hooks/useBitcoinChainClock";
 import { extractRefundAddress } from "../../utils/bip21";
 import {
   getBlockexplorerAddressLink,
   getBlockexplorerTxLink,
 } from "../../utils/tokenUtils";
-import { useWalletBridge } from "../../WalletBridgeContext";
 import { DepositCard } from "../components";
 
 interface RefundArkadeStepProps {
@@ -55,9 +55,13 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
   const [refundTxid, setRefundTxid] = useState<string | null>(null);
   const [amounts, setAmounts] = useState<VhtlcAmounts | null>(null);
   const [isLoadingAmounts, setIsLoadingAmounts] = useState(false);
-  const { arkAddress } = useWalletBridge();
+  const { address: arkAddress, source: walletSource } =
+    useArkadeFundingWallet();
+  // The embedding host wallet owns the funds, so its address is fixed. An
+  // Inscrib3 address is only a suggestion the user may overwrite.
+  const refundAddressLocked = walletSource === "embedded" && !!arkAddress;
 
-  // Auto-populate refund address if arkAddress is provided
+  // Auto-populate refund address from the connected Arkade wallet
   useEffect(() => {
     if (arkAddress && !refundAddress) {
       setRefundAddress(arkAddress);
@@ -331,8 +335,10 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
                   const raw = e.target.value;
                   setRefundAddress(extractRefundAddress(raw, "arkade") ?? raw);
                 }}
-                disabled={isRefunding || !!arkAddress}
-                className={arkAddress ? "cursor-not-allowed opacity-60" : ""}
+                disabled={isRefunding || refundAddressLocked}
+                className={
+                  refundAddressLocked ? "cursor-not-allowed opacity-60" : ""
+                }
               />
             </div>
 

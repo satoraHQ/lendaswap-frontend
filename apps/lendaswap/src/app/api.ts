@@ -145,7 +145,7 @@ export { getTokenDisplayName, getTokenIcon } from "./utils/tokenUtils";
 const API_BASE_URL =
   import.meta.env.VITE_LENDASWAP_API_URL || "http://localhost:3333";
 
-const ARK_SERVER_URL =
+export const ARK_SERVER_URL =
   import.meta.env.VITE_ARKADE_URL || "https://arkade.computer";
 
 const ESPLORA_URL =
