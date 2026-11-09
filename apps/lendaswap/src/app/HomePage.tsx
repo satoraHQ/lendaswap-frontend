@@ -486,18 +486,22 @@ export function HomePage() {
     // below handles those transitions.
   }, [targetChainKey]);
 
-  // Also react to an Arkade wallet connecting while the target is Arkade:
-  // fill an empty field, and clear it again when that wallet disconnects.
+  // Also react to the Arkade wallet while the target is Arkade: fill an
+  // empty field on connect, follow the wallet when its active account
+  // changes, and clear the field on disconnect. An address the user typed
+  // themselves (one that never came from the wallet) is left alone.
   const isArkadeTarget = targetAsset ? isArkade(targetAsset) : false;
   const previousArkAddress = useRef<string | null>(null);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: only re-run on wallet connect/disconnect events
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only re-run on wallet connect/disconnect/account events
   useEffect(() => {
     const previous = previousArkAddress.current;
     previousArkAddress.current = arkAddress;
     if (!isArkadeTarget) return;
-    if (arkAddress && !targetAddress) {
+    const fieldHoldsWalletAddress =
+      previous !== null && targetAddress === previous;
+    if (arkAddress && (!targetAddress || fieldHoldsWalletAddress)) {
       setTargetAddress(arkAddress);
-    } else if (!arkAddress && previous && targetAddress === previous) {
+    } else if (!arkAddress && fieldHoldsWalletAddress) {
       setTargetAddress("");
     }
   }, [arkAddress]);

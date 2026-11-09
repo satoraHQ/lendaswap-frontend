@@ -204,17 +204,29 @@ export function ArkadeWalletProvider({ children }: ArkadeWalletProviderProps) {
       if (cancelled) return;
 
       if (!provider) {
-        // No extension: restore a remembered PWA address, if any.
+        // No extension: restore a remembered PWA address, if any. It gets
+        // the same server check as a fresh connection: the configured Arkade
+        // server may have changed since the address was stored.
+        let stored: string | null = null;
         try {
-          const stored = localStorage.getItem(PWA_ADDRESS_STORAGE_KEY);
-          if (stored && isValidArkadeAddress(stored)) {
-            setAddress(stored);
-            setMode("pwa");
-          } else if (stored) {
-            localStorage.removeItem(PWA_ADDRESS_STORAGE_KEY);
-          }
+          stored = localStorage.getItem(PWA_ADDRESS_STORAGE_KEY);
         } catch {
           // localStorage unavailable (private mode etc.) — stay disconnected.
+          return;
+        }
+        if (!stored) return;
+        try {
+          await assertUsableAddress(stored);
+          if (cancelled) return;
+          setAddress(stored);
+          setMode("pwa");
+        } catch (err) {
+          console.warn("Discarding stored Inscrib3 wallet address:", err);
+          try {
+            localStorage.removeItem(PWA_ADDRESS_STORAGE_KEY);
+          } catch {
+            // ignore
+          }
         }
         return;
       }
