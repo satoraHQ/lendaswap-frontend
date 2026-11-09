@@ -14,7 +14,7 @@
     "node": "^22",
     "npm": "11.1.0"
   },
-  "packageManager": "pnpm@10.8.0",
+  "packageManager": "pnpm@10.34.9",
   "dependencies": {
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
