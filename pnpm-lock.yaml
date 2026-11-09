@@ -116,18 +116,39 @@ importers:
       '@arkade-os/sdk':
         specifier: ^0.5.1
         version: 0.5.1(bufferutil@4.0.9)(utf-8-validate@6.0.6)
-      '@lendasat/lendaswap-sdk-pure':
-        specifier: workspace:^
-        version: link:../../../ts-pure-sdk
+      '@circle-fin/adapter-viem-v2':
+        specifier: ^1.8.0
+        version: 1.8.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(viem@2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@4.1.12))
+      '@circle-fin/bridge-kit':
+        specifier: ^1.8.0
+        version: 1.8.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)
+      '@noble/curves':
+        specifier: ^2.2.0
+        version: 2.4.0
       '@noble/hashes':
         specifier: ^2.2.0
         version: 2.2.0
       '@scure/base':
         specifier: ^2.0.0
         version: 2.0.0
+      '@scure/bip32':
+        specifier: ^2.0.1
+        version: 2.0.1
+      '@scure/bip39':
+        specifier: ^2.0.1
+        version: 2.4.0
       '@scure/btc-signer':
         specifier: ^2.0.1
         version: 2.0.1
+      '@zerodev/sdk':
+        specifier: ^5.5.0
+        version: 5.5.10(viem@2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@4.1.12))
+      dexie:
+        specifier: 4.4.4
+        version: 4.4.4
+      openapi-fetch:
+        specifier: ^0.17.0
+        version: 0.17.0
       viem:
         specifier: 2.52.2
         version: 2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@4.1.12)
@@ -135,6 +156,12 @@ importers:
       '@biomejs/biome':
         specifier: 2.3.15
         version: 2.3.15
+      '@lendasat/lendaswap-sdk-pure':
+        specifier: workspace:*
+        version: link:../../../ts-pure-sdk
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(jiti@1.21.7)(postcss@8.5.6)(typescript@5.7.3)
@@ -144,6 +171,10 @@ importers:
       vitest:
         specifier: ^3.0.0
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.7.5)
+    optionalDependencies:
+      better-sqlite3:
+        specifier: ^12.11.1
+        version: 12.11.1
 
   apps/lendaswap:
     dependencies:
@@ -2633,6 +2664,7 @@ packages:
   '@safe-global/safe-gateway-typescript-sdk@3.23.1':
     resolution: {integrity: sha512-6ORQfwtEJYpalCeVO21L4XXGSdbEMfyp2hEv6cP82afKXSwvse6d3sdelgaPWUxHIsFRkWvHDdzh8IyyKHZKxw==}
     engines: {node: '>=16'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@scure/base@1.1.9':
     resolution: {integrity: sha512-8YKhl8GHiNI/pU2VMaofa2Tor7PJRAjwQLBBuilkJ9L5+13yVbC7JO/wS7piioAvPSwR3JKM1IJ/u4xQzbcXKg==}
@@ -7006,6 +7038,22 @@ snapshots:
       - typescript
       - utf-8-validate
 
+  '@circle-fin/adapter-viem-v2@1.8.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(viem@2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@4.1.12))':
+    dependencies:
+      '@ethersproject/address': 5.8.0
+      '@ethersproject/bytes': 5.8.0
+      '@ethersproject/units': 5.8.0
+      '@solana/web3.js': 1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)
+      abitype: 1.2.3(typescript@5.7.3)(zod@3.25.67)
+      bs58: 6.0.0
+      viem: 2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@4.1.12)
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - typescript
+      - utf-8-validate
+
   '@circle-fin/bridge-kit@1.8.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)':
     dependencies:
       '@circle-fin/provider-cctp-v2': 1.6.2(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)
@@ -10855,6 +10903,11 @@ snapshots:
     dependencies:
       semver: 7.7.3
       viem: 2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@3.25.76)
+
+  '@zerodev/sdk@5.5.10(viem@2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@4.1.12))':
+    dependencies:
+      semver: 7.7.3
+      viem: 2.52.2(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.6)(zod@4.1.12)
 
   abitype@1.0.6(typescript@5.7.3)(zod@3.25.76):
     optionalDependencies:

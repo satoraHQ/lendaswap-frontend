@@ -3,9 +3,9 @@ packages:
   - "apps/**"
   # all packages in direct subdirs of packages/
   - "packages/*"
-  # client-sdk TypeScript SDK (legacy, wrapped by @satora/swap)
+  # Private implementation bundled into @satora/swap
   - "../client-sdk/ts-pure-sdk"
-  # Satora swap client — the drop-in the app consumes; wraps ts-pure-sdk
+  # Satora swap client consumed by the app
   - "../client-sdk/ts-sdk/packages/swap"
   - "!**/dist/**"
 
