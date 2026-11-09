@@ -17,6 +17,9 @@ import {
 
 interface ArkadeWalletDialogProps {
   trigger?: React.ReactNode;
+  /** Controlled open state; when set, no trigger is rendered. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function truncateArkadeAddress(address: string): string {
@@ -29,7 +32,11 @@ export function truncateArkadeAddress(address: string): string {
  * Connect / inspect / disconnect an Inscrib3 Arkade wallet. Mirrors the NWC
  * dialog so the header reads the same for both external wallets.
  */
-export function ArkadeWalletDialog({ trigger }: ArkadeWalletDialogProps) {
+export function ArkadeWalletDialog({
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: ArkadeWalletDialogProps) {
   const {
     hasExtension,
     isConnected,
@@ -43,7 +50,13 @@ export function ArkadeWalletDialog({ trigger }: ArkadeWalletDialogProps) {
     disconnect,
     refreshBalance,
   } = useArkadeWallet();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleConnect = async () => {
@@ -80,7 +93,9 @@ export function ArkadeWalletDialog({ trigger }: ArkadeWalletDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

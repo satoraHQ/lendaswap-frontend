@@ -14,9 +14,16 @@ import { useNwc } from "../NwcContext";
 
 interface NwcConnectDialogProps {
   trigger?: React.ReactNode;
+  /** Controlled open state; when set, no trigger is rendered. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function NwcConnectDialog({ trigger }: NwcConnectDialogProps) {
+export function NwcConnectDialog({
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: NwcConnectDialogProps) {
   const {
     isConnected,
     isConnecting,
@@ -26,7 +33,13 @@ export function NwcConnectDialog({ trigger }: NwcConnectDialogProps) {
     disconnect,
     refreshBalance,
   } = useNwc();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = (next: boolean) => {
+    if (!isControlled) setUncontrolledOpen(next);
+    onOpenChange?.(next);
+  };
   const [uri, setUri] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -68,7 +81,9 @@ export function NwcConnectDialog({ trigger }: NwcConnectDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

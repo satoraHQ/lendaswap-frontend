@@ -1,4 +1,3 @@
-import { useAppKit } from "@reown/appkit/react";
 import {
   Download,
   Eye,
@@ -8,31 +7,23 @@ import {
   Key,
   Menu,
   Upload,
-  Wallet,
-  Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useAccount } from "wagmi";
 import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { ReactComponent as XLogo } from "../../assets/x-com-logo.svg";
 import isValidSpeedWalletContext from "../../utils/speedWallet";
-import { useArkadeWallet } from "../ArkadeWalletContext";
-import { useNwc } from "../NwcContext";
 import { useActionableSwaps } from "../swapActionCenter";
 import { ThemeToggle } from "../utils/theme-toggle";
 import { useWalletBridge } from "../WalletBridgeContext";
-import {
-  ArkadeWalletDialog,
-  truncateArkadeAddress,
-} from "./ArkadeWalletDialog";
-import { NwcConnectDialog } from "./NwcConnectDialog";
+import { useWalletMenu, WalletMenu, WalletMenuItems } from "./WalletMenu";
 
 interface AppHeaderProps {
   onBackupOpen: () => void;
@@ -56,251 +47,190 @@ export function AppHeader({
   onDownloadSeedphrase,
 }: AppHeaderProps) {
   const navigate = useNavigate();
-  const { open } = useAppKit();
-  const { isConnected, address } = useAccount();
   const { isEmbedded } = useWalletBridge();
   const isSpeedWallet = isValidSpeedWalletContext();
-  const showNwc = !isEmbedded && !isSpeedWallet;
-  const { isConnected: isNwcConnected, balanceSats } = useNwc();
-  // Inscrib3 Arkade wallet: same visibility rules as NWC — an embedding host
-  // wallet or Speed Wallet already supplies the Arkade side.
-  const showArkadeWallet = !isEmbedded && !isSpeedWallet;
-  const {
-    isConnected: isArkadeWalletConnected,
-    address: arkadeWalletAddress,
-    balanceSats: arkadeBalanceSats,
-  } = useArkadeWallet();
-  const truncatedAddress = address
-    ? `${address.slice(0, 6)}...${address.slice(-4)}`
-    : undefined;
+  // NWC and Inscrib3 Arkade wallets only in standalone mode: an embedding
+  // host wallet or Speed Wallet already supplies the Bitcoin side. Speed
+  // Wallet also has no use for the EVM connect button.
+  const { entries: walletEntries, dialogs: walletDialogs } = useWalletMenu({
+    showNwc: !isEmbedded && !isSpeedWallet,
+    showArkade: !isEmbedded && !isSpeedWallet,
+    showEvm: !isSpeedWallet,
+  });
   const needsAction = useActionableSwaps().size > 0;
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 transition-opacity hover:opacity-80"
-            >
-              <span className="text-2xl font-bold select-none">
-                satora
-                <span
-                  className="inline-block rounded-full bg-lime-400 align-baseline"
-                  style={{
-                    width: "0.3em",
-                    height: "0.3em",
-                    marginLeft: "0.05em",
-                  }}
-                />
-              </span>
-            </button>
+    <>
+      <header className="border-b">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="flex items-center gap-2 transition-opacity hover:opacity-80"
+              >
+                <span className="text-2xl font-bold select-none">
+                  satora
+                  <span
+                    className="inline-block rounded-full bg-lime-400 align-baseline"
+                    style={{
+                      width: "0.3em",
+                      height: "0.3em",
+                      marginLeft: "0.05em",
+                    }}
+                  />
+                </span>
+              </button>
 
-            {/* GitHub Link */}
-            <a
-              href="https://github.com/satoraHQ"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-              aria-label="Visit us on GitHub"
-            >
-              <Github className="h-4 w-4" />
-            </a>
+              {/* GitHub Link */}
+              <a
+                href="https://github.com/satoraHQ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+                aria-label="Visit us on GitHub"
+              >
+                <Github className="h-4 w-4" />
+              </a>
 
-            {/* X/Twitter Link */}
-            <a
-              href="https://x.com/satora_io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-              aria-label="Follow us on X"
-            >
-              <XLogo className="h-3.5 w-3.5 fill-current" />
-            </a>
+              {/* X/Twitter Link */}
+              <a
+                href="https://x.com/satora_io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+                aria-label="Follow us on X"
+              >
+                <XLogo className="h-3.5 w-3.5 fill-current" />
+              </a>
 
-            {/* Satora Website Link */}
-            <a
-              href="https://satora.io"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-              aria-label="Visit satora.io"
-            >
-              <Globe className="h-4 w-4" />
-            </a>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Mobile Dropdown Menu */}
-            <div className="md:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative">
-                    <Menu className="h-4 w-4" />
-                    {needsAction && (
-                      <ActionDot className="absolute right-1 top-1" />
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    onClick={() => navigate("/swaps")}
-                    className="gap-2"
-                  >
-                    <History className="h-4 w-4" />
-                    Swaps
-                    {needsAction && <ActionDot className="relative ml-auto" />}
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuItem onClick={onBackupOpen} className="gap-2">
-                    <Eye className="h-4 w-4" />
-                    Show Seedphrase
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    onClick={onDownloadSeedphrase}
-                    className="gap-2"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download Seedphrase
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem onClick={onImportOpen} className="gap-2">
-                    <Upload className="h-4 w-4" />
-                    Import Seedphrase
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-
-                  {/* NWC Lightning Wallet - only in standalone mode */}
-                  {showNwc && (
-                    <NwcConnectDialog
-                      trigger={
-                        <button
-                          type="button"
-                          className="focus:bg-accent focus:text-accent-foreground outline-hidden relative flex w-full cursor-default select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-gray-200"
-                        >
-                          <Zap
-                            className={`h-4 w-4 shrink-0 ${isNwcConnected ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                          />
-                          {isNwcConnected
-                            ? balanceSats !== null
-                              ? `${balanceSats.toLocaleString()} sats`
-                              : "Connected"
-                            : "Lightning"}
-                        </button>
-                      }
-                    />
-                  )}
-
-                  {/* Inscrib3 Arkade Wallet - only in standalone mode */}
-                  {showArkadeWallet && (
-                    <ArkadeWalletDialog
-                      trigger={
-                        <button
-                          type="button"
-                          className="focus:bg-accent focus:text-accent-foreground outline-hidden relative flex w-full cursor-default select-none items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-gray-200"
-                        >
-                          <Wallet
-                            className={`h-4 w-4 shrink-0 ${isArkadeWalletConnected ? "text-lime-500" : "text-muted-foreground"}`}
-                          />
-                          {isArkadeWalletConnected && arkadeWalletAddress
-                            ? arkadeBalanceSats !== null
-                              ? `${arkadeBalanceSats.toLocaleString()} sats`
-                              : truncateArkadeAddress(arkadeWalletAddress)
-                            : "Arkade"}
-                        </button>
-                      }
-                    />
-                  )}
-
-                  {/* Hide Connect button in Speed Wallet - not needed */}
-                  {!isSpeedWallet && (
-                    <DropdownMenuItem
-                      onClick={() => open().catch(console.error)}
-                    >
-                      <Wallet className="h-4 w-4" />
-                      {isConnected ? truncatedAddress : "Connect"}
-                    </DropdownMenuItem>
-                  )}
-
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuItem asChild>
-                    <ThemeToggle />
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Satora Website Link */}
+              <a
+                href="https://satora.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+                aria-label="Visit satora.io"
+              >
+                <Globe className="h-4 w-4" />
+              </a>
             </div>
 
-            {/* Desktop Buttons */}
-            <div className="hidden items-center gap-3 md:flex">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/swaps")}
-                className="relative gap-2"
-                title="Swaps"
-              >
-                <History className="h-4 w-4" />
-                {needsAction && (
-                  <ActionDot className="absolute right-1 top-1" />
-                )}
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-2"
-                    title="Wallet Settings"
-                  >
-                    <Key className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={onBackupOpen} className="gap-2">
-                    <Eye className="h-4 w-4" />
-                    Show Seedphrase
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={onDownloadSeedphrase}
-                    className="gap-2"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download Seedphrase
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={onImportOpen} className="gap-2">
-                    <Upload className="h-4 w-4" />
-                    Import Seedphrase
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* NWC Lightning Wallet - only in standalone mode */}
-              {showNwc && <NwcConnectDialog />}
-              {/* Inscrib3 Arkade Wallet - only in standalone mode */}
-              {showArkadeWallet && <ArkadeWalletDialog />}
-              <ThemeToggle />
-              {/* Hide Connect button in Speed Wallet - not needed */}
-              {!isSpeedWallet && (
+            <div className="flex items-center gap-3">
+              {/* Mobile Dropdown Menu */}
+              <div className="md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="relative">
+                      <Menu className="h-4 w-4" />
+                      {needsAction && (
+                        <ActionDot className="absolute right-1 top-1" />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={() => navigate("/swaps")}
+                      className="gap-2"
+                    >
+                      <History className="h-4 w-4" />
+                      Swaps
+                      {needsAction && (
+                        <ActionDot className="relative ml-auto" />
+                      )}
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem onClick={onBackupOpen} className="gap-2">
+                      <Eye className="h-4 w-4" />
+                      Show Seedphrase
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={onDownloadSeedphrase}
+                      className="gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Seedphrase
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem onClick={onImportOpen} className="gap-2">
+                      <Upload className="h-4 w-4" />
+                      Import Seedphrase
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+
+                    {walletEntries.length > 0 && (
+                      <>
+                        <DropdownMenuLabel className="text-muted-foreground">
+                          Wallets
+                        </DropdownMenuLabel>
+                        <WalletMenuItems entries={walletEntries} />
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+
+                    <DropdownMenuItem asChild>
+                      <ThemeToggle />
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Desktop Buttons */}
+              <div className="hidden items-center gap-3 md:flex">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  onClick={() => open().catch(console.error)}
-                  className="h-9"
+                  onClick={() => navigate("/swaps")}
+                  className="relative gap-2"
+                  title="Swaps"
                 >
-                  <Wallet className="mr-1.5 h-3.5 w-3.5" />
-                  {isConnected ? truncatedAddress : "Connect"}
+                  <History className="h-4 w-4" />
+                  {needsAction && (
+                    <ActionDot className="absolute right-1 top-1" />
+                  )}
                 </Button>
-              )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2"
+                      title="Wallet Settings"
+                    >
+                      <Key className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={onBackupOpen} className="gap-2">
+                      <Eye className="h-4 w-4" />
+                      Show Seedphrase
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={onDownloadSeedphrase}
+                      className="gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Download Seedphrase
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={onImportOpen} className="gap-2">
+                      <Upload className="h-4 w-4" />
+                      Import Seedphrase
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <ThemeToggle />
+                <WalletMenu entries={walletEntries} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+      {walletDialogs}
+    </>
   );
 }
