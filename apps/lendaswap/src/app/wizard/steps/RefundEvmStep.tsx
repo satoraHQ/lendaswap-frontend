@@ -30,7 +30,11 @@ import {
   isContractWallet,
 } from "../../utils/evmRefundOptions";
 import { buildEvmSigner } from "../../utils/evmSigner";
-import { getViemChain, isNativeLockSwap } from "../../utils/tokenUtils";
+import {
+  displayTargetToken,
+  getViemChain,
+  isNativeLockSwap,
+} from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
 interface RefundEvmStepProps {
@@ -355,7 +359,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
   return (
     <DepositCard
       sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapId}
       title={`Refund ${swapData.source_token.symbol} → ${swapData.target_token.symbol}`}
     >

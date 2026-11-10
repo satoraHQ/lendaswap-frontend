@@ -5,7 +5,10 @@ import type {
 } from "@satora/swap";
 import { toChainName } from "@satora/swap";
 import { ArrowRight, Info, Zap } from "lucide-react";
-import { getTargetChainDisplayName } from "../../utils/tokenUtils";
+import {
+  displayTargetToken,
+  getTargetChainDisplayName,
+} from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
 interface RefundLightningStepProps {
@@ -19,7 +22,7 @@ export function RefundLightningStep({ swapData }: RefundLightningStepProps) {
   return (
     <DepositCard
       sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapData.id}
       title={`Refund ${swapData.source_token.symbol} → ${swapData.target_token.symbol}`}
     >

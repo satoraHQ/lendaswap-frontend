@@ -11,6 +11,8 @@ import { useNavigate } from "react-router";
 import type { BtcToArkadeSwapResponse } from "../../api";
 import {
   displayDecimals,
+  displaySourceToken,
+  displayTargetToken,
   getTargetChainDisplayName,
 } from "../../utils/tokenUtils";
 import {
@@ -93,8 +95,8 @@ export function DepositBitcoinStep({
 
   return (
     <DepositCard
-      sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      sourceToken={displaySourceToken(swapData)}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapId}
       title={`${swapData.source_token.symbol} → ${swapData.target_token.symbol}`}
     >

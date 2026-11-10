@@ -15,6 +15,8 @@ import { useNwc } from "../../NwcContext";
 import { totalFeeSats } from "../../utils/feeUtils";
 import {
   displayDecimals,
+  displaySourceToken,
+  displayTargetToken,
   getTargetChainDisplayName,
 } from "../../utils/tokenUtils";
 import { useWalletBridge } from "../../WalletBridgeContext";
@@ -123,8 +125,8 @@ export function DepositLightningStep({ swapData }: SendLightningStepProps) {
   if (isSpeedWallet) {
     return (
       <DepositCard
-        sourceToken={swapData.source_token}
-        targetToken={swapData.target_token}
+        sourceToken={displaySourceToken(swapData)}
+        targetToken={displayTargetToken(swapData)}
         swapId={swapData.id}
         title="Pay with Speed Wallet"
       >
@@ -182,8 +184,8 @@ export function DepositLightningStep({ swapData }: SendLightningStepProps) {
 
   return (
     <DepositCard
-      sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      sourceToken={displaySourceToken(swapData)}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapData.id}
       title={`${swapData.source_token.symbol} → ${swapData.target_token.symbol}`}
     >

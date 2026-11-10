@@ -33,6 +33,7 @@ import {
   resolveSolanaBridgeRecipient,
 } from "../../utils/solana";
 import {
+  displayTargetToken,
   getBlockexplorerTxLink,
   getTokenIcon,
   getTokenNetworkIcon,
@@ -747,12 +748,12 @@ export function SwapProcessingStep({
           <div className="relative">
             <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
               <div className="flex h-5 w-5 items-center justify-center">
-                {getTokenIcon(swapData.target_token)}
+                {getTokenIcon(displayTargetToken(swapData))}
               </div>
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background p-[1px]">
               <div className="flex h-full w-full items-center justify-center rounded-full [&_svg]:h-full [&_svg]:w-full">
-                {getTokenNetworkIcon(swapData.target_token)}
+                {getTokenNetworkIcon(displayTargetToken(swapData))}
               </div>
             </div>
           </div>

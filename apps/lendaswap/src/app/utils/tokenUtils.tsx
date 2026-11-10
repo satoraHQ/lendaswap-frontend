@@ -276,6 +276,32 @@ export function getTargetChainDisplayName(swapData: {
 }
 
 /**
+ * The swap's target token as the user sees it: on a bridged swap the chain is
+ * the bridge destination (e.g. Base), not the intermediate chain (Arbitrum).
+ */
+export function displayTargetToken<T extends { chain: Chain }>(swapData: {
+  target_token: T;
+  bridge_target_chain?: string | null;
+}): T {
+  return swapData.bridge_target_chain
+    ? { ...swapData.target_token, chain: toChain(swapData.bridge_target_chain) }
+    : swapData.target_token;
+}
+
+/**
+ * The swap's source token as the user sees it: on a bridged inbound swap the
+ * chain is where the user actually pays (e.g. Base), not Arbitrum.
+ */
+export function displaySourceToken<T extends { chain: Chain }>(swapData: {
+  source_token: T;
+  bridge_source_chain?: string | null;
+}): T {
+  return swapData.bridge_source_chain
+    ? { ...swapData.source_token, chain: toChain(swapData.bridge_source_chain) }
+    : swapData.source_token;
+}
+
+/**
  * Block explorer base URLs by chain key.
  *
  * Unknown EVM chains fall back to {@link EVM_EXPLORER_FALLBACK} (blockscan.com,

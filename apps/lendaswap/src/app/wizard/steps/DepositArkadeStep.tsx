@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useArkadeFundingWallet } from "../../hooks/useArkadeFundingWallet";
 import { totalFeeSats } from "../../utils/feeUtils";
+import { displaySourceToken, displayTargetToken } from "../../utils/tokenUtils";
 import {
   AddressDisplay,
   AmountRow,
@@ -58,8 +59,8 @@ export function DepositArkadeStep({ swapData }: DepositArkadeStepProps) {
 
   return (
     <DepositCard
-      sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      sourceToken={displaySourceToken(swapData)}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapData.id}
       title={`${swapData.source_token.symbol} → ${swapData.target_token.symbol}`}
     >

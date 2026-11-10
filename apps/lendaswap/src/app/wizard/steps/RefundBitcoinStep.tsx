@@ -13,7 +13,10 @@ import { api, type BtcToArkadeSwapResponse } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import { useBitcoinChainClock } from "../../hooks/useBitcoinChainClock";
 import { extractRefundAddress } from "../../utils/bip21";
-import { getTargetChainDisplayName } from "../../utils/tokenUtils";
+import {
+  displayTargetToken,
+  getTargetChainDisplayName,
+} from "../../utils/tokenUtils";
 import { DepositCard } from "../components";
 
 interface OnchainBtcRefundStepProps {
@@ -104,7 +107,7 @@ export function RefundBitcoinStep({ swapData }: OnchainBtcRefundStepProps) {
   return (
     <DepositCard
       sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapId}
       title={`Refund ${swapData.source_token.symbol} → ${swapData.target_token.symbol}`}
     >

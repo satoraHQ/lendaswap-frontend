@@ -81,7 +81,11 @@ import {
   getCctpInboundSession,
   upsertCctpInboundSession,
 } from "../../db";
-import { getBlockexplorerTxLink } from "../../utils/tokenUtils";
+import {
+  displaySourceToken,
+  displayTargetToken,
+  getBlockexplorerTxLink,
+} from "../../utils/tokenUtils";
 import { useWalletBridge } from "../../WalletBridgeContext";
 import { DepositCard } from "../components";
 
@@ -657,8 +661,8 @@ export function BridgingCctpStep({ swapId, swapData }: BridgingCctpStepProps) {
 
   return (
     <DepositCard
-      sourceToken={sourceToken ?? swapData.source_token}
-      targetToken={swapData.target_token}
+      sourceToken={sourceToken ?? displaySourceToken(swapData)}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapId}
       title={`${sourceAmountHuman} USDC on ${sourceChainName} → ${swapData.target_token.symbol}`}
     >

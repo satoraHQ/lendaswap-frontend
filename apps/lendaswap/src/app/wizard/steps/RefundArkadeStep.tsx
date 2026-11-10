@@ -16,6 +16,7 @@ import { useArkadeFundingWallet } from "../../hooks/useArkadeFundingWallet";
 import { useBitcoinChainClock } from "../../hooks/useBitcoinChainClock";
 import { extractRefundAddress } from "../../utils/bip21";
 import {
+  displayTargetToken,
   getBlockexplorerAddressLink,
   getBlockexplorerTxLink,
 } from "../../utils/tokenUtils";
@@ -145,7 +146,7 @@ export function RefundArkadeStep({ swapData }: RefundArkadeStepProps) {
   return (
     <DepositCard
       sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapData.id}
       title={`Refund ${swapData.source_token.symbol} → ${swapData.target_token.symbol}`}
     >

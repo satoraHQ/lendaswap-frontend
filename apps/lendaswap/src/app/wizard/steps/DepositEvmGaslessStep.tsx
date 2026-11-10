@@ -17,6 +17,8 @@ import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import { buildTransport } from "../../utils/evmTransport";
 import { totalFeeSats } from "../../utils/feeUtils";
 import {
+  displaySourceToken,
+  displayTargetToken,
   getBlockexplorerAddressLink,
   getTargetChainDisplayName,
   getViemChain,
@@ -169,8 +171,8 @@ export function DepositEvmGaslessStep({
 
   return (
     <DepositCard
-      sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      sourceToken={displaySourceToken(swapData)}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapId}
       title={`${tokenSymbol} → ${swapData.target_token.symbol}`}
     >

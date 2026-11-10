@@ -33,6 +33,8 @@ import { buildEvmSigner } from "../../utils/evmSigner";
 import { totalFeeSats } from "../../utils/feeUtils";
 import {
   displayDecimals,
+  displaySourceToken,
+  displayTargetToken,
   getTargetChainDisplayName,
   getViemChain,
   isNativeLockSwap,
@@ -254,8 +256,8 @@ export function DepositEvmStep({ swapData, swapId }: EvmDepositStepProps) {
 
   return (
     <DepositCard
-      sourceToken={swapData.source_token}
-      targetToken={swapData.target_token}
+      sourceToken={displaySourceToken(swapData)}
+      targetToken={displayTargetToken(swapData)}
       swapId={swapId}
       title={`${tokenSymbol} → ${swapData.target_token.symbol}`}
     >
