@@ -49,6 +49,7 @@ import { ReactComponent as Arbitrum } from "../../assets/arbitrum.svg";
 import { ReactComponent as ArkadeIcon } from "../../assets/arkade.svg";
 import { ReactComponent as BitcoinIcon } from "../../assets/bitcoin.svg";
 import { ReactComponent as BitcoinLightningIcon } from "../../assets/bitcoin_lightning.svg";
+import cirbtcIcon from "../../assets/cirbtc.svg";
 import { ReactComponent as Ethereum } from "../../assets/eth.svg";
 import { ReactComponent as Eurc } from "../../assets/eurc.svg";
 import { ReactComponent as Eure } from "../../assets/eure.svg";
@@ -106,6 +107,16 @@ export function getTokenIcon(
   }
   if (tokenId.symbol.toLowerCase() === "tbtc") {
     return <Tbtc width={64} height={64} />;
+  }
+  if (tokenId.symbol.toLowerCase() === "cirbtc") {
+    return (
+      <img
+        src={cirbtcIcon}
+        alt="cirBTC"
+        width={width ?? 64}
+        height={height ?? 64}
+      />
+    );
   }
   // Rootstock's coin is bitcoin; the network badge says where.
   if (tokenId.symbol.toLowerCase() === "rbtc") {

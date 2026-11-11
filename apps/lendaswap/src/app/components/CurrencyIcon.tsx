@@ -62,6 +62,7 @@ const SYMBOL_CATEGORY: Record<string, CurrencyCategory> = {
   busd: "stablecoin",
   btc: "bitcoin",
   wbtc: "bitcoin",
+  cirbtc: "bitcoin",
   tbtc: "bitcoin",
   rbtc: "bitcoin",
   xaut: "gold",
