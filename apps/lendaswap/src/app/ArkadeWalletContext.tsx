@@ -1,4 +1,4 @@
-import { RestArkProvider } from "@arkade-os/sdk";
+import { RestOperatorProvider } from "@arkade-os/sdk";
 import { isValidArkadeAddress } from "@satora/swap";
 import {
   createContext,
@@ -80,7 +80,7 @@ const PWA_ADDRESS_STORAGE_KEY = "satora_inscrib3_pwa_address";
 // Server info is fetched once per page load; the signer key does not change.
 let serverSignerPubkeyPromise: Promise<string | null> | null = null;
 function getServerSignerPubkey(): Promise<string | null> {
-  serverSignerPubkeyPromise ??= new RestArkProvider(ARK_SERVER_URL)
+  serverSignerPubkeyPromise ??= new RestOperatorProvider(ARK_SERVER_URL)
     .getInfo()
     .then((info) => info.signerPubkey)
     .catch((err) => {
