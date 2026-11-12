@@ -49,7 +49,7 @@ import { ReactComponent as Arbitrum } from "../../assets/arbitrum.svg";
 import { ReactComponent as ArkadeIcon } from "../../assets/arkade.svg";
 import { ReactComponent as BitcoinIcon } from "../../assets/bitcoin.svg";
 import { ReactComponent as BitcoinLightningIcon } from "../../assets/bitcoin_lightning.svg";
-import cirbtcIcon from "../../assets/cirbtc.svg";
+import cirbtcIcon from "../../assets/cirbtc.svg?url";
 import { ReactComponent as Ethereum } from "../../assets/eth.svg";
 import { ReactComponent as Eurc } from "../../assets/eurc.svg";
 import { ReactComponent as Eure } from "../../assets/eure.svg";
