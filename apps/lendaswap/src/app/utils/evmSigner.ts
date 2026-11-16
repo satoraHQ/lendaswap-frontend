@@ -26,6 +26,8 @@ export function buildEvmSigner(
   return {
     address: walletClient.account.address,
     chainId: chain.id,
+    getCode: async (address) =>
+      (await publicClient.getCode({ address: address as `0x${string}` })) ?? "0x",
     signTypedData: (td) =>
       walletClient.signTypedData({
         ...td,
