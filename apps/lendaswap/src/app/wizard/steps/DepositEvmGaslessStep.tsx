@@ -49,6 +49,41 @@ export function DepositEvmGaslessStep({
   const [fundError, setFundError] = useState<string | null>(null);
   const [funded, setFunded] = useState(false);
 
+  // ── Funding capability ────────────────────────────────────────────────
+  // On chains where the SDK submits the funding itself as a sponsored
+  // UserOp, a missing AA configuration means a deposit could never be
+  // moved into the swap. Checked up front so the user is not asked to
+  // deposit before the problem surfaces.
+  const setupKey = `${swapId}:${swapData.source_token.chain}`;
+  const [checkedSetup, setCheckedSetup] = useState<string | null>(null);
+  const [setupError, setSetupError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .gaslessFundingPlan(Number(swapData.source_token.chain))
+      .then((plan) => {
+        if (plan.mode === "self-paid") {
+          throw new Error("Gasless deposits require sponsored funding.");
+        }
+        if (!cancelled) {
+          setSetupError(null);
+          setCheckedSetup(setupKey);
+        }
+      })
+      .catch((err) => {
+        console.error("Gasless funding unavailable:", err);
+        if (!cancelled) {
+          setCheckedSetup(setupKey);
+          setSetupError(
+            err instanceof Error ? err.message : "Gasless funding unavailable",
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [setupKey, swapData.source_token.chain]);
+
   // ── Balance polling ────────────────────────────────────────────────────
   const chain = getViemChain(swapData.source_token.chain);
   const tokenAddress = swapData.source_token.token_id as `0x${string}`;
@@ -168,6 +203,40 @@ export function DepositEvmGaslessStep({
       setIsFunding(false);
     }
   };
+
+  // Funding cannot complete on this client: say so instead of directing
+  // the user to deposit into an account the funding could not move.
+  if (checkedSetup !== setupKey) {
+    return <p role="status">Checking gasless funding availability…</p>;
+  }
+
+  if (setupError) {
+    return (
+      <DepositCard
+        sourceToken={displaySourceToken(swapData)}
+        targetToken={displayTargetToken(swapData)}
+        swapId={swapId}
+        title={`${tokenSymbol} → ${swapData.target_token.symbol}`}
+      >
+        <SupportErrorBanner
+          message="Gasless funding is not available"
+          error={setupError}
+          swapId={swapId}
+        />
+        <p className="text-xs text-muted-foreground text-center">
+          Do not send {tokenSymbol} to this swap — the deposit could not be
+          completed. Cancel the swap and try again, or contact support.
+        </p>
+        <Button
+          variant="outline"
+          className="h-12 w-full"
+          onClick={() => navigate("/")}
+        >
+          Cancel Swap
+        </Button>
+      </DepositCard>
+    );
+  }
 
   return (
     <DepositCard

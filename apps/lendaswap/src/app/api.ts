@@ -702,6 +702,19 @@ export const api = {
     return await client.fundSwapGasless(swapId);
   },
 
+  /**
+   * How `fundSwapGasless` would fund a gasless swap on `chainId`. Throws
+   * when the chain needs the SDK's sponsored funding but the client has no
+   * AA config — checked before the deposit address is shown, so no deposit
+   * is requested that could not be moved afterwards.
+   */
+  async gaslessFundingPlan(
+    chainId: number,
+  ): Promise<{ mode: "sponsored" | "self-paid" | "relay" }> {
+    const client = await getClients();
+    return client.gaslessFundingPlan(chainId);
+  },
+
   async getSwapAndLockUseropCalldata(swapId: string): Promise<{
     coordinator_address: string;
     permit2_address: string;
