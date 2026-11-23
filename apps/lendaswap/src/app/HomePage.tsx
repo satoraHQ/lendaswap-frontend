@@ -47,7 +47,7 @@ import { type RefreshArgs, useQuote } from "./hooks/useQuote";
 import { useSwapsPaused } from "./hooks/useSwapsPaused";
 import { useTokenBalance } from "./hooks/useTokenBalance";
 import { formatSatsForUnit, useBtcUnit } from "./utils/btcUnit";
-import { clearPromoCode, getPromoCode, setPromoCode } from "./utils/promoCode";
+import { clearPromoCode, setPromoCode, usePromoCode } from "./utils/promoCode";
 import {
   evmSmallestToSats,
   gaslessFeeBtc,
@@ -331,15 +331,18 @@ export function HomePage() {
     }
   }, [urlRef]);
 
-  // Promo link (`?promo=CODE`): stored like the referral code, before any
-  // quote runs, then checked so the user sees what it gives. An unusable code
-  // is dropped so quotes fall back to the normal fee.
+  // Promo link (`?promo=CODE`): set before the first quote runs, then
+  // looked up so the user sees what it gives. An unusable code is dropped,
+  // which re-quotes at the normal fee and hides the badge.
   const urlPromo = searchParams.get("promo");
-  const [promoCode] = useState(() => {
+  useState(() => {
     if (urlPromo) setPromoCode(urlPromo);
-    return getPromoCode();
   });
-  const { value: promo } = useAsync(async () => {
+  useEffect(() => {
+    if (urlPromo) setPromoCode(urlPromo);
+  }, [urlPromo]);
+  const promoCode = usePromoCode();
+  const { value: promoLookup } = useAsync(async () => {
     if (!promoCode) return undefined;
     try {
       return await api.getPromoCode(promoCode);
@@ -349,6 +352,9 @@ export function HomePage() {
       return undefined;
     }
   }, [promoCode]);
+  // Only show what the active code gives; a cleared code hides the badge.
+  const promo =
+    promoLookup && promoLookup.code === promoCode ? promoLookup : undefined;
 
   const {
     value: maybeAvailableTokens,
@@ -658,6 +664,7 @@ export function HomePage() {
     targetToken: targetTokenId,
     bridgeRecipientSetup,
     lightningDestination,
+    promoCode,
   });
 
   // Debounced quote fetch - fires 800ms after the last amount change.
@@ -871,6 +878,7 @@ export function HomePage() {
           targetAmount != null;
 
         const swap = await api.createSwap({
+          promoCode,
           // `api.createSwap` accepts either `Asset` or `TokenInfo` via
           // `sourceAsset`; we pass the legacy shape so the SDK auto-detects
           // the CCTP-only source and populates `inboundBridgeParams`.
@@ -967,6 +975,7 @@ export function HomePage() {
           : undefined;
       }
       const swap = await api.createSwap({
+        promoCode,
         sourceAsset,
         targetAsset,
         sourceAmount: selectedSourceAmount,

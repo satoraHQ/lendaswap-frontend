@@ -22,6 +22,11 @@ export interface UseQuoteParams {
    * dedupe key includes it so edits re-fetch.
    */
   lightningDestination?: string;
+  /**
+   * Active promo code. Part of the dedupe key, so setting or clearing it
+   * re-fetches and the quote always shows the fee `createSwap` will charge.
+   */
+  promoCode?: string | null;
 }
 
 export interface RefreshArgs {
@@ -53,6 +58,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
     targetToken,
     bridgeRecipientSetup,
     lightningDestination,
+    promoCode,
   } = params;
   const [quote, setQuote] = useState<QuoteResponse | undefined>();
   const [isLoading, setIsLoading] = useState(false);
@@ -98,7 +104,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
       // callers re-invoking after a cancelled in-flight request still
       // get the response back and can run their follow-up side-effects
       // (e.g. syncing the opposite amount into UI state).
-      const key = `${sourceChain}|${sourceToken}|${targetChain}|${targetToken}|s=${args.sourceAmount ?? ""}|t=${args.targetAmount ?? ""}|setup=${bridgeRecipientSetup}|ln=${lightningDestination ?? ""}`;
+      const key = `${sourceChain}|${sourceToken}|${targetChain}|${targetToken}|s=${args.sourceAmount ?? ""}|t=${args.targetAmount ?? ""}|setup=${bridgeRecipientSetup}|ln=${lightningDestination ?? ""}|promo=${promoCode ?? ""}`;
       if (lastRequestKeyRef.current === key) {
         return quoteRef.current;
       }
@@ -119,6 +125,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
           sourceAmount: args.sourceAmount,
           targetAmount: args.targetAmount,
           bridgeRecipientSetup,
+          promoCode,
         });
         if (abort.signal.aborted) {
           return undefined;
@@ -147,6 +154,7 @@ export function useQuote(params: UseQuoteParams): UseQuoteResult {
       targetToken,
       bridgeRecipientSetup,
       lightningDestination,
+      promoCode,
     ],
   );
 

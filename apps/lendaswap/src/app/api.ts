@@ -211,13 +211,14 @@ function getClients(): Promise<SdkClient> {
 }
 
 /**
- * Quote with the stored promo code. If the server rejects the code (expired,
- * used up, ...), forget it and quote at the normal fee instead of failing.
+ * Quote with `promoCode`. If the server rejects the code (expired, used up,
+ * ...), forget it and quote at the normal fee instead of failing; clearing it
+ * also re-renders the promo badge away.
  */
 async function withPromoFallback<T>(
+  promoCode: string | null | undefined,
   quote: (promoCode: string | undefined) => Promise<T>,
 ): Promise<T> {
-  const promoCode = getPromoCode();
   if (!promoCode) return quote(undefined);
   try {
     return await quote(promoCode);
@@ -366,16 +367,19 @@ export const api = {
      * provider send fee instead of the estimate.
      */
     lightningDestination?: string;
+    /** Promo code to price with; pass the same one to `createSwap`. */
+    promoCode?: string | null;
   }): Promise<QuoteResponse> {
+    const { promoCode: requestedPromo, ...quoteRequest } = request;
     const referralCode = getReferralCode();
     const client = await getClients();
     const quote = (promoCode: string | undefined) =>
       client.getQuote({
-        ...request,
+        ...quoteRequest,
         referralCode: referralCode || undefined,
         promoCode,
       });
-    return await withPromoFallback(quote);
+    return await withPromoFallback(requestedPromo, quote);
   },
 
   /**
@@ -401,7 +405,7 @@ export const api = {
         referralCode: referralCode || undefined,
         promoCode,
       });
-    return await withPromoFallback(quote);
+    return await withPromoFallback(getPromoCode(), quote);
   },
 
   async createSwap(request: {
@@ -417,27 +421,40 @@ export const api = {
     bridgeRecipientSetup?: boolean;
     bridgeRecipient?: string;
     bridgeRecipientWallet?: string;
+    /** The promo code the displayed quote was priced with. */
+    promoCode?: string | null;
   }): Promise<GetSwapResponse> {
     const referralCode = getReferralCode();
     const client = await getClients();
-    const result = await client.createSwap({
-      source: request.source,
-      target: request.target,
-      sourceAsset: request.sourceAsset,
-      targetAsset: request.targetAsset,
-      sourceAmount: request.sourceAmount,
-      targetAmount: request.targetAmount,
-      targetAddress: request.targetAddress,
-      userAddress: request.userAddress,
-      referralCode: referralCode || undefined,
-      promoCode: getPromoCode() || undefined,
-      gasless: request.gasless,
-      bridgeRecipientSetup: request.bridgeRecipientSetup,
-      bridgeRecipient: request.bridgeRecipient,
-      bridgeRecipientWallet: request.bridgeRecipientWallet,
-    });
+    const createSwap = () =>
+      client.createSwap({
+        source: request.source,
+        target: request.target,
+        sourceAsset: request.sourceAsset,
+        targetAsset: request.targetAsset,
+        sourceAmount: request.sourceAmount,
+        targetAmount: request.targetAmount,
+        targetAddress: request.targetAddress,
+        userAddress: request.userAddress,
+        referralCode: referralCode || undefined,
+        promoCode: request.promoCode || undefined,
+        gasless: request.gasless,
+        bridgeRecipientSetup: request.bridgeRecipientSetup,
+        bridgeRecipient: request.bridgeRecipient,
+        bridgeRecipientWallet: request.bridgeRecipientWallet,
+      });
+    let result: Awaited<ReturnType<typeof createSwap>>;
+    try {
+      result = await createSwap();
+    } catch (error) {
+      // The server refused the promo (used up meanwhile, swap too large,
+      // ...): drop it so the next quote is at the normal fee, and surface
+      // the reason. Never retry silently at a different fee than shown.
+      if (request.promoCode && isPromoCodeError(error)) clearPromoCode();
+      throw error;
+    }
     // A promo link is good for one swap.
-    clearPromoCode();
+    if (request.promoCode) clearPromoCode();
     return result.response as GetSwapResponse;
   },
 
