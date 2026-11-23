@@ -55,7 +55,7 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
   const swapId = swapData.id;
   const chain = getViemChain(swapData.source_token.chain);
 
-  const { data: walletClient } = useWalletClient({ chainId: chain?.id });
+  const { data: walletClient } = useWalletClient();
   const { switchChainAsync } = useSwitchChain();
 
   const [isRefunding, setIsRefunding] = useState(false);
