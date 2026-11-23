@@ -656,6 +656,9 @@ export function HomePage() {
   // Only show what the active code gives; a cleared code hides the badge
   // even while the last quote still carries it.
   const promo = quote?.promo?.code === promoCode ? quote?.promo : undefined;
+  // The displayed quote was priced with a different code (e.g. one a
+  // rejected create just cleared): wait for the requote before creating.
+  const quotePromoStale = (quote?.promo?.code ?? null) !== promoCode;
 
   // Debounced quote fetch - fires 800ms after the last amount change.
   // Uses the user's actual amount so amount-dependent fees (like CCTP bridge
@@ -1112,6 +1115,7 @@ export function HomePage() {
     !targetAddress ||
     !isAddressValid ||
     isCreatingSwap ||
+    quotePromoStale ||
     isOutOfLimits ||
     insufficientBalance ||
     (!sourceAmount && !targetAmount);
