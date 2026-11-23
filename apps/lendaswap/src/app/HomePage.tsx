@@ -47,6 +47,7 @@ import { type RefreshArgs, useQuote } from "./hooks/useQuote";
 import { useSwapsPaused } from "./hooks/useSwapsPaused";
 import { useTokenBalance } from "./hooks/useTokenBalance";
 import { formatSatsForUnit, useBtcUnit } from "./utils/btcUnit";
+import { clearPromoCode, getPromoCode, setPromoCode } from "./utils/promoCode";
 import {
   evmSmallestToSats,
   gaslessFeeBtc,
@@ -329,6 +330,25 @@ export function HomePage() {
       setReferralCode(urlRef);
     }
   }, [urlRef]);
+
+  // Promo link (`?promo=CODE`): stored like the referral code, before any
+  // quote runs, then checked so the user sees what it gives. An unusable code
+  // is dropped so quotes fall back to the normal fee.
+  const urlPromo = searchParams.get("promo");
+  const [promoCode] = useState(() => {
+    if (urlPromo) setPromoCode(urlPromo);
+    return getPromoCode();
+  });
+  const { value: promo } = useAsync(async () => {
+    if (!promoCode) return undefined;
+    try {
+      return await api.getPromoCode(promoCode);
+    } catch (error) {
+      console.warn(`Ignoring promo code ${promoCode}: ${error}`);
+      clearPromoCode();
+      return undefined;
+    }
+  }, [promoCode]);
 
   const {
     value: maybeAvailableTokens,
@@ -1392,6 +1412,14 @@ export function HomePage() {
                           Protocol Fee (
                           {(quote.protocol_fee_rate * 100).toFixed(2)}
                           %): {protocolFee} BTC
+                        </div>
+                      )}
+                      {promo && (
+                        <div className="text-green-600 dark:text-green-400">
+                          Promo {promo.code}:{" "}
+                          {(promo.fee_rate * 100).toFixed(2)}% fee on swaps up
+                          to {formatSatsForUnit(promo.max_amount_sats, btcUnit)}{" "}
+                          {btcUnitLabel}
                         </div>
                       )}
                       {quote?.bridge_fee != null &&

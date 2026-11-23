@@ -14,6 +14,7 @@ import {
   type LightningSendQuote,
   type LightningSendSourceChain,
   PROTOCOL_HEADERS,
+  type PromoCodeResponse,
   type TokenInfo as PureTokenInfo,
   type QuoteResponse,
   type RecoverAllSwapsResult,
@@ -38,6 +39,11 @@ import { arbitrum } from "viem/chains";
 import { readStoredConfirmations } from "./utils/bitcoinConfirmations";
 import { buildEvmSigner } from "./utils/evmSigner";
 import { RPC_OVERRIDES } from "./utils/evmTransport";
+import {
+  clearPromoCode,
+  getPromoCode,
+  isPromoCodeError,
+} from "./utils/promoCode";
 import { getReferralCode } from "./utils/referralCode";
 
 // Re-export SDK types for use throughout the frontend
@@ -204,6 +210,24 @@ function getClients(): Promise<SdkClient> {
   return sdkClientPromise;
 }
 
+/**
+ * Quote with the stored promo code. If the server rejects the code (expired,
+ * used up, ...), forget it and quote at the normal fee instead of failing.
+ */
+async function withPromoFallback<T>(
+  quote: (promoCode: string | undefined) => Promise<T>,
+): Promise<T> {
+  const promoCode = getPromoCode();
+  if (!promoCode) return quote(undefined);
+  try {
+    return await quote(promoCode);
+  } catch (error) {
+    if (!isPromoCodeError(error)) throw error;
+    clearPromoCode();
+    return quote(undefined);
+  }
+}
+
 async function buildClient(): Promise<SdkClient> {
   const walletStorage = new IdbWalletStorage();
 
@@ -345,10 +369,13 @@ export const api = {
   }): Promise<QuoteResponse> {
     const referralCode = getReferralCode();
     const client = await getClients();
-    return await client.getQuote({
-      ...request,
-      referralCode: referralCode || undefined,
-    });
+    const quote = (promoCode: string | undefined) =>
+      client.getQuote({
+        ...request,
+        referralCode: referralCode || undefined,
+        promoCode,
+      });
+    return await withPromoFallback(quote);
   },
 
   /**
@@ -368,10 +395,13 @@ export const api = {
   }): Promise<LightningSendQuote> {
     const referralCode = getReferralCode();
     const client = await getClients();
-    return await client.getLightningSendQuote({
-      ...request,
-      referralCode: referralCode || undefined,
-    });
+    const quote = (promoCode: string | undefined) =>
+      client.getLightningSendQuote({
+        ...request,
+        referralCode: referralCode || undefined,
+        promoCode,
+      });
+    return await withPromoFallback(quote);
   },
 
   async createSwap(request: {
@@ -400,12 +430,21 @@ export const api = {
       targetAddress: request.targetAddress,
       userAddress: request.userAddress,
       referralCode: referralCode || undefined,
+      promoCode: getPromoCode() || undefined,
       gasless: request.gasless,
       bridgeRecipientSetup: request.bridgeRecipientSetup,
       bridgeRecipient: request.bridgeRecipient,
       bridgeRecipientWallet: request.bridgeRecipientWallet,
     });
+    // A promo link is good for one swap.
+    clearPromoCode();
     return result.response as GetSwapResponse;
+  },
+
+  /** Look up a promo code; throws with the server's reason when unusable. */
+  async getPromoCode(code: string): Promise<PromoCodeResponse> {
+    const client = await getClients();
+    return await client.getPromoCode(code);
   },
 
   /**
