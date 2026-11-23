@@ -47,7 +47,7 @@ import { type RefreshArgs, useQuote } from "./hooks/useQuote";
 import { useSwapsPaused } from "./hooks/useSwapsPaused";
 import { useTokenBalance } from "./hooks/useTokenBalance";
 import { formatSatsForUnit, useBtcUnit } from "./utils/btcUnit";
-import { clearPromoCode, setPromoCode, usePromoCode } from "./utils/promoCode";
+import { setPromoCode, usePromoCode } from "./utils/promoCode";
 import {
   evmSmallestToSats,
   gaslessFeeBtc,
@@ -331,9 +331,9 @@ export function HomePage() {
     }
   }, [urlRef]);
 
-  // Promo link (`?promo=CODE`): set before the first quote runs, then
-  // looked up so the user sees what it gives. An unusable code is dropped,
-  // which re-quotes at the normal fee and hides the badge.
+  // Promo link (`?promo=CODE`): set before the first quote runs. The quote
+  // carries what the code gives (shown as a badge); an unusable code is
+  // dropped by `api.getQuote`, which re-quotes at the normal fee.
   const urlPromo = searchParams.get("promo");
   useState(() => {
     if (urlPromo) setPromoCode(urlPromo);
@@ -342,19 +342,6 @@ export function HomePage() {
     if (urlPromo) setPromoCode(urlPromo);
   }, [urlPromo]);
   const promoCode = usePromoCode();
-  const { value: promoLookup } = useAsync(async () => {
-    if (!promoCode) return undefined;
-    try {
-      return await api.getPromoCode(promoCode);
-    } catch (error) {
-      console.warn(`Ignoring promo code ${promoCode}: ${error}`);
-      clearPromoCode();
-      return undefined;
-    }
-  }, [promoCode]);
-  // Only show what the active code gives; a cleared code hides the badge.
-  const promo =
-    promoLookup && promoLookup.code === promoCode ? promoLookup : undefined;
 
   const {
     value: maybeAvailableTokens,
@@ -666,6 +653,9 @@ export function HomePage() {
     lightningDestination,
     promoCode,
   });
+  // Only show what the active code gives; a cleared code hides the badge
+  // even while the last quote still carries it.
+  const promo = quote?.promo?.code === promoCode ? quote?.promo : undefined;
 
   // Debounced quote fetch - fires 800ms after the last amount change.
   // Uses the user's actual amount so amount-dependent fees (like CCTP bridge

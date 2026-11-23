@@ -14,7 +14,6 @@ import {
   type LightningSendQuote,
   type LightningSendSourceChain,
   PROTOCOL_HEADERS,
-  type PromoCodeResponse,
   type TokenInfo as PureTokenInfo,
   type QuoteResponse,
   type RecoverAllSwapsResult,
@@ -456,12 +455,6 @@ export const api = {
     // A promo link is good for one swap.
     if (request.promoCode) clearPromoCode();
     return result.response as GetSwapResponse;
-  },
-
-  /** Look up a promo code; throws with the server's reason when unusable. */
-  async getPromoCode(code: string): Promise<PromoCodeResponse> {
-    const client = await getClients();
-    return await client.getPromoCode(code);
   },
 
   /**
