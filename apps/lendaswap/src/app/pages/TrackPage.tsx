@@ -312,9 +312,11 @@ function extractTxs(swap: GetSwapResponse): TxItem[] {
           },
           // Step 4 (server settles the hold invoice) is off-chain, no txid.
         ];
+      case "spark_to_evm":
       case "lightning_to_evm":
         return [
-          // Step 1 (user pays the hold invoice) is off-chain — no txid.
+          // Step 1 (user pays the hold invoice or native Spark HTLC) is
+          // off-chain — no txid.
           {
             stepNumber: 2,
             actor: "server",

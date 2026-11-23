@@ -121,6 +121,7 @@ export function getDirectionConfig(swapData: GetSwapResponse): DirectionConfig {
         swapTxId: swapData.btc_claim_txid,
         tweetText: makeTweet(sent, received),
       };
+    case "spark_to_evm":
     case "lightning_to_evm":
       return {
         sourceAmount: sent,
@@ -186,6 +187,7 @@ export function getBridgeInfo(swapData: GetSwapResponse) {
     case "arkade_to_evm":
     case "bitcoin_to_evm":
     case "lightning_to_evm":
+    case "spark_to_evm":
       return {
         bridgeTargetChain: swapData.bridge_target_chain,
         claimTxHash: swapData.evm_claim_txid,

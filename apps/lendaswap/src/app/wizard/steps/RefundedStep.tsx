@@ -97,6 +97,8 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
       case "lightning_to_evm":
       case "lightning_to_bitcoin":
         return null; // Lightning refunds go back via the LN channel
+      case "spark_to_evm":
+        return null; // The native Spark HTLC returns to the payer's wallet
     }
 
     return assertNever(
@@ -125,8 +127,9 @@ export function RefundedStep({ swapData }: RefundedStepProps) {
       case "lightning_to_arkade":
         return swapData.arkade_claim_txid ?? null;
       case "lightning_to_evm":
+      case "spark_to_evm":
         // The server refunding its own EVM HTLC; the user's held Lightning
-        // payment unwinds off-chain with no txid.
+        // payment or native Spark HTLC unwinds off-chain with no txid.
         return swapData.evm_claim_txid ?? null;
       case "lightning_to_bitcoin":
         // Likewise for the server's on-chain HTLC.

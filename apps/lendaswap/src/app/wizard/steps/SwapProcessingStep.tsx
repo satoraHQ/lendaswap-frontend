@@ -48,7 +48,8 @@ function isBtcToEvmDirection(direction: GetSwapResponse["direction"]): boolean {
   return (
     direction === "bitcoin_to_evm" ||
     direction === "arkade_to_evm" ||
-    direction === "lightning_to_evm"
+    direction === "lightning_to_evm" ||
+    direction === "spark_to_evm"
   );
 }
 
@@ -550,6 +551,8 @@ export function SwapProcessingStep({
           step4TxId: null,
           step4IsEvm: false,
         };
+      // Native Spark funds and settles off-chain like Lightning: no txids.
+      case "spark_to_evm":
       case "lightning_to_evm":
         return {
           step1Label: "User Funded",
@@ -672,6 +675,7 @@ export function SwapProcessingStep({
   // payment) is off-chain, so it completes on the swap status.
   const lightningToEvmComplete =
     (swapData.direction === "lightning_to_evm" ||
+      swapData.direction === "spark_to_evm" ||
       swapData.direction === "lightning_to_bitcoin") &&
     swapData.status === "serverredeemed";
   const step2Done =
