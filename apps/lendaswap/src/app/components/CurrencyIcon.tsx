@@ -28,7 +28,7 @@ function GoldBar(props: SVGProps<SVGSVGElement>) {
  * Satoshi symbol - three parallel diagonal lines with two short vertical strokes.
  * @see https://bitcoin.design/guide/designing-products/units-and-symbols/
  */
-function SatoshiIcon(props: SVGProps<SVGSVGElement>) {
+export function SatoshiIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

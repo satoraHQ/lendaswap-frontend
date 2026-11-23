@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useBtcUnit } from "../utils/btcUnit";
 import { normalizeDecimalInput } from "../utils/decimalInput";
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -50,7 +51,9 @@ export function useSatsBtcMode({
   symbol,
 }: UseAmountInputOptions): AmountInputMode {
   const [inputValue, setInputValue] = useState<string>("");
-  const [satsMode, setSatsMode] = useState(false);
+  // App-wide unit (swap settings / icon click), so both fields always agree.
+  const { unit, toggle } = useBtcUnit();
+  const satsMode = unit === "sats";
 
   const isBtc = isBtcToken(symbol);
 
@@ -72,22 +75,10 @@ export function useSatsBtcMode({
 
   const displayValue = value !== undefined ? value / divisor : undefined;
 
+  // Switching the unit changes `displayValue`, and the sync effect below
+  // re-renders the input in the new unit.
   const toggleSatsMode = () => {
-    if (!isBtc) return;
-    const newSatsMode = !satsMode;
-    setSatsMode(newSatsMode);
-    // Re-format current value for the new mode
-    if (value !== undefined) {
-      const newDivisor = newSatsMode
-        ? 10 ** ((decimals ?? 8) - 8)
-        : 10 ** (decimals ?? 0);
-      const newDisplay = value / newDivisor;
-      setInputValue(
-        newSatsMode
-          ? String(Math.round(newDisplay))
-          : formatNumber(newDisplay, displayDecimals),
-      );
-    }
+    if (isBtc) toggle();
   };
 
   // Sync internal input string when external value changes (e.g. quote)

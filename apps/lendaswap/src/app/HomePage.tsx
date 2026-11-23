@@ -37,6 +37,7 @@ import { AddressInput } from "./components/AddressInput";
 import { AmountInput } from "./components/AmountInput";
 import { AssetDropDown } from "./components/AssetDropDown";
 import { SupportErrorBanner } from "./components/SupportErrorBanner";
+import { SwapLimits } from "./components/SwapLimits";
 import { SwapSettingsMenu } from "./components/SwapSettingsMenu";
 import { updateSwap, upsertCctpInboundSession } from "./db";
 import { useArkadeFundingWallet } from "./hooks/useArkadeFundingWallet";
@@ -45,6 +46,7 @@ import { useGaslessFeature } from "./hooks/useGaslessFeature";
 import { type RefreshArgs, useQuote } from "./hooks/useQuote";
 import { useSwapsPaused } from "./hooks/useSwapsPaused";
 import { useTokenBalance } from "./hooks/useTokenBalance";
+import { formatSatsForUnit, useBtcUnit } from "./utils/btcUnit";
 import {
   evmSmallestToSats,
   gaslessFeeBtc,
@@ -53,6 +55,11 @@ import {
   totalFeeBtc,
 } from "./utils/quoteUtils";
 import { getReferralCode, setReferralCode } from "./utils/referralCode";
+import {
+  fillForLimit,
+  limitCheckedSats,
+  limitSide,
+} from "./utils/swapLimitSide";
 import { formatTokenUrl, isEvmToken, parseUrlToken } from "./utils/tokenUtils";
 
 // Build query string from amounts and target address
@@ -998,13 +1005,42 @@ export function HomePage() {
     return undefined;
   }, [quote, sourceAmount, targetAmount, isSourceBtc, sourceDecimals]);
 
+  // Advertised pair limits (static server config). Prefer the live quote's
+  // limits; before an amount is entered, fall back to /swap-pairs.
+  const swapLimits = useMemo(() => {
+    if (quote) return { min: quote.min_amount, max: quote.max_amount };
+    const pair = swapPairs?.pairs.find(
+      (p) => p.source === sourceChain && p.target === targetChain,
+    );
+    return pair ? { min: pair.min_sats, max: pair.max_sats } : undefined;
+  }, [quote, swapPairs, sourceChain, targetChain]);
+
+  const { unit: btcUnit } = useBtcUnit();
+  const btcUnitLabel = btcUnit === "sats" ? "sats" : "BTC";
+
+  // Check min/max against the same amount the server checks on this route,
+  // not just the BTC leg (e.g. BTC → Arkade is checked on what you receive).
+  const side = limitSide(
+    isSourceBtc,
+    targetAsset ? isBtc(targetAsset) : false,
+    targetAsset ? isLightning(targetAsset) : false,
+  );
+  // Native BTC amounts are already sats; fall back to the BTC-leg estimate.
+  const checkedSats =
+    limitCheckedSats(
+      side,
+      isSourceBtc ? sourceAmount : undefined,
+      targetAmount,
+      quote ?? undefined,
+    ) ?? btcAmountSats;
+
   const isBelowMin =
     quote != null &&
-    btcAmountSats != null &&
-    btcAmountSats < quote.min_amount &&
-    btcAmountSats > 0;
+    checkedSats != null &&
+    checkedSats < quote.min_amount &&
+    checkedSats > 0;
   const isAboveMax =
-    quote != null && btcAmountSats != null && btcAmountSats > quote.max_amount;
+    quote != null && checkedSats != null && checkedSats > quote.max_amount;
   const isOutOfLimits = isBelowMin || isAboveMax;
 
   // Check if the user has insufficient balance for the source token (EVM only)
@@ -1072,7 +1108,26 @@ export function HomePage() {
       <SwapSettingsMenu
         confirmations={confirmations}
         onChange={setConfirmations}
-      />
+      >
+        {swapLimits && (
+          <SwapLimits
+            min={swapLimits.min}
+            max={swapLimits.max}
+            onSelect={(sats, bound) => {
+              // Fill the field the server checks on this route, so the
+              // filled amount is one creation accepts.
+              const fill = fillForLimit(side, sats, bound, quote ?? undefined);
+              if (fill.field === "source") {
+                setLastEditedField("sourceAsset");
+                setSourceAmountState(fill.amount);
+              } else {
+                setLastEditedField("targetAsset");
+                setTargetAmountState(fill.amount);
+              }
+            }}
+          />
+        )}
+      </SwapSettingsMenu>
       {/* Sell/Buy container with arrow */}
       <div className="relative">
         {/* Sell */}
@@ -1281,14 +1336,15 @@ export function HomePage() {
           <div className="space-y-1 pt-2 text-xs text-muted-foreground/70">
             {!isLoadingQuote && isBelowMin && (
               <div className="text-destructive">
-                Amount too low - minimum is {quote.min_amount.toLocaleString()}{" "}
-                sats
+                Amount too low - minimum is{" "}
+                {formatSatsForUnit(quote.min_amount, btcUnit)} {btcUnitLabel}
               </div>
             )}
             {!isLoadingQuote && isAboveMax && (
               <div className="text-destructive">
-                Amount too high - maximum is {quote.max_amount.toLocaleString()}{" "}
-                sats
+                Amount too high - maximum is{" "}
+                {formatSatsForUnit(quote.max_amount, btcUnit)} {btcUnitLabel}.
+                Contact support@satora.io for larger swaps.
               </div>
             )}
             <div className="flex flex-col items-end space-y-1">
