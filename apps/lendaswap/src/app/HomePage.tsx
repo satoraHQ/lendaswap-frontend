@@ -656,9 +656,14 @@ export function HomePage() {
   // Only show what the active code gives; a cleared code hides the badge
   // even while the last quote still carries it.
   const promo = quote?.promo?.code === promoCode ? quote?.promo : undefined;
-  // The displayed quote was priced with a different code (e.g. one a
-  // rejected create just cleared): wait for the requote before creating.
-  const quotePromoStale = (quote?.promo?.code ?? null) !== promoCode;
+  // The displayed quote was priced with a code that is no longer active
+  // (e.g. one a rejected create just cleared): wait for the requote. A quote
+  // without a promo while a code is active (the amount is above its cap) is
+  // fine: create then sends no code and charges the fee shown.
+  const quotePromoStale =
+    quote?.promo != null && quote.promo.code !== promoCode;
+  // Create with the code the shown quote was priced with, never another.
+  const createPromoCode = quotePromoStale ? undefined : quote?.promo?.code;
 
   // Debounced quote fetch - fires 800ms after the last amount change.
   // Uses the user's actual amount so amount-dependent fees (like CCTP bridge
@@ -871,7 +876,7 @@ export function HomePage() {
           targetAmount != null;
 
         const swap = await api.createSwap({
-          promoCode,
+          promoCode: createPromoCode,
           // `api.createSwap` accepts either `Asset` or `TokenInfo` via
           // `sourceAsset`; we pass the legacy shape so the SDK auto-detects
           // the CCTP-only source and populates `inboundBridgeParams`.
@@ -968,7 +973,7 @@ export function HomePage() {
           : undefined;
       }
       const swap = await api.createSwap({
-        promoCode,
+        promoCode: createPromoCode,
         sourceAsset,
         targetAsset,
         sourceAmount: selectedSourceAmount,

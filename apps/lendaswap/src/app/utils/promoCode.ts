@@ -58,3 +58,9 @@ export function isPromoCodeError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return /promo code/i.test(message);
 }
+
+/** Whether a server error says the swap is above the promo code's cap. */
+export function isPromoCapError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /promo code only applies to swaps up to/i.test(message);
+}

@@ -41,6 +41,7 @@ import { RPC_OVERRIDES } from "./utils/evmTransport";
 import {
   clearPromoCode,
   getPromoCode,
+  isPromoCapError,
   isPromoCodeError,
 } from "./utils/promoCode";
 import { getReferralCode } from "./utils/referralCode";
@@ -212,7 +213,8 @@ function getClients(): Promise<SdkClient> {
 /**
  * Quote with `promoCode`. If the server rejects the code (expired, used up,
  * ...), forget it and quote at the normal fee instead of failing; clearing it
- * also re-renders the promo badge away.
+ * also re-renders the promo badge away. If only the amount is above the
+ * code's cap, quote at the normal fee but keep the code for a smaller swap.
  */
 async function withPromoFallback<T>(
   promoCode: string | null | undefined,
@@ -223,7 +225,7 @@ async function withPromoFallback<T>(
     return await quote(promoCode);
   } catch (error) {
     if (!isPromoCodeError(error)) throw error;
-    clearPromoCode();
+    if (!isPromoCapError(error)) clearPromoCode();
     return quote(undefined);
   }
 }
@@ -449,7 +451,12 @@ export const api = {
       // The server refused the promo (used up meanwhile, swap too large,
       // ...): drop it so the next quote is at the normal fee, and surface
       // the reason. Never retry silently at a different fee than shown.
-      if (request.promoCode && isPromoCodeError(error)) clearPromoCode();
+      if (
+        request.promoCode &&
+        isPromoCodeError(error) &&
+        !isPromoCapError(error)
+      )
+        clearPromoCode();
       throw error;
     }
     // A promo link is good for one swap.
