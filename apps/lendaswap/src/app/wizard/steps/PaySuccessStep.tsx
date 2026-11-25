@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "#/components/ui/button";
-import type { GetSwapResponse, StoredSwap } from "../../api";
+import { api, type GetSwapResponse, type StoredSwap } from "../../api";
 import { PayRecipients } from "../../components/PayRecipients";
 import { executedPayment, paymentExplorer } from "../../utils/payExecution";
 import { downloadPayReceipt } from "../../utils/payReceipt";
@@ -25,14 +25,23 @@ export function PaySuccessStep({
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
-  const txid =
+  // A speed-up replaces the claim; follow the replacement until the server
+  // reports it.
+  const [replacementTxid, setReplacementTxid] = useState<string>();
+  const serverTxid =
     swap.direction === "evm_to_bitcoin" ? swap.btc_claim_txid : undefined;
+  const txid = replacementTxid ?? serverTxid ?? undefined;
   const [payout, setPayout] = useState<typeof quotedPayout>();
+  const [confirmed, setConfirmed] = useState(false);
   const [verificationError, setVerificationError] = useState("");
+  const [poll, setPoll] = useState(0);
+  const [speedUpRate, setSpeedUpRate] = useState("");
+  const [speedingUp, setSpeedingUp] = useState(false);
+  const [speedUpError, setSpeedUpError] = useState("");
   const explorer = paymentExplorer(swap.network);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `poll` deliberately re-runs the fetch until the claim confirms.
   useEffect(() => {
     let cancelled = false;
-    setPayout(undefined);
     setVerificationError("");
     if (!txid || swap.direction !== "evm_to_bitcoin") return;
     void fetch(`${explorer}/api/tx/${encodeURIComponent(txid)}`)
@@ -41,13 +50,17 @@ export function PaySuccessStep({
           throw new Error(
             "Could not load the Bitcoin transaction. Reload to retry.",
           );
+        const tx = await response.json();
         const result = executedPayment(
           quotedPayout,
-          await response.json(),
+          tx,
           txid,
           swap.btc_htlc_address,
         );
-        if (!cancelled) setPayout(result);
+        if (!cancelled) {
+          setPayout(result);
+          setConfirmed(tx.status?.confirmed === true);
+        }
       })
       .catch((error) => {
         if (!cancelled) setVerificationError(String(error.message));
@@ -55,7 +68,43 @@ export function PaySuccessStep({
     return () => {
       cancelled = true;
     };
-  }, [txid, explorer, quotedPayout, swap]);
+  }, [txid, explorer, quotedPayout, swap, poll]);
+  // The server marks the swap done once the claim is broadcast; a mempool
+  // transaction is not final, so keep checking until it confirms.
+  useEffect(() => {
+    if (confirmed || !txid) return;
+    const timer = setInterval(() => setPoll((n) => n + 1), 30_000);
+    return () => clearInterval(timer);
+  }, [confirmed, txid]);
+  async function speedUp() {
+    const rate = Number(speedUpRate);
+    if (!Number.isFinite(rate) || rate <= 0) {
+      setSpeedUpError("Enter a positive fee rate in sat/vB.");
+      return;
+    }
+    setSpeedingUp(true);
+    setSpeedUpError("");
+    try {
+      const result = await api.claim(swap.id, { feeRateSatPerVb: rate });
+      if (!result.success) setSpeedUpError(result.message);
+      else if (result.txHash) {
+        setReplacementTxid(result.txHash);
+        setPayout(undefined);
+        setConfirmed(false);
+      }
+    } catch (error) {
+      setSpeedUpError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSpeedingUp(false);
+    }
+  }
+  if (!txid)
+    return (
+      <p role="status">
+        Your Bitcoin payment has been submitted. Waiting for the transaction to
+        appear; this page updates automatically.
+      </p>
+    );
   if (!payout)
     return (
       <p role="status">
@@ -91,7 +140,9 @@ export function PaySuccessStep({
         <Check />
       </div>
       <div>
-        <h1 className="text-2xl font-semibold">Payment complete</h1>
+        <h1 className="text-2xl font-semibold">
+          {confirmed ? "Payment complete" : "Payment sent"}
+        </h1>
         <p className="mt-2 text-muted-foreground">
           {payout.recipients.length} recipients ·{" "}
           {(Number(total) / 1e8).toFixed(8)} BTC paid
@@ -129,12 +180,50 @@ export function PaySuccessStep({
           Transaction details are awaiting synchronization.
         </p>
       )}
+      {!confirmed && (
+        <div className="space-y-2 rounded-lg border p-4">
+          <p className="text-sm" role="status">
+            Waiting for the Bitcoin transaction to confirm. If it is taking
+            long, raise its fee. The extra comes out of the amount above the
+            recipients' minimums; no recipient is paid less than their minimum.
+          </p>
+          <label className="text-sm">
+            Fee rate (sat/vB)
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={speedUpRate}
+              onChange={(event) => setSpeedUpRate(event.target.value)}
+              className="ml-3 w-24 rounded border bg-background p-2"
+            />
+          </label>
+          <Button
+            onClick={speedUp}
+            disabled={speedingUp || !speedUpRate}
+            className="ml-3"
+            size="sm"
+            variant="outline"
+          >
+            {speedingUp ? "Speeding up…" : "Speed up"}
+          </Button>
+          {speedUpError && (
+            <p role="alert" className="text-sm text-destructive">
+              {speedUpError}
+            </p>
+          )}
+        </div>
+      )}
       <Button
         className="w-full rounded-full"
         onClick={download}
-        disabled={downloading}
+        disabled={downloading || !confirmed}
       >
-        {downloading ? "Preparing PDF…" : "Download receipt (PDF)"}
+        {downloading
+          ? "Preparing PDF…"
+          : confirmed
+            ? "Download receipt (PDF)"
+            : "Receipt available once confirmed"}
       </Button>
       {downloadError && (
         <p role="alert" className="text-sm text-destructive">

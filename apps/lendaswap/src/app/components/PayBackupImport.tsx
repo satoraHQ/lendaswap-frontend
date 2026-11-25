@@ -57,8 +57,8 @@ export function PayBackupImport() {
                 // biome-ignore lint/suspicious/noArrayIndexKey: Read-only payment outputs retain their committed order, including duplicate recipients.
                 <li key={i} className="break-all">
                   <span className="font-medium">
-                    {backup.recipientNames[i] || `Recipient ${i + 1}`} ·{" "}
-                    {(Number(r.amountSats) / 1e8).toFixed(8)} BTC
+                    {backup.recipientNames[i] || `Recipient ${i + 1}`} · at
+                    least {(Number(r.amountSats) / 1e8).toFixed(8)} BTC
                   </span>
                   <br />
                   <span className="font-mono text-xs">{r.address}</span>

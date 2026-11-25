@@ -137,6 +137,12 @@ describe("payment recovery backups", () => {
     const b = fixture();
     b.swap.bitcoinPayout!.recipients[0].amountSats = "545";
     expect(() => validatePayBackup(b)).toThrow();
+    // A number, not an integer satoshi string: the claim would refuse it.
+    const n = fixture();
+    (
+      n.swap.bitcoinPayout!.recipients[0] as { amountSats: unknown }
+    ).amountSats = 700;
+    expect(() => validatePayBackup(n)).toThrow();
     const c = fixture();
     c.network = "bitcoin";
     expect(() => validatePayBackup(c)).toThrow();
@@ -165,15 +171,25 @@ describe("payment recovery backups", () => {
 
 it("enriches seed recovery and refuses a different payout", () => {
   const backup = fixture();
-  const seeded = {
+  backup.swap.payRequestedAmounts = ["710", "810"];
+  backup.swap.bitcoinClaimBroadcast = "submitted-claim";
+  backup.swap.evmFundTxid = "0xfunding";
+  // Seed recovery writes explicit undefined keys, as IndexedDB keeps them.
+  const seeded = structuredClone({
     ...backup.swap,
     bitcoinPayout: undefined,
     evmFundingTerms: undefined,
     payRecipientNames: undefined,
-  };
+    payRequestedAmounts: undefined,
+    bitcoinClaimBroadcast: undefined,
+    evmFundTxid: undefined,
+  });
   const merged = mergePayBackup(seeded, backup);
   expect(merged.bitcoinPayout).toEqual(backup.swap.bitcoinPayout);
   expect(merged.evmFundingTerms).toEqual(backup.swap.evmFundingTerms);
+  expect(merged.payRequestedAmounts).toEqual(["710", "810"]);
+  expect(merged.bitcoinClaimBroadcast).toBe("submitted-claim");
+  expect(merged.evmFundTxid).toBe("0xfunding");
   expect(mergePayBackup(merged, backup).bitcoinPayout).toEqual(
     backup.swap.bitcoinPayout,
   );

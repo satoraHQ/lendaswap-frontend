@@ -50,42 +50,20 @@ describe("payment PDF receipts", () => {
       expect(content).toContain(value);
     expect(content).not.toContain("must-not-export");
   });
-  it("reports executed payouts with the surplus shared in proportion", () => {
-    // 100 sats above floors plus fee: 55.55 and 44.44, the leftover sat to the first.
+  it("reports the verified amounts as given, whatever the recorded funding", () => {
     const content = JSON.stringify(
       buildPayReceipt({
         ...receipt,
+        // A funding figure above outputs plus fee must not inflate the payouts.
         swap: { ...swap, target_amount: "12743" },
         usdRate: 100000,
       }).content,
     );
-    expect(content).toContain("0.00006821 BTC");
-    expect(content).toContain("0.00005456 BTC");
-    expect(content).toContain("$6.82");
-    expect(content).toContain("$5.46");
-    expect(content).toContain("466 sats");
-    expect(content).not.toContain("0.00006765 BTC");
-  });
-  it("takes a raised claim fee out of the surplus", () => {
-    const content = JSON.stringify(
-      buildPayReceipt({
-        ...receipt,
-        swap: { ...swap, target_amount: "12743" },
-        feeSats: "566",
-      }).content,
-    );
-    expect(content).toContain("566 sats");
     expect(content).toContain("0.00006765 BTC");
     expect(content).toContain("0.00005412 BTC");
-  });
-  it("shows the committed floors when funding falls short of them", () => {
-    const content = JSON.stringify(
-      buildPayReceipt({
-        ...receipt,
-        swap: { ...swap, target_amount: "12000" },
-      }).content,
-    );
-    expect(content).toContain("0.00006765 BTC");
+    expect(content).toContain("$6.77");
+    expect(content).toContain("466 sats");
+    expect(content).not.toContain("0.00006821 BTC");
   });
   it("shows estimated USD costs for older payments and prefers a saved review rate", () => {
     const content = JSON.stringify(buildPayReceipt(receipt).content);

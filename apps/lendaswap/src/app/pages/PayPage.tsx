@@ -80,6 +80,8 @@ export function PayPage() {
     total: number;
     at: number;
     feeSats: number;
+    /** USD per BTC: for USD entry, the rate the amounts were converted at. */
+    usdRate: number;
   }>();
   const navigate = useNavigate();
   const source = tokens.find((t) => `${t.chain}:${t.token_id}` === sourceId);
@@ -196,6 +198,9 @@ export function PayPage() {
         total,
         at: Date.now(),
         feeSats: absoluteFee,
+        // Show and save the rate the sats were computed at, not a second
+        // quote's, so a $100 entry reviews as $100.
+        usdRate: unit === "USD" ? rate : Number(result.exchange_rate),
       });
       setNow(Date.now());
     } catch (e) {
@@ -232,13 +237,22 @@ export function PayPage() {
         bitcoinPayout,
         gasless: true,
       });
+      // Save names and requested amounts now, so they survive even if the
+      // backup below fails: retries re-quote these amounts, not the floors.
+      await api
+        .savePayMetadata(swap.id, {
+          recipientNames: rows.map((r) => r.name),
+          usdRate: review.usdRate,
+          requestedAmounts: review.amounts.map(String),
+        })
+        .catch(() => undefined);
       let backupFailed = false;
       try {
         downloadPayBackup(
           await api.exportPayBackup(
             swap.id,
             rows.map((r) => r.name),
-            Number(review.quote.exchange_rate),
+            review.usdRate,
             review.amounts.map(String),
           ),
         );
@@ -256,8 +270,7 @@ export function PayPage() {
   const expired = !!review && now - review.at >= 60000;
   const usd = (value: number) =>
     value.toLocaleString(undefined, { style: "currency", currency: "USD" });
-  const satsUsd = (sats: number) =>
-    usd((sats / 1e8) * Number(review?.quote.exchange_rate ?? 0));
+  const satsUsd = (sats: number) => usd((sats / 1e8) * (review?.usdRate ?? 0));
   const btc = (sats: number) => (sats / 1e8).toFixed(8);
   const payoutTotal = review?.amounts.reduce((a, b) => a + b, 0);
   const tokenAmount = (amount: string | number) =>
@@ -346,7 +359,7 @@ export function PayPage() {
                   amountSats: String(review.amounts[i]),
                 }))}
                 names={rows.map((r) => r.name)}
-                usdRate={Number(review.quote.exchange_rate)}
+                usdRate={review.usdRate}
               />
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between gap-4">
@@ -680,7 +693,7 @@ export function PayPage() {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#a7ada2]">Quoted exchange rate</dt>
-                  <dd>1 BTC ≈ {usd(Number(review.quote.exchange_rate))}</dd>
+                  <dd>1 BTC ≈ {usd(review.usdRate)}</dd>
                 </div>
               </>
             )}

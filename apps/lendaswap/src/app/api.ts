@@ -331,6 +331,36 @@ function ensureTracking(client: SdkClient): Promise<void> {
 }
 
 export const api = {
+  /**
+   * Save Pay display metadata on the stored payment. Re-reads the record just
+   * before writing and sets only these fields, so an SDK write in between
+   * (such as a submitted claim) is kept.
+   */
+  async savePayMetadata(
+    id: string,
+    metadata: {
+      recipientNames?: string[];
+      usdRate?: number;
+      requestedAmounts?: string[];
+    },
+  ): Promise<void> {
+    const storage = new IdbSwapStorage();
+    const latest = await storage.get(id);
+    if (!latest?.bitcoinPayout) return;
+    await storage.store({
+      ...latest,
+      ...(metadata.recipientNames && {
+        payRecipientNames: metadata.recipientNames,
+      }),
+      ...(metadata.requestedAmounts && {
+        payRequestedAmounts: metadata.requestedAmounts,
+      }),
+      ...(metadata.usdRate !== undefined &&
+        Number.isFinite(metadata.usdRate) &&
+        metadata.usdRate > 0 && { payUsdRate: metadata.usdRate }),
+    });
+  },
+
   async exportPayBackup(
     id: string,
     recipientNames?: string[],
@@ -365,7 +395,11 @@ export const api = {
         swap.bitcoinPayout.recipients.map(() => ""),
     };
     const validated = validatePayBackup(backup);
-    await new IdbSwapStorage().store(swap);
+    await api.savePayMetadata(id, {
+      recipientNames,
+      usdRate,
+      requestedAmounts,
+    });
     return validated;
   },
 

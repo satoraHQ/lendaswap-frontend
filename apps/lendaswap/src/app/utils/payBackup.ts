@@ -1,8 +1,10 @@
 import {
+  bitcoinNetworkOf,
   bytesToHex,
   type GetSwapResponse,
   Signer,
   type StoredSwap,
+  validateBitcoinPayout,
 } from "@satora/swap";
 import { parseBitcoinNetwork, validBitcoinAddress } from "./bitcoinNetwork";
 
@@ -103,8 +105,15 @@ export function validatePayBackup(input: unknown): PayBackup {
     )
       fail();
   }
-  // Recovery must remain possible however the swap was funded: the claim
-  // itself refuses funding below the committed floors plus the fee.
+  // The same rules the claim applies (integer satoshi strings, supply and
+  // dust bounds, the claim's network), so an import never stores a payout
+  // the claim would then refuse. Recovery must remain possible however the
+  // swap was funded: the claim itself refuses funding below floors plus fee.
+  try {
+    validateBitcoinPayout(p, bitcoinNetworkOf(s.targetAddress));
+  } catch {
+    fail();
+  }
   if (
     b.recipientNames.length !== p.recipients.length ||
     b.recipientNames.some((n) => typeof n !== "string" || n.length > 200)
@@ -211,17 +220,13 @@ export function mergePayBackup(
         "This payment already exists with different recovery data. Nothing was overwritten.",
       );
   }
-  return {
-    ...restored,
-    ...existing,
-    bitcoinPayout: existing?.bitcoinPayout ?? restored.bitcoinPayout,
-    evmFundingTerms: existing?.evmFundingTerms ?? restored.evmFundingTerms,
-    targetAddress: existing?.targetAddress ?? restored.targetAddress,
-    evmDepositorSecretKey:
-      existing?.evmDepositorSecretKey ?? restored.evmDepositorSecretKey,
-    evmDepositorKeyIndex:
-      existing?.evmDepositorKeyIndex ?? restored.evmDepositorKeyIndex,
-    payUsdRate: existing?.payUsdRate ?? restored.payUsdRate,
-    payRecipientNames: backup.recipientNames,
-  };
+  // The local record wins only where it actually holds a value: records
+  // rebuilt from the seed carry explicit undefined keys, which must not erase
+  // the backup's (requested amounts, submitted claim, funding txids, ...).
+  const merged: StoredSwap = { ...restored };
+  const target = merged as unknown as Record<string, unknown>;
+  for (const [key, value] of Object.entries(existing ?? {}))
+    if (value !== undefined) target[key] = value;
+  merged.payRecipientNames = backup.recipientNames;
+  return merged;
 }

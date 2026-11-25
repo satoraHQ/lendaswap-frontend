@@ -289,8 +289,10 @@ export function PayFundingLayout({
               <dd>{payout.recipients.length}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-[#a7ada2]">Recipient payouts</dt>
-              <dd>{(Number(total) / 1e8).toFixed(8)} BTC</dd>
+              {/* A preview at the committed fee; a raised claim fee comes out
+                  of the surplus, and the success step shows what was paid. */}
+              <dt className="text-[#a7ada2]">Expected recipient payouts</dt>
+              <dd>~{(Number(total) / 1e8).toFixed(8)} BTC</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-[#a7ada2]">Bitcoin transaction fee</dt>

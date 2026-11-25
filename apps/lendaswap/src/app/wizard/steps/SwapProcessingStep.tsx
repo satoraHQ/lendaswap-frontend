@@ -807,36 +807,47 @@ export function SwapProcessingStep({
                 >
                   Retry payment
                 </Button>
-                <details>
-                  <summary className="cursor-pointer text-sm">
-                    Retry with a higher Bitcoin fee
-                  </summary>
-                  <p className="my-2 text-sm text-muted-foreground">
-                    The extra fee reduces recipient amounts within the same 1%
-                    total allowance, including any conversion loss. If the
-                    allowance is insufficient, no transaction is sent.
+                {claimError.includes("Surplus cannot cover") ? (
+                  <p className="text-sm text-muted-foreground">
+                    The funded amount cannot pay the current Bitcoin network fee
+                    without paying a recipient less than their minimum, so
+                    nothing was sent. Retry when network fees drop.
                   </p>
-                  <label className="text-sm">
-                    Fee rate (sat/vB)
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={retryFeeRate}
-                      onChange={(event) => setRetryFeeRate(event.target.value)}
-                      className="ml-3 w-24 rounded border bg-background p-2"
-                    />
-                  </label>
-                  <Button
-                    onClick={retryWithFee}
-                    disabled={isClaiming || !retryFeeRate}
-                    className="ml-3"
-                    size="sm"
-                    variant="outline"
-                  >
-                    {isClaiming ? "Retrying…" : "Approve fee and retry"}
-                  </Button>
-                </details>
+                ) : (
+                  <details>
+                    <summary className="cursor-pointer text-sm">
+                      Retry with a higher Bitcoin fee
+                    </summary>
+                    <p className="my-2 text-sm text-muted-foreground">
+                      The extra fee comes out of the amount above the
+                      recipients' minimums. No recipient is paid less than their
+                      minimum; if the extra cannot cover the fee, nothing is
+                      sent.
+                    </p>
+                    <label className="text-sm">
+                      Fee rate (sat/vB)
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={retryFeeRate}
+                        onChange={(event) =>
+                          setRetryFeeRate(event.target.value)
+                        }
+                        className="ml-3 w-24 rounded border bg-background p-2"
+                      />
+                    </label>
+                    <Button
+                      onClick={retryWithFee}
+                      disabled={isClaiming || !retryFeeRate}
+                      className="ml-3"
+                      size="sm"
+                      variant="outline"
+                    >
+                      {isClaiming ? "Retrying…" : "Retry with this fee"}
+                    </Button>
+                  </details>
+                )}
               </div>
             )}
           </div>

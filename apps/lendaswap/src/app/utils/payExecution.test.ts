@@ -3,11 +3,10 @@ import { executedPayment, type PaymentTransaction } from "./payExecution";
 
 const original = {
   recipients: [
-    { address: "bob", amountSats: "10000" },
-    { address: "bob", amountSats: "20000" },
+    { address: "bob", amountSats: "9900" },
+    { address: "bob", amountSats: "19800" },
   ],
   feeSats: "472",
-  maxSlippageBps: 100,
 };
 const tx: PaymentTransaction = {
   txid: "claim",
@@ -50,5 +49,40 @@ describe("executed payment recovery", () => {
         "htlc",
       ),
     ).toThrow();
+  });
+  it("matches an uppercase bech32 recipient to the explorer's lowercase output", () => {
+    const upper = "TB1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KXPJZSX";
+    const result = executedPayment(
+      {
+        recipients: [{ address: upper, amountSats: "29000" }],
+        feeSats: "472",
+      },
+      {
+        ...tx,
+        vout: [{ value: 29872, scriptpubkey_address: upper.toLowerCase() }],
+      },
+      "claim",
+      "htlc",
+    );
+    expect(result.recipients[0]).toEqual({
+      address: upper,
+      amountSats: "29872",
+    });
+  });
+  it("rejects an output below its recipient's committed floor", () => {
+    expect(() =>
+      executedPayment(
+        {
+          ...original,
+          recipients: [
+            { address: "bob", amountSats: "9958" },
+            { address: "bob", amountSats: "19916" },
+          ],
+        },
+        tx,
+        "claim",
+        "htlc",
+      ),
+    ).toThrow("do not match");
   });
 });

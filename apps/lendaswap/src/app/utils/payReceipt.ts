@@ -1,4 +1,4 @@
-import { allocateBitcoinPayout, toChainName } from "@satora/swap";
+import { toChainName } from "@satora/swap";
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import type { GetSwapResponse, StoredSwap } from "../api";
 import { payUsd } from "../components/PayRecipients";
@@ -20,16 +20,8 @@ export function buildPayReceipt({
   usdRate,
   feeSats,
 }: Receipt): TDocumentDefinitions {
-  // Stored amounts are floors; the claim shared the surplus in proportion.
-  try {
-    payout = allocateBitcoinPayout(
-      payout,
-      BigInt(swap.target_amount),
-      BigInt(feeSats),
-    );
-  } catch {
-    // Funding below the floors: show the commitments as stored.
-  }
+  // `payout` holds the amounts the claim transaction actually paid, verified
+  // against the chain by the caller; never re-split them.
   const valuation = payUsdValuation(swap, usdRate);
   const btc = (sats: string | bigint) =>
     `${(Number(sats) / 1e8).toFixed(8)} BTC`;
