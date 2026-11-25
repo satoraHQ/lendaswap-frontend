@@ -36,6 +36,7 @@ import { api } from "./api";
 import { AddressInput } from "./components/AddressInput";
 import { AmountInput } from "./components/AmountInput";
 import { AssetDropDown } from "./components/AssetDropDown";
+import { HigherLimitsDialog } from "./components/HigherLimitsDialog";
 import { SupportErrorBanner } from "./components/SupportErrorBanner";
 import { SwapLimits } from "./components/SwapLimits";
 import { SwapSettingsMenu } from "./components/SwapSettingsMenu";
@@ -1368,11 +1369,17 @@ export function HomePage() {
                 {formatSatsForUnit(quote.min_amount, btcUnit)} {btcUnitLabel}
               </div>
             )}
-            {!isLoadingQuote && isAboveMax && (
+            {!isLoadingQuote && isAboveMax && btcAmountSats != null && (
               <div className="text-destructive">
                 Amount too high - maximum is{" "}
                 {formatSatsForUnit(quote.max_amount, btcUnit)} {btcUnitLabel}.
-                Contact support@satora.io for larger swaps.
+                <div className="mt-2">
+                  <HigherLimitsDialog
+                    requestedSats={btcAmountSats}
+                    maximumSats={quote.max_amount}
+                    route={`${sourceAsset?.symbol ?? "Source"} on ${sourceAsset ? toChainName(sourceAsset.chain) : "unknown network"} → ${targetAsset?.symbol ?? "Target"} on ${targetAsset ? toChainName(targetAsset.chain) : "unknown network"}`}
+                  />
+                </div>
               </div>
             )}
             <div className="flex flex-col items-end space-y-1">

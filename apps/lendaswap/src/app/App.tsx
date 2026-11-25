@@ -7,9 +7,10 @@ import {
   useNavigate,
 } from "react-router";
 import "../assets/styles.css";
-import { ArrowLeftRight, Zap } from "lucide-react";
+import { ArrowLeftRight, Github, Globe, Zap } from "lucide-react";
 import { Card } from "#/components/ui/card";
 import { Toaster } from "#/components/ui/sonner";
+import { ReactComponent as XLogo } from "../assets/x-com-logo.svg";
 import isValidSpeedWalletContext from "../utils/speedWallet";
 import { api } from "./api";
 import { AppHeader } from "./components/AppHeader";
@@ -28,6 +29,7 @@ import {
   TermsOfServicePage,
   TrackPage,
 } from "./pages";
+import { PayPage } from "./pages/PayPage";
 import { startSwapActionCenter } from "./swapActionCenter";
 import { SwapWizardPage } from "./wizard";
 
@@ -51,7 +53,9 @@ function useStepInfo() {
 
   // Check if on home page (token pair route like /btc_lightning/usdc_pol)
   const isHomePage =
-    location.pathname === "/" || /^\/[^/]+\/[^/]+$/.test(location.pathname);
+    location.pathname === "/" ||
+    (!location.pathname.startsWith("/pay/") &&
+      /^\/[^/]+\/[^/]+$/.test(location.pathname));
 
   if (isHomePage) {
     return {
@@ -112,7 +116,9 @@ export default function App() {
 
   // Check if on home page (token pair route like /btc_lightning/usdc_pol)
   const isHomePage =
-    location.pathname === "/" || /^\/[^/]+\/[^/]+$/.test(location.pathname);
+    location.pathname === "/" ||
+    (!location.pathname.startsWith("/pay/") &&
+      /^\/[^/]+\/[^/]+$/.test(location.pathname));
 
   // Watch tracked swaps and toast when one needs the user (claim/refund/…).
   useEffect(() => {
@@ -189,7 +195,14 @@ export default function App() {
         {/* Main Content */}
         {location.pathname !== "/terms" && (
           <main className="container mx-auto px-4 py-16 sm:px-5 md:px-6">
-            <div className="mx-auto max-w-2xl space-y-10">
+            <div
+              className={
+                location.pathname === "/pay" ||
+                location.pathname.startsWith("/pay/")
+                  ? "mx-auto max-w-6xl space-y-10"
+                  : "mx-auto max-w-2xl space-y-10"
+              }
+            >
               {/* Title */}
               <div className="text-center">
                 {stepInfo.isHomePage ? (
@@ -219,8 +232,17 @@ export default function App() {
               </div>
 
               {/* Step Card */}
-              <div className="mx-auto max-w-lg">
+              <div
+                className={
+                  location.pathname === "/pay" ||
+                  location.pathname.startsWith("/pay/")
+                    ? "mx-auto max-w-6xl"
+                    : "mx-auto max-w-lg"
+                }
+              >
                 <Routes>
+                  <Route path="/pay" element={<PayPage />} />
+                  <Route path="/pay/:swapId" element={<SwapWizardPage />} />
                   <Route
                     path="/swap/:swapId/wizard"
                     element={<SwapWizardPage />}
@@ -276,6 +298,39 @@ export default function App() {
             <DebugNavigation />
 
             <div className="space-y-2 text-center text-sm text-muted-foreground">
+              <nav
+                aria-label="Satora community"
+                className="flex flex-wrap items-center justify-center gap-2 pb-2"
+              >
+                <a
+                  href="https://github.com/satoraHQ"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-full px-3 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Github className="h-4 w-4" aria-hidden="true" /> GitHub
+                </a>
+                <a
+                  href="https://x.com/satora_io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-full px-3 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <XLogo
+                    className="h-3.5 w-3.5 fill-current"
+                    aria-hidden="true"
+                  />{" "}
+                  X
+                </a>
+                <a
+                  href="https://satora.io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-full px-3 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Globe className="h-4 w-4" aria-hidden="true" /> satora.io
+                </a>
+              </nav>
               <p>© 2026 Satora. All rights reserved.</p>
               <p>
                 <button

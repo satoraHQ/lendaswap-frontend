@@ -65,6 +65,7 @@ function isEvmToBtcDirection(direction: GetSwapResponse["direction"]): boolean {
 interface ConfirmingDepositStepProps {
   swapData: GetSwapResponse;
   swapId: string;
+  presentation?: "swap" | "pay";
 }
 
 /**
@@ -79,9 +80,31 @@ const RIF_LOOKUP_RETRY_MS = 10_000;
 export function SwapProcessingStep({
   swapData,
   swapId,
+  presentation = "swap",
 }: ConfirmingDepositStepProps) {
   const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
+  const [retryFeeRate, setRetryFeeRate] = useState("");
+  const retryWithFee = async () => {
+    const rate = Number(retryFeeRate);
+    if (!Number.isFinite(rate) || rate <= 0) {
+      setClaimError("Enter a positive fee rate in sat/vB.");
+      return;
+    }
+    setIsClaiming(true);
+    try {
+      const result = await api.claim(swapId, { feeRateSatPerVb: rate });
+      if (!result.success) setClaimError(result.message);
+      else {
+        setClaimError(null);
+        if (result.txHash) setClaimTxHash(result.txHash);
+      }
+    } catch (error) {
+      setClaimError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsClaiming(false);
+    }
+  };
   // The relayed claim's tx hash as the SDK returned it. The server records
   // the same hash on broadcast, but the wizard only refetches the swap on a
   // status change, and the status only moves once the claim mines.
@@ -743,6 +766,84 @@ export function SwapProcessingStep({
     swapData.direction === "lightning_to_bitcoin"
       ? swapData.target_token.chain
       : undefined;
+
+  if (presentation === "pay") {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Fund payment</h2>
+        <p className="text-muted-foreground" role="status">
+          {isClientFundingSeen
+            ? "Deposit received. Waiting for confirmation on the source network."
+            : claimSubmitted
+              ? "Your Bitcoin payment has been submitted. Waiting for confirmation."
+              : isClaiming
+                ? "Sending Bitcoin to your recipients…"
+                : waitingForDepth
+                  ? "Waiting for Bitcoin funding confirmations before paying your recipients."
+                  : swapData.status === "serverfunded"
+                    ? "Bitcoin funding is ready. Preparing your recipient payments…"
+                    : "Your deposit is confirmed. Swapping to Bitcoin…"}
+        </p>
+        {isClientFundingSeen && evmFunding.confirmations !== undefined && (
+          <p className="text-sm text-muted-foreground">
+            {Math.min(evmFunding.confirmations, evmFunding.required)} of{" "}
+            {evmFunding.required} confirmations
+          </p>
+        )}
+        {claimError && (
+          <div className="space-y-2">
+            <SupportErrorBanner
+              message="Payment could not be completed"
+              error={claimError}
+              swapId={swapId}
+            />
+            {retryCount >= maxRetries && (
+              <div className="space-y-3">
+                <Button
+                  onClick={handleManualRetry}
+                  size="sm"
+                  variant="outline"
+                  disabled={isClaiming}
+                >
+                  Retry payment
+                </Button>
+                <details>
+                  <summary className="cursor-pointer text-sm">
+                    Retry with a higher Bitcoin fee
+                  </summary>
+                  <p className="my-2 text-sm text-muted-foreground">
+                    The extra fee reduces recipient amounts within the same 1%
+                    total allowance, including any conversion loss. If the
+                    allowance is insufficient, no transaction is sent.
+                  </p>
+                  <label className="text-sm">
+                    Fee rate (sat/vB)
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={retryFeeRate}
+                      onChange={(event) => setRetryFeeRate(event.target.value)}
+                      className="ml-3 w-24 rounded border bg-background p-2"
+                    />
+                  </label>
+                  <Button
+                    onClick={retryWithFee}
+                    disabled={isClaiming || !retryFeeRate}
+                    className="ml-3"
+                    size="sm"
+                    variant="outline"
+                  >
+                    {isClaiming ? "Retrying…" : "Approve fee and retry"}
+                  </Button>
+                </details>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/80 shadow-xl backdrop-blur-sm">

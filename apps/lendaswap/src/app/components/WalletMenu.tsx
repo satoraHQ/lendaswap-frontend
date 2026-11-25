@@ -1,5 +1,5 @@
 import { useAppKit } from "@reown/appkit/react";
-import { ChevronDown, Wallet, Zap } from "lucide-react";
+import { ChevronDown, Menu, Wallet, Zap } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "#/components/ui/button";
@@ -163,19 +163,29 @@ export function WalletMenuItems({ entries }: { entries: WalletMenuEntry[] }) {
 }
 
 /**
- * Desktop header control: a single wallet button that opens the list. The
+ * Responsive header control: a single menu for wallets and app settings. The
  * caller owns `useWalletMenu` and renders its dialogs once.
  */
-export function WalletMenu({ entries }: { entries: WalletMenuEntry[] }) {
-  if (entries.length === 0) return null;
+export function WalletMenu({
+  entries,
+  children,
+  indicator,
+}: {
+  entries: WalletMenuEntry[];
+  children?: ReactNode;
+  indicator?: ReactNode;
+}) {
+  if (entries.length === 0 && !children) return null;
 
   const connected = entries.filter((e) => e.connected);
   const triggerLabel =
-    connected.length === 0
-      ? "Connect wallet"
-      : connected.length === 1
-        ? connected[0].detail
-        : `${connected.length} wallets`;
+    entries.length === 0
+      ? "Menu"
+      : connected.length === 0
+        ? "Connect wallet"
+        : connected.length === 1
+          ? connected[0].detail
+          : `${connected.length} wallets`;
 
   return (
     <DropdownMenu>
@@ -183,20 +193,30 @@ export function WalletMenu({ entries }: { entries: WalletMenuEntry[] }) {
         <Button
           variant="outline"
           size="sm"
-          className={`h-9 gap-1.5 ${connected.length > 0 ? "border-lime-500/40" : ""}`}
+          aria-label="Wallets and settings"
+          className={`relative h-9 gap-1.5 ${connected.length > 0 ? "border-lime-500/40" : ""}`}
         >
-          <Wallet className="h-3.5 w-3.5" />
-          <span className={connected.length === 1 ? "font-mono" : ""}>
+          <Menu className="h-4 w-4 md:hidden" />
+          <Wallet className="hidden h-3.5 w-3.5 md:block" />
+          <span
+            className={`hidden md:inline ${connected.length === 1 ? "font-mono" : ""}`}
+          >
             {triggerLabel}
           </span>
-          <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+          <ChevronDown className="hidden h-3.5 w-3.5 opacity-60 md:block" />
+          {indicator}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel className="text-muted-foreground">
-          Wallets
-        </DropdownMenuLabel>
-        <WalletMenuItems entries={entries} />
+        {entries.length > 0 && (
+          <>
+            <DropdownMenuLabel className="text-muted-foreground">
+              Wallets
+            </DropdownMenuLabel>
+            <WalletMenuItems entries={entries} />
+          </>
+        )}
+        {children}
       </DropdownMenuContent>
     </DropdownMenu>
   );

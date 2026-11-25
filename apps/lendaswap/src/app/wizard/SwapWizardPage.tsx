@@ -16,13 +16,15 @@ import type {
 import { useLiveQuery } from "dexie-react-hooks";
 import { AlertCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { useAsyncRetry } from "react-use";
 import { api, type SwapActions } from "../api";
 import { SupportErrorBanner } from "../components/SupportErrorBanner";
 import { db } from "../db";
 import { useDerivedSwapActions } from "../swapActionCenter";
 import { assertNever } from "../utils/assertNever";
+import { PayFundingLayout } from "./PayFundingLayout";
+import { payFundingExpired, showReportedFunding } from "./payFundingState";
 import {
   CctpInboundRecoveryStep,
   DepositArkadeStep,
@@ -39,6 +41,7 @@ import {
 } from "./steps";
 import { BridgingCctpStep } from "./steps/BridgingCctpStep";
 import { DepositLightningStep } from "./steps/DepositLightningStep";
+import { PaySuccessStep } from "./steps/PaySuccessStep";
 
 export type SwapDirection =
   | "btc-to-evm"
@@ -245,6 +248,7 @@ function determineStepFromActions(
 export function SwapWizardPage() {
   const { swapId } = useParams<{ swapId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
 
   //
   useEffect(() => {
@@ -288,6 +292,16 @@ export function SwapWizardPage() {
     console.error(`Failed fetching swap ${error}`);
   }
 
+  useEffect(() => {
+    if (
+      swapData?.bitcoinPayout &&
+      swapId &&
+      location.pathname !== `/pay/${swapId}`
+    ) {
+      navigate(`/pay/${swapId}`, { replace: true });
+    }
+  }, [swapData?.bitcoinPayout, swapId, location.pathname, navigate]);
+
   // Update display data when swap data changes and status is different
   useEffect(() => {
     if (!swapData) return;
@@ -308,12 +322,35 @@ export function SwapWizardPage() {
   // The step: chain-derived next action first (locktime flips and counterparty
   // moves surface without a server round-trip), server status as the fallback
   // for untracked swaps and for terminal rendering.
-  const currentStep = useMemo(
+  const resolvedStep = useMemo(
     () =>
       determineStepFromActions(derivedActions, displaySwapData?.status) ??
       determineStepFromStatus(displaySwapData),
     [derivedActions, displaySwapData],
   );
+
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  const payDeadline =
+    swapData?.bitcoinPayout && displaySwapData?.direction === "evm_to_bitcoin"
+      ? displaySwapData.btc_refund_locktime
+      : undefined;
+  useEffect(() => {
+    if (!payDeadline || resolvedStep !== "user-deposit") return;
+    setNow(Math.floor(Date.now() / 1000));
+    const timer = setInterval(
+      () => setNow(Math.floor(Date.now() / 1000)),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, [payDeadline, resolvedStep]);
+  const reportedFundingSeen =
+    !!swapData?.bitcoinPayout &&
+    showReportedFunding(displaySwapData?.status, resolvedStep);
+  const currentStep = reportedFundingSeen
+    ? "user-deposit-seen"
+    : payFundingExpired(resolvedStep, payDeadline, now)
+      ? "expired"
+      : resolvedStep;
 
   // Subscribe to swap status updates via WebSocket (replaces 2s polling).
   useEffect(() => {
@@ -378,7 +415,7 @@ export function SwapWizardPage() {
     };
   }, [swapId, retry, displaySwapData, swapData]);
 
-  return (
+  const content = (
     <>
       {/* Error State */}
       {error && (
@@ -513,6 +550,8 @@ export function SwapWizardPage() {
                     | EvmToLightningSwapResponse
                 ).gasless ? (
                   <DepositEvmGaslessStep
+                    key={displaySwapData.id}
+                    autoFund={!!swapData?.bitcoinPayout}
                     swapData={
                       displaySwapData as
                         | EvmToArkadeSwapResponse
@@ -560,10 +599,25 @@ export function SwapWizardPage() {
             </div>
           )}
 
-          {swapDirectionValue &&
+          {reportedFundingSeen && (
+            <div className="space-y-3" role="status">
+              <h2 className="text-xl font-semibold">Deposit received</h2>
+              <p className="text-muted-foreground">
+                The server has seen your funding. Waiting for onchain
+                confirmation before continuing.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Do not send another deposit. This page updates automatically.
+              </p>
+            </div>
+          )}
+
+          {!reportedFundingSeen &&
+            swapDirectionValue &&
             (currentStep === "user-deposit-seen" ||
               currentStep === "server-depositing") && (
               <SwapProcessingStep
+                presentation={swapData?.bitcoinPayout ? "pay" : "swap"}
                 swapData={displaySwapData}
                 swapId={displaySwapData.id}
               />
@@ -587,8 +641,8 @@ export function SwapWizardPage() {
                     Swap Expired
                   </h3>
                   <p className="text-muted-foreground">
-                    This swap has expired. The time window to complete the swap
-                    has passed.
+                    The funding window has expired. Do not send tokens to this
+                    payment. Start a new swap to try again.
                   </p>
                 </div>
               </div>
@@ -619,6 +673,7 @@ export function SwapWizardPage() {
                 swapDirectionValue === "evm_to_arkade" ||
                 swapDirectionValue === "evm_to_lightning") && (
                 <RefundEvmStep
+                  gaslessOnly={!!swapData?.bitcoinPayout}
                   swapData={
                     displaySwapData as
                       | EvmToBitcoinSwapResponse
@@ -656,9 +711,18 @@ export function SwapWizardPage() {
             </>
           )}
 
-          {currentStep === "success" && swapDirectionValue && (
-            <SuccessStep swapData={displaySwapData} />
-          )}
+          {currentStep === "success" &&
+            swapDirectionValue &&
+            (swapData?.bitcoinPayout ? (
+              <PaySuccessStep
+                swap={displaySwapData}
+                payout={swapData.bitcoinPayout}
+                names={swapData.payRecipientNames}
+                usdRate={swapData.payUsdRate}
+              />
+            ) : (
+              <SuccessStep swapData={displaySwapData} />
+            ))}
 
           {currentStep === "refunded" && (
             <RefundedStep swapData={displaySwapData} />
@@ -666,5 +730,18 @@ export function SwapWizardPage() {
         </>
       )}
     </>
+  );
+  return swapData?.bitcoinPayout && displaySwapData ? (
+    <PayFundingLayout
+      names={swapData.payRecipientNames}
+      requestedAmounts={swapData.payRequestedAmounts}
+      swap={displaySwapData}
+      payout={swapData.bitcoinPayout}
+      step={currentStep}
+    >
+      {content}
+    </PayFundingLayout>
+  ) : (
+    content
   );
 }

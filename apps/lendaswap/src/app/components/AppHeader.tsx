@@ -1,29 +1,15 @@
-import {
-  Download,
-  Eye,
-  Github,
-  Globe,
-  History,
-  Key,
-  Menu,
-  Upload,
-} from "lucide-react";
+import { Download, Eye, History, Moon, Sun, Upload } from "lucide-react";
 import { useNavigate } from "react-router";
-import { Button } from "#/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ReactComponent as XLogo } from "../../assets/x-com-logo.svg";
 import isValidSpeedWalletContext from "../../utils/speedWallet";
 import { useActionableSwaps } from "../swapActionCenter";
-import { ThemeToggle } from "../utils/theme-toggle";
+import { useTheme } from "../utils/theme-provider";
 import { useWalletBridge } from "../WalletBridgeContext";
-import { useWalletMenu, WalletMenu, WalletMenuItems } from "./WalletMenu";
+import { useWalletMenu, WalletMenu } from "./WalletMenu";
 
 interface AppHeaderProps {
   onBackupOpen: () => void;
@@ -47,6 +33,7 @@ export function AppHeader({
   onDownloadSeedphrase,
 }: AppHeaderProps) {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const { isEmbedded } = useWalletBridge();
   const isSpeedWallet = isValidSpeedWalletContext();
   // NWC and Inscrib3 Arkade wallets only in standalone mode: an embedding
@@ -62,15 +49,15 @@ export function AppHeader({
   return (
     <>
       <header className="border-b">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="container mx-auto px-4 py-4 sm:px-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 sm:gap-6">
               <button
                 type="button"
                 onClick={() => navigate("/")}
                 className="flex items-center gap-2 transition-opacity hover:opacity-80"
               >
-                <span className="text-2xl font-bold select-none">
+                <span className="select-none text-2xl font-bold">
                   satora
                   <span
                     className="inline-block rounded-full bg-lime-400 align-baseline"
@@ -82,151 +69,53 @@ export function AppHeader({
                   />
                 </span>
               </button>
-
-              {/* GitHub Link */}
-              <a
-                href="https://github.com/satoraHQ"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-                aria-label="Visit us on GitHub"
-              >
-                <Github className="h-4 w-4" />
-              </a>
-
-              {/* X/Twitter Link */}
-              <a
-                href="https://x.com/satora_io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-                aria-label="Follow us on X"
-              >
-                <XLogo className="h-3.5 w-3.5 fill-current" />
-              </a>
-
-              {/* Satora Website Link */}
-              <a
-                href="https://satora.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:bg-muted/50 text-foreground hover:text-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-                aria-label="Visit satora.io"
-              >
-                <Globe className="h-4 w-4" />
-              </a>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Mobile Dropdown Menu */}
-              <div className="md:hidden">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="relative">
-                      <Menu className="h-4 w-4" />
-                      {needsAction && (
-                        <ActionDot className="absolute right-1 top-1" />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={() => navigate("/swaps")}
-                      className="gap-2"
-                    >
-                      <History className="h-4 w-4" />
-                      Swaps
-                      {needsAction && (
-                        <ActionDot className="relative ml-auto" />
-                      )}
-                    </DropdownMenuItem>
-
-                    <DropdownMenuSeparator />
-
-                    <DropdownMenuItem onClick={onBackupOpen} className="gap-2">
-                      <Eye className="h-4 w-4" />
-                      Show Seedphrase
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem
-                      onClick={onDownloadSeedphrase}
-                      className="gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Seedphrase
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem onClick={onImportOpen} className="gap-2">
-                      <Upload className="h-4 w-4" />
-                      Import Seedphrase
-                    </DropdownMenuItem>
-
-                    <DropdownMenuSeparator />
-
-                    {walletEntries.length > 0 && (
-                      <>
-                        <DropdownMenuLabel className="text-muted-foreground">
-                          Wallets
-                        </DropdownMenuLabel>
-                        <WalletMenuItems entries={walletEntries} />
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-
-                    <DropdownMenuItem asChild>
-                      <ThemeToggle />
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {/* Desktop Buttons */}
-              <div className="hidden items-center gap-3 md:flex">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate("/swaps")}
-                  className="relative gap-2"
-                  title="Swaps"
-                >
-                  <History className="h-4 w-4" />
-                  {needsAction && (
-                    <ActionDot className="absolute right-1 top-1" />
-                  )}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2"
-                      title="Wallet Settings"
-                    >
-                      <Key className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={onBackupOpen} className="gap-2">
-                      <Eye className="h-4 w-4" />
-                      Show Seedphrase
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={onDownloadSeedphrase}
-                      className="gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Seedphrase
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onImportOpen} className="gap-2">
-                      <Upload className="h-4 w-4" />
-                      Import Seedphrase
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <ThemeToggle />
-                <WalletMenu entries={walletEntries} />
-              </div>
-            </div>
+            <WalletMenu
+              entries={walletEntries}
+              indicator={
+                needsAction ? (
+                  <ActionDot className="absolute -right-1 -top-1" />
+                ) : undefined
+              }
+            >
+              {walletEntries.length > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuItem
+                onSelect={() => navigate("/swaps")}
+                className="gap-2"
+              >
+                <History className="h-4 w-4" />
+                Swap history
+                {needsAction && <ActionDot className="relative ml-auto" />}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-muted-foreground">
+                Seedphrase settings
+              </DropdownMenuLabel>
+              <DropdownMenuItem onSelect={onBackupOpen} className="gap-2">
+                <Eye className="h-4 w-4" /> Show seedphrase
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={onDownloadSeedphrase}
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" /> Download seedphrase
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={onImportOpen} className="gap-2">
+                <Upload className="h-4 w-4" /> Import seedphrase
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={toggleTheme} className="gap-2">
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+                {theme === "dark"
+                  ? "Switch to light mode"
+                  : "Switch to dark mode"}
+              </DropdownMenuItem>
+            </WalletMenu>
           </div>
         </div>
       </header>

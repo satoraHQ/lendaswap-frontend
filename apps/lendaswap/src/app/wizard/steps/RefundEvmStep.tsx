@@ -26,6 +26,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { api } from "../../api";
 import { SupportErrorBanner } from "../../components/SupportErrorBanner";
 import {
+  canRelayEthereumRefund,
   evmRefundOptions,
   isContractWallet,
 } from "../../utils/evmRefundOptions";
@@ -38,6 +39,7 @@ import {
 import { DepositCard } from "../components";
 
 interface RefundEvmStepProps {
+  gaslessOnly?: boolean;
   swapData:
     | EvmToBitcoinSwapResponse
     | EvmToArkadeSwapResponse
@@ -48,7 +50,10 @@ function formatAmount(raw: number | string, decimals: number): string {
   return (Number(raw) / 10 ** decimals).toFixed(decimals);
 }
 
-export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
+export function RefundEvmStep({
+  swapData,
+  gaslessOnly = false,
+}: RefundEvmStepProps) {
   const { address } = useAccount();
   const { open } = useAppKit();
 
@@ -155,6 +160,37 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
     sponsoredFailed,
   });
 
+  const relaySupported = canRelayEthereumRefund({
+    status: swapData.status,
+    chainId: swapData.evm_chain_id,
+    htlcKind: swapData.evm_htlc_kind,
+    htlcVersion: swapData.evm_htlc_version,
+    isBitcoin: swapData.target_token.token_id === "btc",
+  });
+  const relayAvailable = relaySupported && isLocktimePassed;
+
+  async function handleRelayedRefund() {
+    setIsRefunding(true);
+    setRefundError(null);
+    setRefundSuccess(null);
+    try {
+      const { txHash, confirmed } = await api.refundEvmGasless(swapId);
+      setRefundSuccess(
+        confirmed
+          ? `Refund as ${htlcTokenSymbol} confirmed. Transaction: ${txHash}`
+          : `Refund submitted. Waiting for confirmation. Transaction: ${txHash}`,
+      );
+    } catch (err) {
+      setRefundError(
+        err instanceof Error
+          ? err.message
+          : "Gasless refund failed. Please try again.",
+      );
+    } finally {
+      setIsRefunding(false);
+    }
+  }
+
   const timeRemaining = useMemo(() => {
     if (isLocktimePassed) return null;
 
@@ -203,7 +239,9 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
       const reason =
         err instanceof Error ? err.message : "Failed to execute refund";
       setRefundError(
-        `Gasless refund failed: ${reason}. Try again, or refund with your wallet instead.`,
+        gaslessOnly
+          ? `Gasless refund failed: ${reason}. Please try again.`
+          : `Gasless refund failed: ${reason}. Try again, or refund with your wallet instead.`,
       );
     } finally {
       setIsRefunding(false);
@@ -354,6 +392,90 @@ export function RefundEvmStep({ swapData }: RefundEvmStepProps) {
     } finally {
       setIsRefunding(false);
     }
+  }
+
+  if (gaslessOnly) {
+    const available =
+      relayAvailable || primary === "sponsored" || collabGasless;
+    const locked = swapData.evm_htlc_locked_amount;
+    const refundAmount =
+      locked == null
+        ? undefined
+        : (Number(locked) / 10 ** htlcTokenDecimals).toLocaleString(undefined, {
+            maximumFractionDigits: 8,
+          });
+    const destination = swapData.evm_htlc_sender || swapData.client_evm_address;
+    return (
+      <div className="space-y-4 rounded-2xl border p-5 sm:p-6">
+        <div>
+          <h3 className="text-lg font-semibold">Refund your deposit</h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            The refund is paid in {htlcTokenSymbol} on{" "}
+            {toChainName(swapData.source_token.chain)}, not {sourceSymbol}.
+            {available
+              ? " No gas needed."
+              : relaySupported
+                ? ` A gasless refund opens in ${timeRemaining}. No gas will be needed.`
+                : " A gasless refund is not currently available."}
+          </p>
+        </div>
+        <dl className="space-y-3 text-sm">
+          {refundAmount && (
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Refund amount</dt>
+              <dd className="font-medium">
+                {refundAmount} {htlcTokenSymbol}
+              </dd>
+            </div>
+          )}
+          <div className="space-y-1">
+            <dt className="text-muted-foreground">
+              Refund destination · this browser’s swap account
+            </dt>
+            <dd className="break-all font-mono text-xs">{destination}</dd>
+          </div>
+        </dl>
+        {!refundSuccess && (
+          <Button
+            className="h-auto min-h-12 rounded-full bg-[#11150f] px-6 py-3 text-white hover:bg-[#252b22]"
+            disabled={isRefunding || !available}
+            onClick={() =>
+              relayAvailable
+                ? handleRelayedRefund()
+                : primary === "sponsored"
+                  ? handleSponsoredRefund()
+                  : handleCollabRefund()
+            }
+          >
+            {isRefunding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isRefunding
+              ? "Refunding…"
+              : relaySupported && !isLocktimePassed
+                ? `Refund available in ${timeRemaining}`
+                : refundError
+                  ? "Try refund again"
+                  : `Refund ${refundAmount ? refundAmount + " " : "as "}${htlcTokenSymbol}`}
+          </Button>
+        )}
+        {refundError && (
+          <div
+            role="alert"
+            className="break-words rounded-xl bg-destructive/10 p-4 text-sm text-destructive"
+          >
+            <p className="font-medium">Refund didn’t go through</p>
+            <p className="mt-1">{refundError}</p>
+          </div>
+        )}
+        {refundSuccess && (
+          <p
+            role="status"
+            className="break-all rounded-xl bg-muted/50 p-4 text-sm"
+          >
+            {refundSuccess}
+          </p>
+        )}
+      </div>
+    );
   }
 
   return (

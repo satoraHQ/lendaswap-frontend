@@ -10,15 +10,15 @@
  *   2. submit a paymaster-sponsored `receiveMessage` UserOp (if needed),
  *   3. submit a paymaster-sponsored `USDC.transfer(recipient, balance)`.
  *
- * Owner key is the wallet-level BIP-44 EVM key (same one used as the
- * gasless-swap depositor / Kernel-account owner), exposed via the SDK's
- * `getEvmDepositorKey`. No swap id needed.
+ * Recovery matches the attested destination account against legacy and
+ * per-swap keys derived from the restored wallet seed. No swap id needed.
  */
 
 import { useAppKit } from "@reown/appkit/react";
 import {
   type CctpChainName,
   CHAIN_ID_TO_CCTP_NAME,
+  fetchAttestation,
   type RecoveryProgress,
   recoverCctpInbound,
 } from "@satora/swap";
@@ -37,6 +37,7 @@ import { useAccount } from "wagmi";
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { api } from "../api";
+import { cctpRecoveryDestination } from "../utils/cctpRecoveryKey";
 import { buildEvmSigner } from "../utils/evmSigner";
 import { getBlockexplorerTxLink } from "../utils/tokenUtils";
 
@@ -91,24 +92,6 @@ export function CctpRecoveryPage() {
     null,
   );
 
-  // Show the wallet-level smart account address up-front so the user can
-  // sanity-check that the burn's destinationCaller matches before clicking
-  // recover. Cheap call, no signature.
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .getEvmDepositorKey()
-      .then(({ address }) => {
-        if (!cancelled) setSmartAccountAddress(address);
-      })
-      .catch((e) => {
-        console.warn("Failed to derive smart account address:", e);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const burnTxValid = useMemo(() => isHex32(burnTxHash.trim()), [burnTxHash]);
   const recipientValid = useMemo(
     () => isAddress(recipient.trim()),
@@ -127,7 +110,13 @@ export function CctpRecoveryPage() {
     setPhase("attestation");
 
     try {
-      const { privateKey } = await api.getEvmDepositorKey();
+      const attestation = await fetchAttestation({
+        sourceChain,
+        txHash: burnTxHash.trim(),
+      });
+      const destination = cctpRecoveryDestination(attestation.message);
+      const { privateKey, address } = await api.getCctpRecoveryKey(destination);
+      setSmartAccountAddress(address);
       const ownerHex = (
         privateKey.startsWith("0x") ? privateKey : `0x${privateKey}`
       ) as Hex;
@@ -156,6 +145,10 @@ export function CctpRecoveryPage() {
         { aa: { bundlerUrl, paymasterPolicyId } },
         {
           signer,
+          attestation: {
+            message: attestation.message as Hex,
+            attestation: attestation.attestation as Hex,
+          },
           burnTxHash: burnTxHash.trim() as Hex,
           sourceChain,
           recipient: recipient.trim() as Address,

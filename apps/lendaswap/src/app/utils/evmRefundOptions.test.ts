@@ -2,6 +2,7 @@ import type { SwapStatus } from "@satora/swap";
 import { describe, expect, it } from "vitest";
 import {
   COLLAB_REFUND_STATUSES,
+  canRelayEthereumRefund,
   collabRefundPath,
   type EvmRefundInput,
   evmRefundOptions,
@@ -231,5 +232,23 @@ describe("collab refund cost per path", () => {
       collabGasless: true,
       collabNeedsSignature: false,
     });
+  });
+});
+
+describe("Ethereum refund relay", () => {
+  const lock = { ...base, chainId: 1, isBitcoin: true };
+  it("offers the v7 Ethereum Bitcoin refund without a wallet", () => {
+    expect(canRelayEthereumRefund(lock)).toBe(true);
+  });
+  it.each([
+    { chainId: 42161 },
+    { htlcVersion: 6 },
+    { htlcKind: "native" },
+    { isBitcoin: false },
+    { status: "serverfunded" as SwapStatus },
+    { status: "clientredeemed" as SwapStatus },
+    { status: "clientrefunded" as SwapStatus },
+  ])("rejects unsupported or unsafe locks: %j", (change) => {
+    expect(canRelayEthereumRefund({ ...lock, ...change })).toBe(false);
   });
 });

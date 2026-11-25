@@ -8,7 +8,8 @@ import {
   toChainName,
 } from "@satora/swap";
 import { AlertCircle, Check, Clock, Loader } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { createPublicClient, erc20Abi } from "viem";
 import { Button } from "#/components/ui/button";
@@ -30,6 +31,8 @@ import {
   DepositCard,
   QrCodeSection,
 } from "../components";
+import { useCopyToClipboard } from "../components/useCopyToClipboard";
+import { WalletDepositButton } from "../components/WalletDepositButton";
 
 interface EvmDepositGaslessStepProps {
   swapData:
@@ -37,13 +40,16 @@ interface EvmDepositGaslessStepProps {
     | EvmToBitcoinSwapResponse
     | EvmToLightningSwapResponse;
   swapId: string;
+  autoFund?: boolean;
 }
 
 export function DepositEvmGaslessStep({
   swapData,
   swapId,
+  autoFund = false,
 }: EvmDepositGaslessStepProps) {
   const navigate = useNavigate();
+  const { copiedValue, handleCopy } = useCopyToClipboard();
 
   const [isFunding, setIsFunding] = useState(false);
   const [fundError, setFundError] = useState<string | null>(null);
@@ -188,7 +194,11 @@ export function DepositEvmGaslessStep({
 
   const qrValue = depositAddress;
 
-  const handleFundGasless = async () => {
+  const fundingInFlight = useRef(false);
+  const autoAttempted = useRef(false);
+  const handleFundGasless = useCallback(async () => {
+    if (fundingInFlight.current) return;
+    fundingInFlight.current = true;
     setIsFunding(true);
     setFundError(null);
     try {
@@ -200,9 +210,132 @@ export function DepositEvmGaslessStep({
         err instanceof Error ? err.message : "Gasless funding failed",
       );
     } finally {
+      fundingInFlight.current = false;
       setIsFunding(false);
     }
-  };
+  }, [swapId]);
+
+  useEffect(() => {
+    if (
+      !autoFund ||
+      !hasSufficientBalance ||
+      isExpired ||
+      funded ||
+      autoAttempted.current
+    )
+      return;
+    autoAttempted.current = true;
+    void handleFundGasless();
+  }, [autoFund, hasSufficientBalance, isExpired, funded, handleFundGasless]);
+
+  if (autoFund)
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold">Fund payment</h2>
+          <span className="text-sm text-muted-foreground">
+            {isExpired
+              ? "Funding expired"
+              : timeRemaining
+                ? `Expires in ${timeRemaining}`
+                : ""}
+          </span>
+        </div>
+        {!isExpired && !funded && (
+          <div className="grid items-center gap-6 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <div className="mx-auto w-full max-w-64 rounded-2xl border bg-white p-4">
+              <QRCodeSVG
+                value={qrValue}
+                size={240}
+                className="h-auto w-full"
+                level="M"
+                aria-label="Deposit address QR code"
+                role="img"
+              />
+            </div>
+            <div className="min-w-0 space-y-6">
+              <div>
+                <p className="mb-2 text-sm text-muted-foreground">
+                  Send exactly
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="break-all text-2xl font-semibold">
+                    {sourceAmount} {tokenSymbol}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => handleCopy(sourceAmount)}
+                  >
+                    {copiedValue === sourceAmount ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  on {chainName} network only
+                </p>
+              </div>
+              <div>
+                <p className="mb-2 text-sm text-muted-foreground">
+                  To deposit address
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="min-w-0 flex-1 break-all rounded-xl bg-muted/50 p-3 text-sm">
+                    {depositAddress}
+                  </code>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCopy(depositAddress)}
+                  >
+                    {copiedValue === depositAddress ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+              </div>
+              {chain && rpcClient && (
+                <WalletDepositButton
+                  key={swapId}
+                  swapId={swapId}
+                  chainId={chain.id}
+                  chainName={chainName}
+                  token={tokenAddress}
+                  recipient={depositAddress}
+                  amount={requiredAmount}
+                  deadline={refundLocktime}
+                  disabled={
+                    isExpired || funded || isFunding || hasSufficientBalance
+                  }
+                  client={rpcClient}
+                />
+              )}
+            </div>
+          </div>
+        )}
+        {(isExpired || funded || hasSufficientBalance) && (
+          <p role="status" className="text-sm text-muted-foreground">
+            {isExpired
+              ? "Funding has expired. Do not send tokens to this payment."
+              : funded
+                ? "Funding submitted. Waiting for network confirmation."
+                : "Deposit detected. Your payment is being funded automatically."}
+          </p>
+        )}
+        {fundError && (
+          <>
+            <SupportErrorBanner
+              message="Gasless funding failed"
+              error={fundError}
+              swapId={swapId}
+            />
+            <Button
+              disabled={isFunding || isExpired || !hasSufficientBalance}
+              onClick={handleFundGasless}
+            >
+              {isFunding ? "Retrying…" : "Retry funding"}
+            </Button>
+          </>
+        )}
+      </div>
+    );
 
   // Funding cannot complete on this client: say so instead of directing
   // the user to deposit into an account the funding could not move.
@@ -258,15 +391,15 @@ export function DepositEvmGaslessStep({
           copyValue={sourceAmount}
           copiable
         />
-        <div className="flex justify-between items-center text-sm">
+        <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Deposit</span>
           {hasSufficientBalance ? (
-            <span className="font-medium text-green-600 dark:text-green-400 flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 font-medium text-green-600 dark:text-green-400">
               <Check className="h-3.5 w-3.5" />
               {balanceDisplay} {tokenSymbol} received
             </span>
           ) : (
-            <span className="text-muted-foreground flex items-center gap-1.5">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
               <Loader className="h-3.5 w-3.5 animate-spin" />
               Waiting for {sourceAmount} {tokenSymbol}...
             </span>
@@ -281,27 +414,29 @@ export function DepositEvmGaslessStep({
           value={`${totalFeeSats(swapData).toLocaleString()} sats`}
         />
         {timeRemaining && (
-          <div className="flex justify-between text-sm pt-1 border-t border-border/50">
-            <span className="text-muted-foreground flex items-center gap-1.5">
+          <div className="flex justify-between border-t border-border/50 pt-1 text-sm">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
               Expires in
             </span>
-            <span className="font-medium font-mono">{timeRemaining}</span>
+            <span className="font-mono font-medium">{timeRemaining}</span>
           </div>
         )}
       </AmountSummary>
 
       {/* Expiry warning */}
       {isExpired && (
-        <div className="rounded-lg border border-red-500 bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/20 flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-lg border border-red-500 bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/20">
           <AlertCircle className="h-4 w-4 shrink-0" />
           This swap has expired. Funding is no longer possible.
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground text-center">
+      <p className="text-center text-xs text-muted-foreground">
         {hasSufficientBalance
-          ? `${tokenSymbol} received. Click Fund Swap to complete - no wallet connection or gas needed.`
+          ? autoFund
+            ? `${tokenSymbol} received. Your payment proceeds automatically; keep this page open.`
+            : `${tokenSymbol} received. Click Fund Swap to complete - no wallet connection or gas needed.`
           : `Send ${sourceAmount} ${tokenSymbol} to the address above. This page updates automatically once payment is detected.`}
       </p>
 
@@ -324,14 +459,18 @@ export function DepositEvmGaslessStep({
           >
             {isFunding ? (
               <>
-                <Loader className="animate-spin h-4 w-4 mr-2" />
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
                 Funding...
               </>
             ) : !hasSufficientBalance ? (
               <>
-                <Loader className="animate-spin h-4 w-4 mr-2" />
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
                 Waiting for {tokenSymbol}...
               </>
+            ) : fundError ? (
+              "Retry funding"
+            ) : autoFund ? (
+              "Processing deposit…"
             ) : (
               "Fund Swap"
             )}
@@ -341,9 +480,9 @@ export function DepositEvmGaslessStep({
         <Button
           variant="outline"
           className="h-12 w-full"
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/swaps")}
         >
-          Cancel Swap
+          Back to swaps
         </Button>
       </div>
     </DepositCard>

@@ -35,15 +35,17 @@ export function TxHashRow({
   txHash,
   chain,
   copiedAddress,
+  explorerUrl,
   onCopy,
 }: {
   label: string;
   txHash: string;
   chain: string;
+  explorerUrl?: string;
   copiedAddress: string | null;
   onCopy: (v: string) => void;
 }) {
-  const href = getBlockexplorerTxLink(chain, txHash);
+  const href = explorerUrl ?? getBlockexplorerTxLink(chain, txHash);
   return (
     <div className="border-border flex flex-col gap-2 border-t pt-2 text-sm">
       <span className="text-muted-foreground">{label}</span>

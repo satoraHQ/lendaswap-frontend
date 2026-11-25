@@ -1,12 +1,14 @@
 // Re-export types from SDK - single source of truth
 import {
   type Asset,
+  type BitcoinPaymentRequest,
   type BtcToArkadeSwapResponse,
   type Chain,
   CLIENT_AGENT,
   type ClaimResult,
   type ContinueRefundedEvmSwapInfo,
   type ContinueRefundedEvmSwapResult,
+  deriveEvmAddress,
   type EvmSigner,
   type GetSwapResponse,
   IdbSwapStorage,
@@ -32,12 +34,21 @@ import {
   type UnsignedPermit2FundingData,
   type VhtlcAmounts,
 } from "@satora/swap";
+import Dexie from "dexie";
 import { createWalletClient, type Hex, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { arbitrum } from "viem/chains";
 import { readStoredConfirmations } from "./utils/bitcoinConfirmations";
+import { findRecoveryKey } from "./utils/cctpRecoveryKey";
 import { buildEvmSigner } from "./utils/evmSigner";
 import { RPC_OVERRIDES } from "./utils/evmTransport";
+import {
+  mergePayBackup,
+  type PayBackup,
+  validatePayBackup,
+  verifyBackupSwap,
+  withPayRecoveryAddress,
+} from "./utils/payBackup";
 import {
   clearPromoCode,
   getPromoCode,
@@ -320,6 +331,111 @@ function ensureTracking(client: SdkClient): Promise<void> {
 }
 
 export const api = {
+  async exportPayBackup(
+    id: string,
+    recipientNames?: string[],
+    usdRate?: number,
+    requestedAmounts?: string[],
+  ): Promise<PayBackup> {
+    const client = await getClients();
+    const stored = await client.getStoredSwap(id);
+    const swap = stored ? withPayRecoveryAddress(stored) : null;
+    if (!swap?.bitcoinPayout)
+      throw new Error("Payment not found in this browser.");
+    if (recipientNames) swap.payRecipientNames = recipientNames;
+    if (requestedAmounts) swap.payRequestedAmounts = requestedAmounts;
+    if (usdRate !== undefined && Number.isFinite(usdRate) && usdRate > 0)
+      swap.payUsdRate = usdRate;
+    const wallet = new IdbWalletStorage();
+    const backup: PayBackup = {
+      format: "satora-pay-recovery",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      network: await api.getBitcoinNetwork(),
+      apiUrl: API_BASE_URL,
+      wallet: {
+        mnemonic: client.getMnemonic(),
+        keyIndex: await wallet.getKeyIndex(),
+      },
+      swap,
+      recipientNames:
+        recipientNames ??
+        (swap as StoredSwap & { payRecipientNames?: string[] })
+          .payRecipientNames ??
+        swap.bitcoinPayout.recipients.map(() => ""),
+    };
+    const validated = validatePayBackup(backup);
+    await new IdbSwapStorage().store(swap);
+    return validated;
+  },
+
+  async importPayBackup(input: unknown): Promise<string> {
+    const backup = validatePayBackup(input);
+    if (backup.network !== (await api.getBitcoinNetwork()))
+      throw new Error("This backup belongs to a different Bitcoin network.");
+    // Fetch only by ID; recovery secrets never leave this browser.
+    const response = await fetch(`${API_BASE_URL}/swap/${backup.swap.swapId}`, {
+      headers: apiHeaders(),
+    });
+    if (!response.ok)
+      throw new Error(
+        "Could not verify this swap with the configured server. Check the server and try again.",
+      );
+    const live: GetSwapResponse = await response.json();
+    verifyBackupSwap(backup, live);
+    const client = await getClients();
+    client.stopTracking();
+    // Commit the seed, derivation counter and payment together. Never replace
+    // another wallet with saved swaps, or regress a newer local swap snapshot.
+    const db = new Dexie("lendaswap-v3");
+    db.version(1).stores({ wallet: "key", swaps: "swapId" });
+    try {
+      await db.transaction(
+        "rw",
+        db.table("wallet"),
+        db.table("swaps"),
+        async () => {
+          const wallet = db.table("wallet");
+          const swaps = db.table("swaps");
+          const seed = (await wallet.get("mnemonic"))?.value;
+          const index = (await wallet.get("keyIndex"))?.value ?? 0;
+          if (
+            seed &&
+            seed !== backup.wallet.mnemonic &&
+            (index > 0 || (await swaps.count()) > 0)
+          )
+            throw new Error(
+              "This browser has a different wallet. Import in a separate browser profile to keep its existing payments safe.",
+            );
+          const existing: StoredSwap | undefined = await swaps.get(
+            backup.swap.swapId,
+          );
+          const merged = mergePayBackup(existing, backup);
+          await wallet.put({ key: "mnemonic", value: backup.wallet.mnemonic });
+          await wallet.put({
+            key: "keyIndex",
+            value: Math.max(
+              seed === backup.wallet.mnemonic ? index : 0,
+              backup.wallet.keyIndex,
+              backup.swap.keyIndex + 1,
+            ),
+          });
+          await swaps.put({
+            ...merged,
+            response: live,
+            updatedAt: Date.now(),
+          });
+        },
+      );
+    } catch (error) {
+      await client.startTracking();
+      throw error;
+    } finally {
+      db.close();
+    }
+    return backup.swap.swapId;
+  },
+
   async setBitcoinMinConfirmations(minConfirmations: number): Promise<void> {
     const client = await getClients();
     client.setBitcoinMinConfirmations(minConfirmations);
@@ -328,6 +444,23 @@ export const api = {
   async loadMnemonic(mnemonic: string): Promise<void> {
     const client = await getClients();
     await client.loadMnemonic(mnemonic);
+  },
+
+  async getBitcoinNetwork(): Promise<string> {
+    const response = await fetch(`${API_BASE_URL}/tokens`, {
+      headers: apiHeaders(),
+    });
+    if (!response.ok) throw new Error("Could not load Bitcoin network");
+    const data = await response.json();
+    if (typeof data.bitcoin_network !== "string") {
+      // Older hosted backends omit this field; only use an explicit network setting.
+      if (["mainnet", "testnet", "signet", "regtest"].includes(BITCOIN_NETWORK))
+        return BITCOIN_NETWORK;
+      throw new Error(
+        "Backend does not report its Bitcoin network. Configure the Bitcoin network before creating a payment.",
+      );
+    }
+    return data.bitcoin_network;
   },
 
   async getTokens(): Promise<TokenInfos> {
@@ -410,6 +543,7 @@ export const api = {
   },
 
   async createSwap(request: {
+    bitcoinPayout?: BitcoinPaymentRequest;
     source?: Asset;
     target?: Asset;
     sourceAsset?: TokenInfo;
@@ -429,6 +563,7 @@ export const api = {
     const client = await getClients();
     const createSwap = () =>
       client.createSwap({
+        bitcoinPayout: request.bitcoinPayout,
         source: request.source,
         target: request.target,
         sourceAsset: request.sourceAsset,
@@ -551,6 +686,7 @@ export const api = {
       bridgeRecipient?: string;
       bridgeRecipientWallet?: string;
       signer?: EvmSigner;
+      feeRateSatPerVb?: number;
     },
   ): Promise<ClaimResult> {
     const client = await getClients();
@@ -660,6 +796,25 @@ export const api = {
   ): Promise<{ txHash: string }> {
     const client = await getClients();
     return await client.refundEvmWithSigner(swapId, signer);
+  },
+
+  async refundEvmGasless(
+    swapId: string,
+  ): Promise<{ txHash: string; confirmed: boolean }> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/swap/${encodeURIComponent(swapId)}/refund-evm-gasless`,
+      { method: "POST", headers: apiHeaders() },
+    );
+    if (!response.ok) {
+      throw new Error(
+        `Gasless refund failed: ${response.status} ${await response.text()}`,
+      );
+    }
+    const result = (await response.json()) as {
+      tx_hash: string;
+      confirmed?: boolean;
+    };
+    return { txHash: result.tx_hash, confirmed: result.confirmed === true };
   },
 
   async refundEvmSponsored(
@@ -821,11 +976,24 @@ export const api = {
     return client.getEvmDepositorKey();
   },
 
+  async getCctpRecoveryKey(destination: string) {
+    const client = await getClients();
+    return findRecoveryKey(
+      destination,
+      client.getEvmDepositorKey(),
+      (index) => {
+        const { secretKey } = client.deriveSwapParamsAtIndex(index);
+        const privateKey = `0x${Array.from(secretKey, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+        return { privateKey, address: deriveEvmAddress(secretKey) };
+      },
+    );
+  },
+
   async getRefundedEvmSwapContinuation(
     swapId: string,
   ): Promise<ContinueRefundedEvmSwapInfo> {
     const client = await getClients();
-    const { privateKey } = client.getEvmDepositorKey();
+    const { privateKey } = await client.getSwapDepositorKey(swapId);
     const account = privateKeyToAccount(
       (privateKey.startsWith("0x") ? privateKey : `0x${privateKey}`) as Hex,
     );
@@ -843,7 +1011,7 @@ export const api = {
     targetAddress: string,
   ): Promise<ContinueRefundedEvmSwapResult> {
     const client = await getClients();
-    const { privateKey } = client.getEvmDepositorKey();
+    const { privateKey } = await client.getSwapDepositorKey(swapId);
     const account = privateKeyToAccount(
       (privateKey.startsWith("0x") ? privateKey : `0x${privateKey}`) as Hex,
     );

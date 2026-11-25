@@ -148,3 +148,20 @@ export function evmRefundOptions(input: EvmRefundInput): EvmRefundOptions {
     secondaryCollab,
   };
 }
+
+/** The backend relays expired Ethereum v7 ERC20 locks for Bitcoin payouts. */
+export function canRelayEthereumRefund(input: {
+  status: SwapStatus;
+  chainId: string | number;
+  htlcKind: string | undefined;
+  htlcVersion: number | undefined;
+  isBitcoin: boolean;
+}): boolean {
+  return (
+    input.isBitcoin &&
+    String(input.chainId) === "1" &&
+    input.htlcKind === "erc20" &&
+    input.htlcVersion === 7 &&
+    COLLAB_REFUND_STATUSES.has(input.status)
+  );
+}

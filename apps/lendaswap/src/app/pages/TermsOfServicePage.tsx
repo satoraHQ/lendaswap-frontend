@@ -27,7 +27,7 @@ export function TermsOfServicePage() {
           Terms of Service
         </h1>
         <p className="text-muted-foreground mt-2 mb-12">
-          Last updated: August 2026
+          Last updated: November 2026
         </p>
 
         <div className="space-y-10 text-[15px] md:text-base leading-7 text-muted-foreground">
@@ -37,9 +37,7 @@ export function TermsOfServicePage() {
             </h2>
             <p>
               These Terms of Service (&quot;Terms&quot;) govern your use of
-              Satora, an atomic swap service operated by Sofbear Consulting
-              Ltd., a company registered in the British Virgin Islands
-              (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or
+              Satora, an atomic swap service (&quot;we&quot;, &quot;us&quot;, or
               &quot;our&quot;). By accessing or using our service, you agree to
               be bound by these Terms.
             </p>
@@ -142,12 +140,12 @@ export function TermsOfServicePage() {
               6. Limitation of Liability
             </h2>
             <p>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, SOFBEAR CONSULTING LTD.
-              AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE
-              LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR
-              PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS,
-              DATA, OR OTHER INTANGIBLE LOSSES, ARISING OUT OF OR RELATED TO
-              YOUR USE OF THE SERVICE.
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE AND OUR OFFICERS,
+              DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR ANY
+              INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES,
+              INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, OR OTHER
+              INTANGIBLE LOSSES, ARISING OUT OF OR RELATED TO YOUR USE OF THE
+              SERVICE.
             </p>
             <p className="mt-4">
               This includes, without limitation, any losses resulting from:
@@ -264,29 +262,11 @@ export function TermsOfServicePage() {
 
           <section>
             <h2 className="text-lg md:text-xl font-semibold text-foreground mb-3">
-              12. Governing Law
-            </h2>
-            <p>
-              These Terms shall be governed by and construed in accordance with
-              the laws of the British Virgin Islands, without regard to its
-              conflict of law provisions.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg md:text-xl font-semibold text-foreground mb-3">
-              13. Contact
+              12. Contact
             </h2>
             <p>
               For questions about these Terms, please contact us through our
               official channels.
-            </p>
-            <p className="mt-3">
-              <strong className="text-foreground">
-                Sofbear Consulting Ltd.
-              </strong>
-              <br />
-              British Virgin Islands
             </p>
           </section>
         </div>

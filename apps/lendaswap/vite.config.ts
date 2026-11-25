@@ -11,8 +11,12 @@ import svgr from "vite-plugin-svgr";
 // per-component, so a `git tag` lookup would surface a backend tag instead.
 const appVersion = createRequire(import.meta.url)("./package.json").version;
 
-export default defineConfig({
-  envDir: "../../../",
+export default defineConfig(({ mode }) => ({
+  // Keep test settings isolated from the root mainnet .env and .env.local.
+  envDir:
+    mode === "mutinynet"
+      ? path.resolve(__dirname, "env/mutinynet")
+      : "../../../",
   define: {
     "import.meta.env.VITE_APP_VERSION": JSON.stringify(appVersion),
   },
@@ -85,4 +89,4 @@ export default defineConfig({
     // Exclude Node.js-only native addon from pre-bundling
     exclude: ["@lendasat/lendaswap-sdk-native"],
   },
-});
+}));
