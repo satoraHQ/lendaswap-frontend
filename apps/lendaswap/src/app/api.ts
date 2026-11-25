@@ -200,6 +200,9 @@ const AA_RPC_URL =
   RPC_OVERRIDES[42161] ||
   AA_BUNDLER_URL;
 const AA_POLICY_ID = import.meta.env.VITE_AA_POLICY_ID?.trim() || "";
+// Local stacks only: alto has no paymaster, so the UserOp sender pays its own
+// prefund. Hosted builds leave this unset and rely on the paymaster policy.
+const AA_ALLOW_SELF_PAID = import.meta.env.VITE_AA_ALLOW_SELF_PAID === "true";
 
 // Chain-verified tracking reads EVM legs through the SDK's own readers, which
 // default to public RPCs. Point them at the same override wagmi uses so a
@@ -297,6 +300,9 @@ async function buildClient(): Promise<SdkClient> {
       bundlerUrl: AA_BUNDLER_URL,
       rpcUrl: AA_RPC_URL,
       ...(AA_POLICY_ID ? { paymasterPolicyId: AA_POLICY_ID } : {}),
+      ...(!AA_POLICY_ID && AA_ALLOW_SELF_PAID
+        ? { allowSelfPaidFunding: true }
+        : {}),
     });
   }
 
