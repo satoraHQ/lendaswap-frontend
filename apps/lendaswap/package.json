@@ -11,7 +11,8 @@
     "dev": "vite serve",
     "check-types": "tsc --noEmit -p tsconfig.app.json",
     "test": "vitest run",
-    "dev:mutinynet": "vite serve --mode mutinynet --port 4206 --strictPort"
+    "dev:mutinynet": "vite serve --mode mutinynet --port 4206 --strictPort",
+    "dev:regtest": "vite serve --mode regtest --port 4207 --strictPort"
   },
   "dependencies": {
     "@arkade-os/sdk": "^0.5.5",

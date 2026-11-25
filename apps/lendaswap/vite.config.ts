@@ -14,8 +14,8 @@ const appVersion = createRequire(import.meta.url)("./package.json").version;
 export default defineConfig(({ mode }) => ({
   // Keep test settings isolated from the root mainnet .env and .env.local.
   envDir:
-    mode === "mutinynet"
-      ? path.resolve(__dirname, "env/mutinynet")
+    mode === "mutinynet" || mode === "regtest"
+      ? path.resolve(__dirname, `env/${mode}`)
       : "../../../",
   define: {
     "import.meta.env.VITE_APP_VERSION": JSON.stringify(appVersion),
