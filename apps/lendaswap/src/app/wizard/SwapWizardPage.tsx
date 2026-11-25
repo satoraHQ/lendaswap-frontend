@@ -719,6 +719,7 @@ export function SwapWizardPage() {
                 payout={swapData.bitcoinPayout}
                 names={swapData.payRecipientNames}
                 usdRate={swapData.payUsdRate}
+                claimTxid={swapData.bitcoinClaimBroadcast}
               />
             ) : (
               <SuccessStep swapData={displaySwapData} />

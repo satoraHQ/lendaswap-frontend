@@ -10,6 +10,9 @@ interface Receipt {
   names?: string[];
   usdRate?: number;
   feeSats: string;
+  /** The claim transaction the payout was verified against. A speed-up
+   * replaces it, so the server's recorded claim txid can be stale. */
+  txid: string;
 }
 
 /** An explicit allowlist keeps wallet seeds and swap keys out of receipts. */
@@ -19,6 +22,7 @@ export function buildPayReceipt({
   names = [],
   usdRate,
   feeSats,
+  txid,
 }: Receipt): TDocumentDefinitions {
   // `payout` holds the amounts the claim transaction actually paid, verified
   // against the chain by the caller; never re-split them.
@@ -37,8 +41,6 @@ export function buildPayReceipt({
   const stablecoin = ["USDC", "USDT", "USDT0"].includes(
     swap.source_token.symbol.toUpperCase(),
   );
-  const txid =
-    swap.direction === "evm_to_bitcoin" ? swap.btc_claim_txid : undefined;
   const detail = (label: string, value: string): Content => ({
     columns: [
       { text: label, width: 110, color: "#6b706b" },
@@ -113,7 +115,7 @@ export function buildPayReceipt({
     detail("Recipient payouts", `${btc(total)} / ${usd(total)}`),
     detail("Bitcoin fee", `${feeSats} sats / ${usd(feeSats)}`),
     detail("Swap fee", `${swap.fee_sats} sats / ${usd(swap.fee_sats)}`),
-    detail("Bitcoin transaction", txid || "Awaiting synchronization"),
+    detail("Bitcoin transaction", txid),
     {
       text:
         valuation?.basis === "review"

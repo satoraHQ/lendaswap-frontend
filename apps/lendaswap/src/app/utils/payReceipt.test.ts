@@ -14,7 +14,7 @@ const swap = {
   fee_sats: 190,
   source_token: { decimals: 6, symbol: "USDT0", chain: "42161" },
   network: "signet",
-  btc_claim_txid: "public-transaction",
+  btc_claim_txid: "replaced-transaction",
   secretKey: "must-not-export",
 } as unknown as GetSwapResponse;
 const receipt = {
@@ -28,6 +28,7 @@ const receipt = {
   },
   names: ["Bob", "Alice"],
   feeSats: "466",
+  txid: "public-transaction",
 };
 
 describe("payment PDF receipts", () => {
@@ -49,6 +50,9 @@ describe("payment PDF receipts", () => {
     ])
       expect(content).toContain(value);
     expect(content).not.toContain("must-not-export");
+    // A speed-up leaves the server on the replaced claim; the receipt names
+    // the transaction the payout was verified against.
+    expect(content).not.toContain("replaced-transaction");
   });
   it("reports the verified amounts as given, whatever the recorded funding", () => {
     const content = JSON.stringify(

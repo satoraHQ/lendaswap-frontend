@@ -14,8 +14,11 @@ export function PaySuccessStep({
   payout: quotedPayout,
   names,
   usdRate,
+  claimTxid,
 }: {
   swap: GetSwapResponse;
+  /** Last claim this browser broadcast (the SDK's `bitcoinClaimBroadcast`). */
+  claimTxid?: string;
   names?: string[];
   usdRate?: number;
   payout: NonNullable<StoredSwap["bitcoinPayout"]>;
@@ -25,12 +28,12 @@ export function PaySuccessStep({
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
-  // A speed-up replaces the claim; follow the replacement until the server
-  // reports it.
+  // A speed-up replaces the claim and the server keeps the first txid, so
+  // follow this browser's latest broadcast, which survives a reload.
   const [replacementTxid, setReplacementTxid] = useState<string>();
   const serverTxid =
     swap.direction === "evm_to_bitcoin" ? swap.btc_claim_txid : undefined;
-  const txid = replacementTxid ?? serverTxid ?? undefined;
+  const txid = replacementTxid ?? claimTxid ?? serverTxid ?? undefined;
   const [payout, setPayout] = useState<typeof quotedPayout>();
   const [confirmed, setConfirmed] = useState(false);
   const [verificationError, setVerificationError] = useState("");
@@ -117,6 +120,7 @@ export function PaySuccessStep({
     0n,
   );
   const feeSats = payout.feeSats;
+  const verifiedTxid = txid;
   async function download() {
     setDownloading(true);
     setDownloadError("");
@@ -127,6 +131,7 @@ export function PaySuccessStep({
         names,
         usdRate,
         feeSats,
+        txid: verifiedTxid,
       });
     } catch {
       setDownloadError("Could not create the PDF. Please try again.");
