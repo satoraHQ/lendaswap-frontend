@@ -15,6 +15,7 @@ export function PayFundingLayout({
   names,
   requestedAmounts,
   step,
+  supersededBy,
 }: {
   children: ReactNode;
   swap: GetSwapResponse;
@@ -23,9 +24,21 @@ export function PayFundingLayout({
   /** Nominal amounts asked for; the stored payout holds the lower floors. */
   requestedAmounts?: string[];
   step?: string;
+  /** The payment that already retried this expired one from its deposit. */
+  supersededBy?: string;
 }) {
   const navigate = useNavigate();
-  const [expiredDepositClear, setExpiredDepositClear] = useState(false);
+  const [expiredDeposit, setExpiredDeposit] = useState<bigint>();
+  const expiredDepositClear = expiredDeposit === 0n;
+  // An expired quote whose deposit arrived too late: a new quote funds from
+  // it, once the server has closed this one (its clock can lag by an hour)
+  // and no other retry has taken the deposit.
+  const expiredDepositFunded =
+    step === "expired" &&
+    swap.status === "expired" &&
+    !supersededBy &&
+    expiredDeposit !== undefined &&
+    expiredDeposit > 0n;
   const amount = (
     Number(swap.source_amount) /
     10 ** swap.source_token.decimals
@@ -69,6 +82,7 @@ export function PayFundingLayout({
           names,
           feeSats: payout.feeSats,
           recovery: "target_btc_address" in swap ? swap.target_btc_address : "",
+          fundFromSwapId: expiredDepositFunded ? swap.id : undefined,
         },
       },
     });
@@ -133,7 +147,7 @@ export function PayFundingLayout({
               </h2>
               <p className="leading-relaxed text-muted-foreground">
                 {step === "expired"
-                  ? "Don’t send funds to the old deposit address. If you sent funds, check the deposit account before funding another payment."
+                  ? "Don’t send more funds to this deposit address. A deposit that arrived late stays in the deposit account and can fund a new quote."
                   : "Retrying with the existing funds is not supported for this payment. Review the gasless refund details below."}
               </p>
               <dl className="divide-y rounded-2xl bg-muted/40 px-5 py-2 text-sm">
@@ -169,11 +183,16 @@ export function PayFundingLayout({
             </div>
           )}
           {step === "expired" ? (
-            <PayExpiredDeposit swap={swap} onClear={setExpiredDepositClear} />
+            <PayExpiredDeposit
+              swap={swap}
+              supersededBy={supersededBy}
+              onBalance={setExpiredDeposit}
+            />
           ) : (
             children
           )}
-          {((step === "expired" && expiredDepositClear) ||
+          {((step === "expired" &&
+            (expiredDepositClear || expiredDepositFunded)) ||
             step === "refunded") && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">What to do next</p>
@@ -189,9 +208,9 @@ export function PayFundingLayout({
                       Try again with a new quote
                     </h3>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      Same {payout.recipients.length} recipients and BTC
-                      amounts. Review a fresh rate, then get a new deposit
-                      address. The new payment needs new funding.
+                      {expiredDepositFunded
+                        ? `Same ${payout.recipients.length} recipients and BTC amounts. Review a fresh rate; the deposit already in this payment's account counts towards it.`
+                        : `Same ${payout.recipients.length} recipients and BTC amounts. Review a fresh rate, then get a new deposit address. The new payment needs new funding.`}
                     </p>
                   </div>
                 </div>

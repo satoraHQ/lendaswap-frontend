@@ -739,6 +739,7 @@ export function SwapWizardPage() {
       swap={displaySwapData}
       payout={swapData.bitcoinPayout}
       step={currentStep}
+      supersededBy={swapData.supersededBy}
     >
       {content}
     </PayFundingLayout>

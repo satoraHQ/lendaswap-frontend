@@ -593,6 +593,8 @@ export const api = {
     targetAddress: string;
     userAddress?: string;
     gasless?: boolean;
+    /** Fund from an expired payment's deposit account (Pay retries). */
+    fundFromSwapId?: string;
     bridgeRecipientSetup?: boolean;
     bridgeRecipient?: string;
     bridgeRecipientWallet?: string;
@@ -615,6 +617,7 @@ export const api = {
         referralCode: referralCode || undefined,
         promoCode: request.promoCode || undefined,
         gasless: request.gasless,
+        fundFromSwapId: request.fundFromSwapId,
         bridgeRecipientSetup: request.bridgeRecipientSetup,
         bridgeRecipient: request.bridgeRecipient,
         bridgeRecipientWallet: request.bridgeRecipientWallet,

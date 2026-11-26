@@ -194,6 +194,20 @@ export function DepositEvmGaslessStep({
 
   const qrValue = depositAddress;
 
+  // A deposit already in the account (a retried quote reuses it) counts:
+  // ask only for the rest, and say what is left over beyond this payment.
+  const formatSource = (value: bigint) =>
+    (Number(value) / 10 ** sourceDecimals).toFixed(sourceDecimals);
+  const partialDeposit =
+    balance !== null && balance > 0n && balance < requiredAmount;
+  const sendAmount = partialDeposit
+    ? formatSource(requiredAmount - balance)
+    : sourceAmount;
+  const leftover =
+    balance !== null && balance > requiredAmount
+      ? formatSource(balance - requiredAmount)
+      : undefined;
+
   const fundingInFlight = useRef(false);
   const autoAttempted = useRef(false);
   const handleFundGasless = useCallback(async () => {
@@ -256,23 +270,25 @@ export function DepositEvmGaslessStep({
             <div className="min-w-0 space-y-6">
               <div>
                 <p className="mb-2 text-sm text-muted-foreground">
-                  Send exactly
+                  {partialDeposit ? "Send the remaining" : "Send exactly"}
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <p className="break-all text-2xl font-semibold">
-                    {sourceAmount} {tokenSymbol}
+                    {sendAmount} {tokenSymbol}
                   </p>
                   <Button
                     size="sm"
                     variant="outline"
                     className="rounded-full"
-                    onClick={() => handleCopy(sourceAmount)}
+                    onClick={() => handleCopy(sendAmount)}
                   >
-                    {copiedValue === sourceAmount ? "Copied" : "Copy"}
+                    {copiedValue === sendAmount ? "Copied" : "Copy"}
                   </Button>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
                   on {chainName} network only
+                  {partialDeposit &&
+                    `. ${balanceDisplay} ${tokenSymbol} of the ${sourceAmount} ${tokenSymbol} is already in this account.`}
                 </p>
               </div>
               <div>
@@ -317,6 +333,13 @@ export function DepositEvmGaslessStep({
               : funded
                 ? "Funding submitted. Waiting for network confirmation."
                 : "Deposit detected. Your payment is being funded automatically."}
+          </p>
+        )}
+        {leftover && !isExpired && (
+          <p role="status" className="text-sm text-muted-foreground">
+            This account holds {leftover} {tokenSymbol} more than this payment
+            needs. It stays in the deposit account: keep your recovery backup
+            and contact support to recover it.
           </p>
         )}
         {fundError && (

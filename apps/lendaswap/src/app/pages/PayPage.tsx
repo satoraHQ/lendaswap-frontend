@@ -42,6 +42,8 @@ export function PayPage() {
         recipients: { address: string; amountSats: string }[];
         feeSats: string;
         recovery: string;
+        /** An expired payment whose deposit funds this one. */
+        fundFromSwapId?: string;
       }
     | undefined;
   const [network, setNetwork] = useState<Network>();
@@ -85,6 +87,11 @@ export function PayPage() {
   }>();
   const navigate = useNavigate();
   const source = tokens.find((t) => `${t.chain}:${t.token_id}` === sourceId);
+  // The expired payment's deposit only funds a retry in the same token.
+  const fundFromSwapId =
+    retryPayment?.fundFromSwapId && sourceId === retryPayment.sourceId
+      ? retryPayment.fundFromSwapId
+      : undefined;
   useEffect(() => {
     Promise.all([api.getTokens(), api.getBitcoinNetwork()])
       .then(([data, backendNetwork]) => {
@@ -236,6 +243,7 @@ export function PayPage() {
         targetAddress: recovery.trim(),
         bitcoinPayout,
         gasless: true,
+        fundFromSwapId,
       });
       // Save names and requested amounts now, so they survive even if the
       // backup below fails: retries re-quote these amounts, not the floors.
@@ -703,6 +711,13 @@ export function PayPage() {
               ? "Funding estimate includes quoted swap and relay fees. The final deposit amount is confirmed in the funding step. No wallet connection or separate gas balance is needed here."
               : "Review to fetch a live quote and see the full fee breakdown."}
           </p>
+          {retryPayment?.fundFromSwapId && (
+            <p role="status" className="text-xs leading-relaxed text-[#a7ada2]">
+              {fundFromSwapId
+                ? "Your earlier deposit counts towards this payment. The funding step asks only for what is missing."
+                : "Your earlier deposit is in another token and does not count towards this payment. Switch back to that token to use it."}
+            </p>
+          )}
           {error && (
             <p
               role="alert"
