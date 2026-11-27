@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { api, type QuoteResponse } from "../api";
+import { api } from "../api";
 import { AssetDropDown } from "../components/AssetDropDown";
 import {
   HigherLimitsDialog,
@@ -32,6 +32,53 @@ const recipient = (): Recipient => ({
   address: "",
   amount: "",
 });
+
+const validAmount = (amount: string, unit: string) =>
+  /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(amount) &&
+  Number(amount) > 0 &&
+  !(amount.split(".")[1]?.length > (unit === "BTC" ? 8 : 2));
+
+/**
+ * Convert the entered recipient amounts to sats and quote the total (payouts +
+ * Bitcoin fee). USD entry is converted at the rate of a reference quote first.
+ */
+async function pricePayment(
+  source: TokenInfo,
+  target: TokenInfo,
+  unit: string,
+  entered: string[],
+  feeSats: number,
+) {
+  const getQuote = (targetAmount: number) =>
+    api.getQuote({
+      sourceChain: source.chain,
+      sourceToken: source.token_id,
+      targetChain: target.chain,
+      targetToken: target.token_id,
+      targetAmount,
+    });
+  const rate =
+    unit === "USD" ? Number((await getQuote(100000)).exchange_rate) : 1;
+  if (!Number.isFinite(rate) || rate <= 0)
+    throw new Error("No valid exchange rate available.");
+  const amounts = entered.map((a) => Math.round((Number(a) * 1e8) / rate));
+  if (amounts.some((a) => !Number.isSafeInteger(a) || a < 546))
+    throw new Error("Each recipient must receive at least 546 sats.");
+  const total = amounts.reduce((a, b) => a + b, feeSats);
+  if (!Number.isSafeInteger(total))
+    throw new Error("Payment total is too large.");
+  const quote = await getQuote(total);
+  return {
+    quote,
+    amounts,
+    total,
+    feeSats,
+    // Show and save the rate the sats were computed at, not a second
+    // quote's, so a $100 entry reviews as $100.
+    usdRate: unit === "USD" ? rate : Number(quote.exchange_rate),
+  };
+}
+type PricedPayment = Awaited<ReturnType<typeof pricePayment>>;
 
 export function PayPage() {
   const { state } = useLocation();
@@ -76,15 +123,9 @@ export function PayPage() {
   const [error, setError] = useState("");
   const [addressesSubmitted, setAddressesSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [review, setReview] = useState<{
-    quote: QuoteResponse;
-    amounts: number[];
-    total: number;
-    at: number;
-    feeSats: number;
-    /** USD per BTC: for USD entry, the rate the amounts were converted at. */
-    usdRate: number;
-  }>();
+  const [review, setReview] = useState<PricedPayment & { at: number }>();
+  /** Live, unlocked estimate shown in the summary while editing. */
+  const [estimate, setEstimate] = useState<PricedPayment>();
   const navigate = useNavigate();
   const source = tokens.find((t) => `${t.chain}:${t.token_id}` === sourceId);
   // The expired payment's deposit only funds a retry in the same token.
@@ -92,6 +133,34 @@ export function PayPage() {
     retryPayment?.fundFromSwapId && sourceId === retryPayment.sourceId
       ? retryPayment.fundFromSwapId
       : undefined;
+  // Auto-quote: refresh the summary estimate (debounced) whenever the amounts,
+  // unit, fee or asset change. Addresses aren't needed for a price; failures
+  // just clear the estimate, Review surfaces the actual error.
+  const enteredAmounts = rows.map((r) => r.amount).join("\n");
+  useEffect(() => {
+    setEstimate(undefined);
+    const entered = enteredAmounts.split("\n");
+    if (!source || !target || !entered.every((a) => validAmount(a, unit)))
+      return;
+    let feeSats: number;
+    try {
+      feeSats = paymentFeeSats(fee, feeMode, entered.length);
+    } catch {
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      pricePayment(source, target, unit, entered, feeSats)
+        .then((priced) => {
+          if (!cancelled) setEstimate(priced);
+        })
+        .catch(() => undefined);
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [source, target, unit, enteredAmounts, fee, feeMode]);
   useEffect(() => {
     Promise.all([api.getTokens(), api.getBitcoinNetwork()])
       .then(([data, backendNetwork]) => {
@@ -155,36 +224,19 @@ export function PayPage() {
       for (const [i, r] of rows.entries()) {
         if (!validAddress(r.address.trim()))
           throw new Error(`Recipient ${i + 1}: enter a valid Bitcoin address.`);
-        if (
-          !/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(r.amount) ||
-          Number(r.amount) <= 0 ||
-          r.amount.split(".")[1]?.length > (unit === "BTC" ? 8 : 2)
-        )
+        if (!validAmount(r.amount, unit))
           throw new Error(
             `Recipient ${i + 1}: enter a positive ${unit} amount with at most ${unit === "BTC" ? 8 : 2} decimal places.`,
           );
       }
-      const getQuote = (targetAmount: number) =>
-        api.getQuote({
-          sourceChain: source.chain,
-          sourceToken: source.token_id,
-          targetChain: target.chain,
-          targetToken: target.token_id,
-          targetAmount,
-        });
-      const rate =
-        unit === "USD" ? Number((await getQuote(100000)).exchange_rate) : 1;
-      if (!Number.isFinite(rate) || rate <= 0)
-        throw new Error("No valid exchange rate available.");
-      const amounts = rows.map((r) =>
-        Math.round((Number(r.amount) * 1e8) / rate),
+      const priced = await pricePayment(
+        source,
+        target,
+        unit,
+        rows.map((r) => r.amount),
+        absoluteFee,
       );
-      if (amounts.some((a) => !Number.isSafeInteger(a) || a < 546))
-        throw new Error("Each recipient must receive at least 546 sats.");
-      const total = amounts.reduce((a, b) => a + b, absoluteFee);
-      if (!Number.isSafeInteger(total))
-        throw new Error("Payment total is too large.");
-      const result = await getQuote(total);
+      const { quote: result, total } = priced;
       if (total > result.max_amount) {
         setLimitRequest({
           requestedSats: total,
@@ -199,16 +251,7 @@ export function PayPage() {
         throw new Error(
           `Total must be between ${result.min_amount} and ${result.max_amount} sats.`,
         );
-      setReview({
-        quote: result,
-        amounts,
-        total,
-        at: Date.now(),
-        feeSats: absoluteFee,
-        // Show and save the rate the sats were computed at, not a second
-        // quote's, so a $100 entry reviews as $100.
-        usdRate: unit === "USD" ? rate : Number(result.exchange_rate),
-      });
+      setReview({ ...priced, at: Date.now() });
       setNow(Date.now());
     } catch (e) {
       setError(String(e));
@@ -276,11 +319,13 @@ export function PayPage() {
     }
   }
   const expired = !!review && now - review.at >= 60000;
+  /** What the summary prices: the locked review, else the live estimate. */
+  const shown = review ?? estimate;
   const usd = (value: number) =>
     value.toLocaleString(undefined, { style: "currency", currency: "USD" });
-  const satsUsd = (sats: number) => usd((sats / 1e8) * (review?.usdRate ?? 0));
+  const satsUsd = (sats: number) => usd((sats / 1e8) * (shown?.usdRate ?? 0));
   const btc = (sats: number) => (sats / 1e8).toFixed(8);
-  const payoutTotal = review?.amounts.reduce((a, b) => a + b, 0);
+  const payoutTotal = shown?.amounts.reduce((a, b) => a + b, 0);
   const tokenAmount = (amount: string | number) =>
     (Number(amount) / 10 ** (source?.decimals ?? 6)).toLocaleString(undefined, {
       maximumFractionDigits: 6,
@@ -634,16 +679,16 @@ export function PayPage() {
           <div>
             <p className="mb-2 text-sm text-[#a7ada2]">Estimated funding</p>
             <p className="break-words text-4xl font-semibold tabular-nums tracking-tight">
-              {review
+              {shown
                 ? usd(
-                    Number(review.quote.net_source_amount) /
+                    Number(shown.quote.net_source_amount) /
                       10 ** (source?.decimals ?? 6),
                   )
                 : "—"}
             </p>
             <p className="mt-2 text-sm text-[#a7ada2]">
               {source
-                ? `${review ? tokenAmount(review.quote.net_source_amount) + " " : ""}${source.symbol} on ${toChainName(source.chain)}`
+                ? `${shown ? tokenAmount(shown.quote.net_source_amount) + " " : ""}${source.symbol} on ${toChainName(source.chain)}`
                 : "Loading assets…"}
             </p>
           </div>
@@ -661,36 +706,36 @@ export function PayPage() {
             <div className="flex justify-between gap-3">
               <dt className="text-[#a7ada2]">Bitcoin transaction fee</dt>
               <dd className="text-right">
-                {review
-                  ? `~${satsUsd(review.feeSats)}`
+                {shown
+                  ? `~${satsUsd(shown.feeSats)}`
                   : estimatedFee !== undefined
                     ? `~${estimatedFee.toLocaleString()} sats`
                     : "—"}
               </dd>
             </div>
-            {review && (
+            {shown && (
               <>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#a7ada2]">Swap fee</dt>
                   <dd className="text-right">
                     {satsUsd(
-                      review.quote.protocol_fee + review.quote.network_fee,
+                      shown.quote.protocol_fee + shown.quote.network_fee,
                     )}
                   </dd>
                 </div>
-                {review.quote.gasless_network_fee > 0 && (
+                {shown.quote.gasless_network_fee > 0 && (
                   <div className="flex justify-between gap-3">
                     <dt className="text-[#a7ada2]">Quoted relay fee</dt>
                     <dd className="text-right">
-                      {satsUsd(review.quote.gasless_network_fee)}
+                      {satsUsd(shown.quote.gasless_network_fee)}
                     </dd>
                   </div>
                 )}
-                {review.quote.bridge_fee != null && (
+                {shown.quote.bridge_fee != null && (
                   <div className="flex justify-between gap-3">
                     <dt className="text-[#a7ada2]">Bridge fee</dt>
                     <dd>
-                      {(review.quote.bridge_fee / 1e6).toFixed(6)}{" "}
+                      {(shown.quote.bridge_fee / 1e6).toFixed(6)}{" "}
                       {source?.symbol}
                     </dd>
                   </div>
@@ -701,7 +746,7 @@ export function PayPage() {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#a7ada2]">Quoted exchange rate</dt>
-                  <dd>1 BTC ≈ {usd(review.usdRate)}</dd>
+                  <dd>1 BTC ≈ {usd(shown.usdRate)}</dd>
                 </div>
               </>
             )}
@@ -709,7 +754,9 @@ export function PayPage() {
           <p className="text-xs leading-relaxed text-[#a7ada2]">
             {review
               ? "Funding estimate includes quoted swap and relay fees. The final deposit amount is confirmed in the funding step. No wallet connection or separate gas balance is needed here."
-              : "Review to fetch a live quote and see the full fee breakdown."}
+              : estimate
+                ? "Live estimate. Review to lock the quote for 60 seconds."
+                : "Enter recipient amounts to see a live estimate."}
           </p>
           {retryPayment?.fundFromSwapId && (
             <p role="status" className="text-xs leading-relaxed text-[#a7ada2]">
