@@ -18,6 +18,7 @@ import NetworkSolana from "@web3icons/react/icons/networks/NetworkSolana";
 import NetworkTron from "@web3icons/react/icons/networks/NetworkTron";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { formatUnits } from "viem";
 import {
   Dialog,
   DialogContent,
@@ -40,7 +41,15 @@ import { ReactComponent as PolygonIcon } from "../../assets/polygon.svg";
 import { ReactComponent as UsdcIcon } from "../../assets/usdc.svg";
 import { ReactComponent as UsdtIcon } from "../../assets/usdt.svg";
 import { getTokenIcon } from "../api";
+import { tokenBalanceKey, useTokenBalances } from "../hooks/useTokenBalances";
 import { getTokenNetworkIcon } from "../utils/tokenUtils";
+
+function formatTokenBalance(balance: bigint, token: TokenInfo) {
+  return Number(formatUnits(balance, token.decimals)).toLocaleString(
+    undefined,
+    { maximumFractionDigits: 5 },
+  );
+}
 
 // Hook to detect mobile viewport
 function useIsMobile() {
@@ -176,6 +185,8 @@ export function AssetDropDown({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTab, setSelectedTab] = useState<NetworkTabId>("all");
   const isMobile = useIsMobile();
+  // Only fetch while the picker is open; empty when no EVM wallet is connected.
+  const balances = useTokenBalances(availableAssets, open);
 
   const selectedAsset = value;
 
@@ -299,6 +310,16 @@ export function AssetDropDown({
                     {toChainName(asset.chain)}
                   </div>
                 </div>
+
+                {/* Connected wallet balance */}
+                {(() => {
+                  const balance = balances.get(tokenBalanceKey(asset));
+                  return balance !== undefined && balance > 0n ? (
+                    <div className="text-sm font-medium tabular-nums text-right">
+                      {formatTokenBalance(balance, asset)}
+                    </div>
+                  ) : null;
+                })()}
 
                 {/* Selected Check */}
                 {selectedAsset === asset && (
